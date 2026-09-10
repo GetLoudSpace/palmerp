@@ -1,11 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { getTenantSlugFromHeaders } from "@/lib/tenant";
+import { getToken } from "next-auth/jwt";
 
-export async function GET() {
+async function resolveSlug(req?: NextRequest) {
+  const headerSlug = await getTenantSlugFromHeaders();
+  if (headerSlug) return headerSlug;
   try {
-    const slug = await getTenantSlugFromHeaders();
-    if (!slug) return NextResponse.json({ success: false, error: "No tenant" }, { status: 400 });
+    const token: any = await getToken({ req: req as any, secret: process.env.NEXTAUTH_SECRET });
+    if (token?.tenantSlug) return String(token.tenantSlug).toLowerCase();
+  } catch {}
+  return null;
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const slug = await resolveSlug(req);
+    if (!slug) return NextResponse.json({ success: true, modes: [] });
     const tenant = await db.tenant.findUnique({ where: { slug } });
     if (!tenant) return NextResponse.json({ success: false, error: "Tenant not found" }, { status: 404 });
     const setting = await db.setting.findUnique({
@@ -18,10 +29,10 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const slug = await getTenantSlugFromHeaders();
-    if (!slug) return NextResponse.json({ success: false, error: "No tenant" }, { status: 400 });
+    const slug = await resolveSlug(req);
+    if (!slug) return NextResponse.json({ success: true, modes: [] });
     const tenant = await db.tenant.findUnique({ where: { slug } });
     if (!tenant) return NextResponse.json({ success: false, error: "Tenant not found" }, { status: 404 });
     const body = await req.json();
