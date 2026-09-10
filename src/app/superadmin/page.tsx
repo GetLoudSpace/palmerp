@@ -961,7 +961,7 @@ export default function SuperadminPage() {
                       {auditLogs.slice(0, 5).map((log) => (
                         <div key={log.id} className="flex gap-3 text-xs border-b border-stone-100 pb-3 last:border-0 last:pb-0">
                           <div className="h-7 w-7 rounded-lg bg-stone-100 text-[#f27059] flex items-center justify-center font-bold shrink-0">
-                            {log.tenant.substring(0, 2).toUpperCase()}
+                            {String((log as any).tenant ?? (log as any).tenantId ?? "??").substring(0, 2).toUpperCase()}
                           </div>
                           <div className="space-y-1">
                             <p className="text-[11px] text-stone-700 leading-normal">
@@ -1172,7 +1172,7 @@ export default function SuperadminPage() {
             {activeTab === "logs" && (
               <div className="space-y-4 animate-in fade-in duration-200">
                 <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                  <SmartSearchInput value={logSearch} onChange={setLogSearch} suggestions={auditLogs.flatMap((log) => [log.action, log.tenant, log.details, log.ipAddress ?? ""])} placeholder="Buscar por acción, detalles, IP..." className="max-w-sm flex-1" />
+                  <SmartSearchInput value={logSearch} onChange={setLogSearch} suggestions={auditLogs.flatMap((log: any) => [log.action, log.tenant ?? log.tenantId ?? "", log.details, log.ipAddress ?? ""])} placeholder="Buscar por acción, detalles, IP..." className="max-w-sm flex-1" />
                 </div>
 
                 {/* Audit Logs Table */}
@@ -1194,7 +1194,7 @@ export default function SuperadminPage() {
                             {new Date(log.createdAt).toLocaleString()}
                           </td>
                           <td className="py-3.5 px-4 font-black text-[#f25c54] uppercase whitespace-nowrap">
-                            {log.tenant}
+                            {(log as any).tenant ?? (log as any).tenantId ?? "—"}
                           </td>
                           <td className="py-3.5 px-4 whitespace-nowrap">
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-stone-100 text-stone-700 border border-stone-200">
