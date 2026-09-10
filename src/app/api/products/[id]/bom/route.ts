@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import db from "@/lib/db";
 import { getToken } from "next-auth/jwt";
+const prisma: any = db;
 
 export async function GET(
   req: NextRequest,
@@ -100,7 +101,7 @@ async function recalculateParentCost(parentId: string) {
     include: { ingredient: true },
   });
 
-  const totalCost = lines.reduce((sum, l) => {
+  const totalCost = lines.reduce((sum: number, l: any) => {
     const ingCost = Number(l.ingredient.cost || 0);
     return sum + ingCost * l.quantity;
   }, 0);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import db from "@/lib/db";
+const prisma: any = db;
 
 export async function POST(
   req: NextRequest,
