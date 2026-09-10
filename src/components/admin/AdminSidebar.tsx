@@ -21,16 +21,7 @@ interface AdminSidebarProps {
   onClose: () => void;
 }
 
-const DEFAULT_ACTIVE_MODES = [
-  "VENTAS",
-  "COMPRAS_INTELIGENTES",
-  "GESTION_EQUIPO",
-  "RESTAURANTE",
-  "COMUNICACION",
-  "GESTION_PROYECTOS",
-  "CREATIVO",
-  "FINANZAS",
-];
+const DEFAULT_ACTIVE_MODES: string[] = [];
 
 export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
@@ -44,26 +35,40 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const userName = session?.user?.name || "Usuario Admin";
   const userInitials = userName.charAt(0).toUpperCase();
 
-  // Load active modes from localStorage (syncing with Settings page)
+  // Load active modes from DB (Setting) with fallback to localStorage
   useEffect(() => {
     const key = getTenantStorageKey("palmera_active_modes");
-    const saved = localStorage.getItem(key);
-    if (saved) {
+    const load = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        setActiveModes(Array.isArray(parsed) ? parsed : DEFAULT_ACTIVE_MODES);
-      } catch (e) {
+        const res = await fetch("/api/admin/modes");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.modes)) {
+            setActiveModes(data.modes);
+            localStorage.setItem(key, JSON.stringify(data.modes));
+            return;
+          }
+        }
+      } catch {}
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setActiveModes(Array.isArray(parsed) ? parsed : DEFAULT_ACTIVE_MODES);
+        } catch (e) {
+          setActiveModes(DEFAULT_ACTIVE_MODES);
+        }
+      } else {
         setActiveModes(DEFAULT_ACTIVE_MODES);
+        localStorage.setItem(key, JSON.stringify(DEFAULT_ACTIVE_MODES));
       }
-    } else {
-      setActiveModes(DEFAULT_ACTIVE_MODES);
-      localStorage.setItem(key, JSON.stringify(DEFAULT_ACTIVE_MODES));
-    }
+    };
+    load();
   }, []);
 
   // Listen to custom local storage changes to keep sidebar reactive
   useEffect(() => {
-    const handleStorageChange = () => {
+    const handleStorageChange = async () => {
       const key = getTenantStorageKey("palmera_active_modes");
       const saved = localStorage.getItem(key);
       if (saved) {
@@ -72,6 +77,13 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
           setActiveModes(Array.isArray(parsed) ? parsed : DEFAULT_ACTIVE_MODES);
         } catch (e) {}
       }
+      // also sync to DB in background
+      try {
+        const modes = saved ? JSON.parse(saved) : [];
+        if (Array.isArray(modes)) {
+          await fetch("/api/admin/modes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ modes }) });
+        }
+      } catch {}
     };
 
     window.addEventListener("storage", handleStorageChange);

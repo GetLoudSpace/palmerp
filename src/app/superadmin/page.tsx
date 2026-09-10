@@ -106,7 +106,7 @@ export default function SuperadminPage() {
     domain: "",
     timezone: "Europe/Madrid",
     deploymentType: "SAAS",
-    modes: "VENTAS,COMUNICACION,GESTION_PROYECTOS"
+    modes: ""
   });
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -487,7 +487,7 @@ export default function SuperadminPage() {
         id: data.tenantId || `t-${Date.now()}`,
         slug,
         name,
-        domain: domain || `${slug}.palmera.io`,
+        domain: domain || `${slug}.palmerp.es`,
         isActive: true,
         createdAt: new Date().toISOString(),
         users: [
@@ -543,7 +543,7 @@ export default function SuperadminPage() {
         domain: "",
         timezone: "Europe/Madrid",
         deploymentType: "SAAS",
-        modes: "VENTAS,COMUNICACION,GESTION_PROYECTOS",
+        modes: "",
       });
       setCreateError(null);
       setCreateTechnical(null);

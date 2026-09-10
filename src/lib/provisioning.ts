@@ -25,7 +25,7 @@ export interface ProvisioningOptions {
   deploymentType: DeploymentType;
 }
 
-const DEFAULT_MODES = ["VENTAS", "COMUNICACION", "GESTION_PROYECTOS"];
+const DEFAULT_MODES: string[] = [];
 
 /**
  * ProvisioningService — SINGLE DB
@@ -65,11 +65,11 @@ export class ProvisioningService {
     const adminPassword = options.adminPassword || crypto.randomBytes(18).toString("base64url");
     const passwordHash = await bcrypt.hash(adminPassword, 10);
 
-    const tenant = await db.tenant.create({
+     const tenant = await db.tenant.create({
       data: {
         slug,
         name: options.name.trim(),
-        domain: options.domain?.trim() || `${slug}.palmera.io`,
+        domain: options.domain?.trim() || `${slug}.palmerp.es`,
         isActive: true,
       },
     });
@@ -138,7 +138,7 @@ export class ProvisioningService {
         PALMERA_INSTANCE_ADMIN_EMAIL: options.adminEmail,
         PALMERA_INSTANCE_ADMIN_NAME: options.adminName,
         PALMERA_INSTANCE_ADMIN_PASSWORD: adminPassword,
-        PALMERA_INSTANCE_DOMAIN: options.domain || `${options.slug}.palmera.io`,
+        PALMERA_INSTANCE_DOMAIN: options.domain || `${options.slug}.palmerp.es`,
         PALMERA_INSTANCE_TIMEZONE: options.timezone || "Europe/Madrid",
         PALMERA_INSTANCE_MODES: (options.modes || DEFAULT_MODES).join(","),
       },

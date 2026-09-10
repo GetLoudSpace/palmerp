@@ -13,6 +13,17 @@ export const coreModules: PalmModule[] = [
     requiredRole: "STAFF",
   },
   {
+    id: "contacts",
+    name: "Contactos",
+    icon: "Users",
+    category: "General",
+    menuItems: [
+      { label: "Todos los Contactos", path: "/admin/contacts" },
+      { label: "Nuevo Contacto", path: "/admin/contacts" },
+    ],
+    requiredRole: "STAFF",
+  },
+  {
     id: "settings",
     name: "Ajustes",
     icon: "Settings",

@@ -33,8 +33,8 @@ ALTER TABLE "Consignment" FORCE ROW LEVEL SECURITY;
 ALTER TABLE "ApiTransferGrant" FORCE ROW LEVEL SECURITY;
 ALTER TABLE "ApiTransferLog" FORCE ROW LEVEL SECURITY;
 
--- 3) Policies: tenant isolation (uuid). La columna Prisma se mapea a "tenantId" (camelCase) — en Postgres es "tenantId".
--- Supabase recomendación: current_setting('app.tenant_id', true)::text::uuid permite NULL-safe si no está seteado => bloquea acceso.
+-- 3) Policies: tenant isolation (TEXT cuid, no uuid). La columna Prisma se mapea a "tenantId" (camelCase) — en Postgres es "tenantId" TEXT.
+-- Supabase recomendación: current_setting('app.tenant_id', true)::text permite NULL-safe si no está seteado => bloquea acceso. Usamos ::text porque Tenant.id es cuid() TEXT, no uuid (evita 42883 text = uuid).
 DO $$
 DECLARE
   t TEXT;
@@ -42,7 +42,7 @@ BEGIN
   FOREACH t IN ARRAY ARRAY['User','Contact','Setting','AuditLog','PasswordResetToken','Artwork','Consignment','ApiTransferGrant','ApiTransferLog']
   LOOP
     EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON %I;', t);
-    EXECUTE format('CREATE POLICY tenant_isolation ON %I USING ("tenantId" = NULLIF(current_setting(''app.tenant_id'', true), '''')::uuid) WITH CHECK ("tenantId" = NULLIF(current_setting(''app.tenant_id'', true), '''')::uuid);', t);
+    EXECUTE format('CREATE POLICY tenant_isolation ON %I USING ("tenantId" = NULLIF(current_setting(''app.tenant_id'', true), '''')::text) WITH CHECK ("tenantId" = NULLIF(current_setting(''app.tenant_id'', true), '''')::text);', t);
   END LOOP;
 END $$;
 

@@ -21,31 +21,43 @@ export default function ModulesSettingsPage() {
   useEffect(() => {
     const { getTenantStorageKey } = require("@/lib/clientStorage");
     const key = getTenantStorageKey("palmera_active_modes");
-    const saved = localStorage.getItem(key);
-    let activeIds: string[] = ["CREATIVO", "RESTAURANTE", "FINANZAS"];
-
-    if (saved) {
+    const load = async () => {
+      let activeIds: string[] = [];
       try {
-        activeIds = JSON.parse(saved);
-      } catch (e) {
-        // use default
+        const res = await fetch("/api/admin/modes");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.modes)) {
+            activeIds = data.modes;
+            localStorage.setItem(key, JSON.stringify(activeIds));
+          } else {
+            const saved = localStorage.getItem(key);
+            if (saved) activeIds = JSON.parse(saved);
+          }
+        } else {
+          const saved = localStorage.getItem(key);
+          if (saved) activeIds = JSON.parse(saved);
+        }
+      } catch {
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          try { activeIds = JSON.parse(saved); } catch {}
+        }
       }
-    }
-
-    // Build lists representing all registry items with their current state
-    const mapped: ERPMode[] = Object.keys(PalmModesRegistry).map((key) => {
-      const config = PalmModesRegistry[key];
-      return {
-        id: config.id,
-        name: config.name,
-        icon: config.icon,
-        description: config.description,
-        category: config.category as any,
-        isActive: activeIds.includes(config.id),
-      };
-    });
-
-    setModes(mapped);
+      const mapped: ERPMode[] = Object.keys(PalmModesRegistry).map((key) => {
+        const config = PalmModesRegistry[key];
+        return {
+          id: config.id,
+          name: config.name,
+          icon: config.icon,
+          description: config.description,
+          category: config.category as any,
+          isActive: activeIds.includes(config.id),
+        };
+      });
+      setModes(mapped);
+    };
+    load();
   }, []);
 
   const handleToggleMode = (mode: ERPMode) => {
@@ -56,11 +68,9 @@ export default function ModulesSettingsPage() {
 
     const { getTenantStorageKey } = require("@/lib/clientStorage");
     const key = getTenantStorageKey("palmera_active_modes");
-    // Save active IDs list to localStorage
     const activeIds = updated.filter((m) => m.isActive).map((m) => m.id);
     localStorage.setItem(key, JSON.stringify(activeIds));
-
-    // Emit event to update Sidebar reactively in the same window
+    fetch("/api/admin/modes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ modes: activeIds }) }).catch(() => {});
     window.dispatchEvent(new Event("palmera_modes_updated"));
 
     const actionText = !mode.isActive ? "Activado" : "Desactivado";
@@ -91,6 +101,7 @@ export default function ModulesSettingsPage() {
     const key = getTenantStorageKey("palmera_active_modes");
     const activeIds = updated.map((m) => m.id);
     localStorage.setItem(key, JSON.stringify(activeIds));
+    fetch("/api/admin/modes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ modes: activeIds }) }).catch(() => {});
     window.dispatchEvent(new Event("palmera_modes_updated"));
     setToastMessage("¡Todos los sectores de trabajo han sido activados!");
     setTimeout(() => setToastMessage(null), 4000);
@@ -103,6 +114,7 @@ export default function ModulesSettingsPage() {
     const { getTenantStorageKey } = require("@/lib/clientStorage");
     const key = getTenantStorageKey("palmera_active_modes");
     localStorage.setItem(key, JSON.stringify([]));
+    fetch("/api/admin/modes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ modes: [] }) }).catch(() => {});
     window.dispatchEvent(new Event("palmera_modes_updated"));
     setToastMessage("¡Todos los sectores de trabajo han sido desactivados!");
     setTimeout(() => setToastMessage(null), 4000);
