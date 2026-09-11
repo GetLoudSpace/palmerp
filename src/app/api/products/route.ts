@@ -115,11 +115,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, name, code, description, productType, price, cost, uom, isSellable, isPurchasable, isComponent, image } = body;
+    const { id, name, code, description, productType, price, cost, uom, isSellable, isPurchasable, isComponent, image, stockQty, lowStockThreshold } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "El nombre del producto es obligatorio." }, { status: 400 });
     }
+
+    const stockVal = stockQty !== undefined && stockQty !== "" ? parseFloat(String(stockQty)) : undefined;
+    const lowStockVal = lowStockThreshold !== undefined && lowStockThreshold !== "" && lowStockThreshold !== null ? parseFloat(String(lowStockThreshold)) : null;
 
     let product;
     if (id) {
@@ -137,8 +140,20 @@ export async function POST(req: NextRequest) {
           isPurchasable: isPurchasable !== undefined ? Boolean(isPurchasable) : true,
           isComponent: isComponent !== undefined ? Boolean(isComponent) : false,
           image,
+          ...(stockVal !== undefined && !Number.isNaN(stockVal) ? { stockQty: stockVal } : {}),
+          ...(lowStockThreshold !== undefined ? { lowStockThreshold: lowStockVal } : {}),
         },
       });
+      if (stockVal !== undefined && !Number.isNaN(stockVal)) {
+        const prev = await prisma.coreProduct.findUnique({ where: { id } }).catch(() => null);
+        // movimiento de ajuste manual se registra como ADJUST si cambia stock
+        try {
+          const diff = stockVal - Number((prev as any)?.stockQty ?? 0);
+          if (Math.abs(diff) > 0.0001) {
+            await prisma.stockMovement.create({ data: { tenantId: token.tenantId, coreProductId: id, type: "ADJUST", qty: Math.abs(diff), uom: uom || "kg", reason: `AJUSTE MANUAL ${diff > 0 ? "+" : ""}${diff}` } });
+          }
+        } catch {}
+      }
     } else {
       product = await prisma.coreProduct.create({
         data: {
@@ -154,6 +169,8 @@ export async function POST(req: NextRequest) {
           isPurchasable: isPurchasable !== undefined ? Boolean(isPurchasable) : true,
           isComponent: isComponent !== undefined ? Boolean(isComponent) : false,
           image,
+          stockQty: stockVal !== undefined && !Number.isNaN(stockVal) ? stockVal : 0,
+          lowStockThreshold: lowStockVal,
         },
       });
     }
@@ -225,11 +242,13 @@ async function seedInitialBakeryCatalog(tenantId: string) {
       description: "Harina de trigo de gran fuerza para panificación artesanal",
       productType: "CONSUMABLE",
       price: 0,
-      cost: 0.85, // 0.85€ / kg
+      cost: 0.85,
       uom: "kg",
       isSellable: false,
       isPurchasable: true,
       isComponent: true,
+      stockQty: 50,
+      lowStockThreshold: 5,
     },
   });
 
@@ -241,11 +260,13 @@ async function seedInitialBakeryCatalog(tenantId: string) {
       description: "Sal marina natural para masa de pan",
       productType: "CONSUMABLE",
       price: 0,
-      cost: 0.30, // 0.30€ / kg
+      cost: 0.30,
       uom: "kg",
       isSellable: false,
       isPurchasable: true,
       isComponent: true,
+      stockQty: 10,
+      lowStockThreshold: 1,
     },
   });
 
@@ -257,11 +278,13 @@ async function seedInitialBakeryCatalog(tenantId: string) {
       description: "Masa madre natural viva de cultivo propio",
       productType: "CONSUMABLE",
       price: 0,
-      cost: 1.20, // 1.20€ / kg
+      cost: 1.20,
       uom: "kg",
       isSellable: false,
       isPurchasable: true,
       isComponent: true,
+      stockQty: 5,
+      lowStockThreshold: 0.5,
     },
   });
 

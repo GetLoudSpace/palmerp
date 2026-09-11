@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
 import { MINIMAL_TEMPLATES, MinimalTemplateDef } from "./MinimalTemplates";
 
@@ -14,11 +14,21 @@ interface Product {
   currentStock: number;
 }
 
+interface PickupWindow {
+  id: string;
+  label: string;
+  start: string;
+  end: string;
+  capacity: number;
+  isActive: boolean;
+}
+
 interface PickupPoint {
   id: string;
   name: string;
   address: string | null;
   schedule: string | null;
+  windows?: PickupWindow[];
 }
 
 interface ShopData {
@@ -39,6 +49,14 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
   const [selectedPointId, setSelectedPointId] = useState<string>(
     shop.pickupPoints[0]?.id || ""
   );
+  const allWindows = shop.pickupPoints.flatMap((p) => (p.windows || []).map((w) => ({ ...w, pointName: p.name, pointId: p.id })));
+  const windowsForPoint = (shop.pickupPoints.find((p) => p.id === selectedPointId)?.windows || []).filter((w) => w.isActive);
+  const [selectedWindowId, setSelectedWindowId] = useState<string>(windowsForPoint[0]?.id || "");
+  const [pickupDate, setPickupDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  useEffect(() => {
+    const w = (shop.pickupPoints.find((p) => p.id === selectedPointId)?.windows || []).filter((w: any) => w.isActive)[0];
+    if (w) setSelectedWindowId(w.id);
+  }, [selectedPointId]);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
@@ -88,6 +106,8 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
           customerName,
           customerPhone,
           pickupPointId: selectedPointId,
+          pickupWindowId: windowsForPoint.length > 0 ? selectedWindowId || windowsForPoint[0]?.id : undefined,
+          pickupDate: pickupDate || undefined,
           notes,
           items,
         }),
@@ -116,18 +136,26 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">
-              ¡Pedido Confirmado!
-            </h1>
+            <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">¡Pedido Confirmado!</h1>
             <p className="text-sm text-gray-600 dark:text-gray-300">
               Gracias <span className="font-bold text-emerald-600">{successOrder.customerName}</span>, hemos registrado tu pedido correctamente.
             </p>
           </div>
 
+          {/* Código 4 dígitos minimalista */}
+          {successOrder.pickupCode && (
+            <div className="bg-amber-500/10 border-2 border-amber-500/30 p-5 rounded-2xl space-y-2">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600">Código de recogida</div>
+              <div className="text-4xl font-black tracking-[0.3em] text-amber-600 font-mono">{successOrder.pickupCode}</div>
+              <div className="text-xs text-gray-600">Muestra este código o tu nombre en el obrador</div>
+              <button onClick={() => navigator.clipboard?.writeText(successOrder.pickupCode)} className="text-xs font-bold text-amber-600 hover:underline">Copiar código</button>
+            </div>
+          )}
+
           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl text-left space-y-2 text-xs text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
             <div className="flex justify-between border-b pb-2 border-gray-200 dark:border-gray-700">
               <span className="font-bold">Nº Pedido:</span>
-              <span className="font-mono">{successOrder.id.slice(-6).toUpperCase()}</span>
+              <span className="font-mono">{successOrder.pickupCode || successOrder.id.slice(-6).toUpperCase()}</span>
             </div>
             <div className="flex justify-between border-b pb-2 border-gray-200 dark:border-gray-700">
               <span className="font-bold">Total a pagar en entrega:</span>
@@ -136,15 +164,19 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
             {successOrder.pickupPoint && (
               <div>
                 <span className="font-bold block">Punto de Recogida:</span>
-                <span>{successOrder.pickupPoint.name} - {successOrder.pickupPoint.schedule}</span>
+                <span>{successOrder.pickupPoint.name} {successOrder.pickupPoint.schedule ? `- ${successOrder.pickupPoint.schedule}` : ""}</span>
               </div>
             )}
+            {successOrder.pickupWindow && (
+              <div>
+                <span className="font-bold block">Franja:</span>
+                <span>{successOrder.pickupWindow.label} {successOrder.pickupWindow.start}-{successOrder.pickupWindow.end}</span>
+              </div>
+            )}
+            {successOrder.pickupDate && <div className="text-[11px] text-gray-500">Fecha: {new Date(successOrder.pickupDate).toLocaleDateString()}</div>}
           </div>
 
-          <button
-            onClick={() => setSuccessOrder(null)}
-            className={`w-full py-3 rounded-xl font-bold text-xs ${tpl.primaryBtnClass} transition-transform active:scale-95`}
-          >
+          <button onClick={() => setSuccessOrder(null)} className={`w-full py-3 rounded-xl font-bold text-xs ${tpl.primaryBtnClass} transition-transform active:scale-95`}>
             Hacer otro pedido
           </button>
         </div>
@@ -181,43 +213,45 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
           />
         ) : null}
 
-        {/* Pickup Points Banner */}
+        {/* Pickup Points + Franjas Banner - minimalista */}
         {shop.pickupPoints.length > 0 && (
-          <section className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-xs">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-1.5">
-              <Icons.MapPin className="h-4 w-4 text-emerald-500" />
-              Puntos de Reparto / Recogida
+          <section className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-xs space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+              <Icons.MapPin className="h-4 w-4 text-emerald-500" /> Puntos de Recogida
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {shop.pickupPoints.map((pt) => (
-                <label
-                  key={pt.id}
-                  onClick={() => setSelectedPointId(pt.id)}
-                  className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                    selectedPointId === pt.id
-                      ? "border-emerald-500 bg-emerald-500/5 shadow-xs"
-                      : "border-gray-200 dark:border-gray-800 hover:border-gray-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="pickupPoint"
-                    checked={selectedPointId === pt.id}
-                    onChange={() => setSelectedPointId(pt.id)}
-                    className="mt-1 accent-emerald-500"
-                  />
+                <label key={pt.id} onClick={() => { setSelectedPointId(pt.id); const w = pt.windows?.[0]?.id; if (w) setSelectedWindowId(w); }} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedPointId === pt.id ? "border-emerald-500 bg-emerald-500/5 shadow-xs" : "border-gray-200 dark:border-gray-800 hover:border-gray-300"}`}>
+                  <input type="radio" name="pickupPoint" checked={selectedPointId === pt.id} onChange={() => setSelectedPointId(pt.id)} className="mt-1 accent-emerald-500" />
                   <div>
                     <div className="text-xs font-bold text-gray-900 dark:text-white">{pt.name}</div>
                     {pt.address && <div className="text-[11px] text-gray-500">{pt.address}</div>}
-                    {pt.schedule && (
-                      <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
-                        🕒 {pt.schedule}
-                      </div>
-                    )}
+                    {pt.schedule && <div className="text-[10px] font-semibold text-emerald-600 mt-1">🕒 {pt.schedule}</div>}
                   </div>
                 </label>
               ))}
             </div>
+            {/* Franjas configurables */}
+            {windowsForPoint.length > 0 && (
+              <div>
+                <div className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5"><Icons.Clock className="h-4 w-4 text-amber-500" /> Elige horario de recogida</div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {windowsForPoint.map((w) => (
+                    <label key={w.id} onClick={() => setSelectedWindowId(w.id)} className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${selectedWindowId === w.id ? "border-amber-500 bg-amber-500/5" : "border-gray-200 dark:border-gray-700"}`}>
+                      <div>
+                        <div className="text-xs font-bold">{w.label}</div>
+                        <div className="text-[11px] text-gray-500">{w.start} - {w.end}</div>
+                      </div>
+                      <span className="text-[10px] font-bold bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded">Cap {w.capacity}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-2">
+                  <label className="text-xs font-bold text-gray-600 block mb-1">Fecha de recogida</label>
+                  <input type="date" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)} min={new Date().toISOString().slice(0,10)} className="w-full px-3 py-1.5 text-xs rounded-xl border bg-gray-50 dark:bg-gray-800" />
+                </div>
+              </div>
+            )}
           </section>
         )}
 

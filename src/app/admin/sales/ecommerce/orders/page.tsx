@@ -27,6 +27,9 @@ export default function OrdersManagerPage() {
     }
   };
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [verifyCodes, setVerifyCodes] = useState<Record<string, string>>({});
+
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     try {
       const res = await fetch("/api/shop/orders", {
@@ -36,16 +39,40 @@ export default function OrdersManagerPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setOrders(orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
-      }
+        setOrders(orders.map((o) => (o.id === orderId ? { ...o, status: newStatus, verifiedAt: (data.order as any)?.verifiedAt || o.verifiedAt } : o)));
+      } else alert(data.error || "Error");
     } catch (e) {
       console.error(e);
     }
   };
 
+  const handleVerify = async (orderId: string) => {
+    const code = verifyCodes[orderId];
+    if (!code || code.trim().length !== 4) { alert("Introduce los 4 dígitos del cliente"); return; }
+    try {
+      const res = await fetch("/api/shop/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, code: code.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrders(orders.map((o) => (o.id === orderId ? { ...o, status: "DELIVERED", verifiedAt: data.order.verifiedAt } : o)));
+      } else alert(data.error || "Código incorrecto");
+    } catch (e) { console.error(e); }
+  };
+
   const filteredOrders = orders.filter((o) => {
-    if (filterStatus === "ALL") return true;
-    return o.status === filterStatus;
+    const matchesStatus = filterStatus === "ALL" ? true : o.status === filterStatus;
+    if (!matchesStatus) return false;
+    if (!searchTerm) return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      o.customerName?.toLowerCase().includes(q) ||
+      o.pickupCode?.toLowerCase().includes(q) ||
+      o.id.toLowerCase().includes(q) ||
+      o.pickupWindow?.label?.toLowerCase().includes(q)
+    );
   });
 
   if (loading) {
@@ -79,31 +106,37 @@ export default function OrdersManagerPage() {
         </button>
       </div>
 
-      {/* Status Filter Buttons */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2">
-        {["ALL", "PENDING", "CONFIRMED", "READY", "DELIVERED", "CANCELLED"].map((st) => (
-          <button
-            key={st}
-            onClick={() => setFilterStatus(st)}
-            className={`px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer shrink-0 ${
-              filterStatus === st
-                ? "bg-amber-500 text-white shadow-md"
-                : "bg-card border border-border/40 text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            {st === "ALL"
-              ? `Todos (${orders.length})`
-              : st === "PENDING"
-              ? `Pendientes (${orders.filter((o) => o.status === "PENDING").length})`
-              : st === "CONFIRMED"
-              ? `Confirmados (${orders.filter((o) => o.status === "CONFIRMED").length})`
-              : st === "READY"
-              ? `Listos (${orders.filter((o) => o.status === "READY").length})`
-              : st === "DELIVERED"
-              ? `Entregados (${orders.filter((o) => o.status === "DELIVERED").length})`
-              : st}
-          </button>
-        ))}
+      {/* Search by name/code */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Icons.Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input type="text" placeholder="Buscar por nombre o código 4 dígitos..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500" />
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          {["ALL", "PENDING", "CONFIRMED", "READY", "DELIVERED", "CANCELLED"].map((st) => (
+            <button
+              key={st}
+              onClick={() => setFilterStatus(st)}
+              className={`px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer shrink-0 ${
+                filterStatus === st
+                  ? "bg-amber-500 text-white shadow-md"
+                  : "bg-card border border-border/40 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {st === "ALL"
+                ? `Todos (${orders.length})`
+                : st === "PENDING"
+                ? `Pendientes (${orders.filter((o) => o.status === "PENDING").length})`
+                : st === "CONFIRMED"
+                ? `Confirmados (${orders.filter((o) => o.status === "CONFIRMED").length})`
+                : st === "READY"
+                ? `Listos (${orders.filter((o) => o.status === "READY").length})`
+                : st === "DELIVERED"
+                ? `Entregados (${orders.filter((o) => o.status === "DELIVERED").length})`
+                : st}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Orders List / Cards */}
@@ -125,33 +158,25 @@ export default function OrdersManagerPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <span className="text-[10px] font-mono text-muted-foreground">
-                    #{order.id.slice(-6).toUpperCase()} • {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    #{order.pickupCode || order.id.slice(-6).toUpperCase()} • {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {order.pickupCode && <span className="ml-1 px-1.5 py-0.5 rounded bg-amber-500 text-white font-black tracking-widest">CODE {order.pickupCode}</span>}
                   </span>
                   <h3 className="font-extrabold text-sm text-foreground mt-0.5">{order.customerName}</h3>
                   {order.customerPhone && (
-                    <a
-                      href={`tel:${order.customerPhone}`}
-                      className="text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1 mt-0.5"
-                    >
+                    <a href={`tel:${order.customerPhone}`} className="text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1 mt-0.5">
                       <Icons.Phone className="h-3 w-3" /> {order.customerPhone}
                     </a>
                   )}
                 </div>
-
                 <span className="text-base font-black text-amber-500">{Number(order.totalAmount).toFixed(2)}€</span>
               </div>
 
-              {order.pickupPoint && (
+              {(order.pickupPoint || order.pickupWindow) && (
                 <div className="bg-muted/30 p-2.5 rounded-xl text-xs space-y-0.5 border border-border/20">
-                  <div className="font-bold text-foreground flex items-center gap-1">
-                    <Icons.MapPin className="h-3.5 w-3.5 text-emerald-500" />
-                    {order.pickupPoint.name}
-                  </div>
-                  {order.pickupPoint.schedule && (
-                    <div className="text-[10px] text-muted-foreground pl-4">
-                      🕒 Horario: {order.pickupPoint.schedule}
-                    </div>
-                  )}
+                  {order.pickupPoint && <div className="font-bold text-foreground flex items-center gap-1"><Icons.MapPin className="h-3.5 w-3.5 text-emerald-500" />{order.pickupPoint.name}</div>}
+                  {order.pickupWindow && <div className="text-[11px] font-bold text-amber-600">Franja: {order.pickupWindow.label} {order.pickupWindow.start}-{order.pickupWindow.end} (Cap {order.pickupWindow.capacity})</div>}
+                  {order.pickupDate && <div className="text-[10px] text-muted-foreground">Fecha recogida: {new Date(order.pickupDate).toLocaleDateString()}</div>}
+                  {!order.pickupWindow && order.pickupPoint?.schedule && <div className="text-[10px] text-muted-foreground pl-4">🕒 {order.pickupPoint.schedule}</div>}
                 </div>
               )}
 
@@ -176,39 +201,27 @@ export default function OrdersManagerPage() {
                 </div>
               )}
 
+              {/* Verificación por código 4 dígitos */}
+              {(order.status === "READY" || order.status === "CONFIRMED" || order.status === "PENDING") && order.pickupCode && (
+                <div className="flex gap-1.5 items-center">
+                  <input type="text" maxLength={4} inputMode="numeric" placeholder="4 dígitos" value={verifyCodes[order.id] || ""} onChange={(e) => setVerifyCodes({ ...verifyCodes, [order.id]: e.target.value.replace(/\D/g, "").slice(0,4) })} className="flex-1 px-2 py-1.5 text-xs rounded-lg border border-border/50 bg-background font-mono tracking-widest text-center" />
+                  <button onClick={() => handleVerify(order.id)} className="px-3 py-1.5 bg-gray-900 text-white font-bold text-xs rounded-lg hover:bg-black flex items-center gap-1"><Icons.ShieldCheck className="h-3.5 w-3.5" /> Verificar</button>
+                </div>
+              )}
+
               {/* Action Buttons for Status */}
               <div className="pt-2 border-t border-border/20 flex flex-wrap gap-1.5">
                 {order.status === "PENDING" && (
-                  <button
-                    onClick={() => handleUpdateStatus(order.id, "CONFIRMED")}
-                    className="flex-1 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700 transition-all cursor-pointer"
-                  >
-                    Confirmar
-                  </button>
+                  <button onClick={() => handleUpdateStatus(order.id, "CONFIRMED")} className="flex-1 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700">Confirmar</button>
                 )}
                 {(order.status === "PENDING" || order.status === "CONFIRMED") && (
-                  <button
-                    onClick={() => handleUpdateStatus(order.id, "READY")}
-                    className="flex-1 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-lg hover:bg-emerald-700 transition-all cursor-pointer"
-                  >
-                    Listo para Recogida
-                  </button>
+                  <button onClick={() => handleUpdateStatus(order.id, "READY")} className="flex-1 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-lg hover:bg-emerald-700">Listo para Recogida</button>
                 )}
                 {order.status === "READY" && (
-                  <button
-                    onClick={() => handleUpdateStatus(order.id, "DELIVERED")}
-                    className="flex-1 py-1.5 bg-gray-800 text-white font-bold text-xs rounded-lg hover:bg-black transition-all cursor-pointer"
-                  >
-                    Marcar Entregado
-                  </button>
+                  <button onClick={() => handleVerify(order.id)} className="flex-1 py-1.5 bg-gray-800 text-white font-bold text-xs rounded-lg hover:bg-black">Entregar con código</button>
                 )}
                 {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
-                  <button
-                    onClick={() => handleUpdateStatus(order.id, "CANCELLED")}
-                    className="px-2.5 py-1.5 text-red-500 hover:bg-red-500/10 font-bold text-xs rounded-lg transition-all cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
+                  <button onClick={() => handleUpdateStatus(order.id, "CANCELLED")} className="px-2.5 py-1.5 text-red-500 hover:bg-red-500/10 font-bold text-xs rounded-lg">Cancelar</button>
                 )}
               </div>
             </div>

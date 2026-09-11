@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       where: { tenantId: token.tenantId },
       include: {
         products: { orderBy: { sortOrder: "asc" } },
-        pickupPoints: { orderBy: { createdAt: "asc" } },
+        pickupPoints: { include: { windows: { orderBy: [{ sortOrder: "asc" }, { start: "asc" }] } }, orderBy: { createdAt: "asc" } },
       },
     });
 

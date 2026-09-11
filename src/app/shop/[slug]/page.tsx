@@ -21,6 +21,7 @@ export default async function PublicShopPage({
       },
       pickupPoints: {
         where: { isActive: true },
+        include: { windows: { where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { start: "asc" }] } },
         orderBy: { createdAt: "asc" },
       },
     },

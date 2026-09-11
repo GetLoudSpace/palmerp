@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
 
   const pickupPoints = await prisma.pickupPoint.findMany({
     where: { shopId: shop.id },
+    include: { windows: { orderBy: [{ sortOrder: "asc" }, { start: "asc" }] } },
     orderBy: { createdAt: "asc" },
   });
 

@@ -16,6 +16,8 @@ interface CoreProduct {
   isPurchasable: boolean;
   isComponent: boolean;
   image: string | null;
+  stockQty?: number | string | null;
+  lowStockThreshold?: number | string | null;
   bomLinesAsParent?: BomLine[];
 }
 
@@ -52,6 +54,8 @@ export default function CoreProductsPage() {
     isSellable: true,
     isPurchasable: true,
     isComponent: false,
+    stockQty: "0",
+    lowStockThreshold: "",
   });
 
   // BOM Form states
@@ -106,6 +110,8 @@ export default function CoreProductsPage() {
         isSellable: product.isSellable,
         isPurchasable: product.isPurchasable,
         isComponent: product.isComponent,
+        stockQty: String((product as any).stockQty ?? "0"),
+        lowStockThreshold: String((product as any).lowStockThreshold ?? ""),
       });
 
       // Load BOM lines if any
@@ -124,6 +130,8 @@ export default function CoreProductsPage() {
         isSellable: true,
         isPurchasable: true,
         isComponent: false,
+        stockQty: "0",
+        lowStockThreshold: "",
       });
       setBomLines([]);
     }
@@ -530,6 +538,19 @@ export default function CoreProductsPage() {
                         <option value="pack">pack (Paquete)</option>
                       </select>
                     </div>
+                  </div>
+
+                  {/* Stock para ingredientes */}
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground block mb-1">Stock actual ({formData.uom})</label>
+                      <input type="number" step="0.001" value={formData.stockQty} onChange={(e) => setFormData({ ...formData, stockQty: e.target.value })} placeholder="ej. 50 para harina kg" className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground block mb-1">Umbral aviso bajo stock</label>
+                      <input type="number" step="0.001" value={formData.lowStockThreshold} onChange={(e) => setFormData({ ...formData, lowStockThreshold: e.target.value })} placeholder="ej. 5" className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500" />
+                    </div>
+                    <div className="flex items-end text-[10px] text-muted-foreground">Dejar vacío = sin alerta. Al vender pan se descuenta automático del ingrediente.</div>
                   </div>
 
                   {/* Flags */}

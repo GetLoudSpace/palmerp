@@ -10,9 +10,15 @@ export default function ShopConfiguratorPage() {
   const [templateId, setTemplateId] = useState("obrador-tradicional");
   const [products, setProducts] = useState<any[]>([]);
   const [pickupPoints, setPickupPoints] = useState<any[]>([]);
+  const [windows, setWindows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [newWinPointId, setNewWinPointId] = useState("");
+  const [newWinLabel, setNewWinLabel] = useState("");
+  const [newWinStart, setNewWinStart] = useState("08:00");
+  const [newWinEnd, setNewWinEnd] = useState("13:00");
+  const [newWinCap, setNewWinCap] = useState("30");
 
   // Form states for new product
   const [newProdName, setNewProdName] = useState("");
@@ -48,6 +54,12 @@ export default function ShopConfiguratorPage() {
         setProducts(data.shop.products || []);
         setPickupPoints(data.shop.pickupPoints || []);
       }
+      // cargar franjas configurables
+      try {
+        const wRes = await fetch("/api/shop/pickup-windows");
+        const wData = await wRes.json();
+        if (wData.success) setWindows(wData.windows || []);
+      } catch {}
     } catch (e) {
       console.error(e);
     } finally {
@@ -150,10 +162,54 @@ export default function ShopConfiguratorPage() {
     try {
       await fetch(`/api/shop/pickup-points?id=${id}`, { method: "DELETE" });
       setPickupPoints(pickupPoints.filter((pt) => pt.id !== id));
+      setWindows(windows.filter((w: any) => w.pickupPointId !== id));
       showToast("Punto de recogida eliminado");
     } catch (e) {
       showToast("Error al eliminar punto");
     }
+  };
+
+  const handleAddWindow = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newWinPointId || !newWinLabel.trim()) return;
+    try {
+      const res = await fetch("/api/shop/pickup-windows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pickupPointId: newWinPointId, label: newWinLabel, start: newWinStart, end: newWinEnd, capacity: newWinCap }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWindows([...windows, data.window]);
+        setNewWinLabel("");
+        showToast("Franja añadida");
+      } else showToast(data.error || "Error");
+    } catch { showToast("Error al añadir franja"); }
+  };
+
+  const handleDeleteWindow = async (id: string) => {
+    try {
+      await fetch(`/api/shop/pickup-windows?id=${id}`, { method: "DELETE" });
+      setWindows(windows.filter((w: any) => w.id !== id));
+      showToast("Franja eliminada");
+    } catch { showToast("Error"); }
+  };
+
+  const handleUpdateProductStock = async (p: any, newMax: string) => {
+    const max = Math.max(0, parseInt(newMax, 10) || 0);
+    const delta = max - Number(p.maxDaily);
+    try {
+      const res = await fetch("/api/shop/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: p.id, name: p.name, price: String(p.price), maxDaily: String(max), currentStock: String(Math.max(0, Number(p.currentStock) + delta)), description: p.description || "" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setProducts(products.map((x) => (x.id === p.id ? { ...x, maxDaily: max, currentStock: Math.max(0, Number(x.currentStock) + delta) } : x)));
+        showToast(`Producción actualizada: ${max} ud (stock ajustado ${delta >= 0 ? "+" : ""}${delta})`);
+      }
+    } catch { showToast("Error al actualizar"); }
   };
 
   const handleSendAIChat = async (e: React.FormEvent) => {
@@ -494,19 +550,18 @@ export default function ShopConfiguratorPage() {
 
           <div className="divide-y divide-border/30">
             {products.map((p) => (
-              <div key={p.id} className="py-2.5 flex items-center justify-between text-xs">
-                <div>
+              <div key={p.id} className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div className="flex-1">
                   <div className="font-bold text-foreground">{p.name} — {Number(p.price).toFixed(2)}€</div>
                   <div className="text-[10px] text-muted-foreground">
-                    Stock: {p.currentStock}/{p.maxDaily}
+                    Quedan: {p.currentStock} / Producción hoy: {p.maxDaily}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleDeleteProduct(p.id)}
-                  className="text-red-500 hover:text-red-600 p-1"
-                >
-                  <Icons.Trash2 className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <input type="number" min={0} defaultValue={p.maxDaily} id={`max-${p.id}`} placeholder="max" className="w-16 px-2 py-1 text-xs rounded border border-border/50 bg-background" />
+                  <button onClick={() => { const el = document.getElementById(`max-${p.id}`) as HTMLInputElement; handleUpdateProductStock(p, el?.value || String(p.maxDaily)); }} className="px-2 py-1 rounded bg-amber-500 text-white font-bold hover:bg-amber-600">Ajustar</button>
+                  <button onClick={() => handleDeleteProduct(p.id)} className="text-red-500 hover:text-red-600 p-1"><Icons.Trash2 className="h-4 w-4" /></button>
+                </div>
               </div>
             ))}
           </div>
@@ -554,22 +609,46 @@ export default function ShopConfiguratorPage() {
 
           <div className="divide-y divide-border/30">
             {pickupPoints.map((pt) => (
-              <div key={pt.id} className="py-2.5 flex items-center justify-between text-xs">
-                <div>
-                  <div className="font-bold text-foreground">{pt.name}</div>
-                  <div className="text-[10px] text-muted-foreground">
-                    {pt.address} {pt.schedule ? `(${pt.schedule})` : ""}
+              <div key={pt.id} className="py-2.5 space-y-2 text-xs border-b border-border/20 last:border-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-bold text-foreground">{pt.name}</div>
+                    <div className="text-[10px] text-muted-foreground">{pt.address} {pt.schedule ? `(${pt.schedule})` : ""}</div>
                   </div>
+                  <button onClick={() => handleDeletePickupPoint(pt.id)} className="text-red-500 hover:text-red-600 p-1"><Icons.Trash2 className="h-4 w-4" /></button>
                 </div>
-                <button
-                  onClick={() => handleDeletePickupPoint(pt.id)}
-                  className="text-red-500 hover:text-red-600 p-1"
-                >
-                  <Icons.Trash2 className="h-4 w-4" />
-                </button>
+                {/* Franjas configurables por punto */}
+                <div className="ml-2 pl-3 border-l-2 border-amber-500/20 space-y-1.5">
+                  <div className="text-[10px] font-bold text-amber-600 uppercase flex items-center gap-1"><Icons.Clock className="h-3 w-3" /> Franjas ({windows.filter((w: any) => w.pickupPointId === pt.id).length})</div>
+                  {windows.filter((w: any) => w.pickupPointId === pt.id).map((w: any) => (
+                    <div key={w.id} className="flex items-center justify-between bg-muted/20 px-2 py-1 rounded">
+                      <span className="font-semibold">{w.label} <span className="text-muted-foreground"> {w.start}-{w.end} </span> <span className="ml-1 bg-amber-500/10 px-1.5 py-0.5 rounded">Cap: {w.capacity}</span></span>
+                      <button onClick={() => handleDeleteWindow(w.id)} className="text-red-400 hover:text-red-600"><Icons.X className="h-3 w-3" /></button>
+                    </div>
+                  ))}
+                  {windows.filter((w: any) => w.pickupPointId === pt.id).length === 0 && <div className="text-[10px] text-muted-foreground">Sin franjas — añade mañana/tarde abajo</div>}
+                </div>
               </div>
             ))}
           </div>
+          {/* Añadir franja */}
+          {pickupPoints.length > 0 && (
+            <form onSubmit={handleAddWindow} className="mt-4 p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-2">
+              <div className="text-[10px] font-bold text-amber-700 uppercase">+ Añadir franja configurable</div>
+              <div className="grid gap-2 sm:grid-cols-5">
+                <select value={newWinPointId} onChange={(e) => setNewWinPointId(e.target.value)} className="px-2 py-1.5 text-xs rounded border bg-background col-span-2" required>
+                  <option value="">Punto…</option>{pickupPoints.map((pt) => <option key={pt.id} value={pt.id}>{pt.name}</option>)}
+                </select>
+                <input type="text" placeholder="Mañana" value={newWinLabel} onChange={(e) => setNewWinLabel(e.target.value)} className="px-2 py-1.5 text-xs rounded border bg-background" required />
+                <input type="time" value={newWinStart} onChange={(e) => setNewWinStart(e.target.value)} className="px-2 py-1.5 text-xs rounded border bg-background" />
+                <input type="time" value={newWinEnd} onChange={(e) => setNewWinEnd(e.target.value)} className="px-2 py-1.5 text-xs rounded border bg-background" />
+              </div>
+              <div className="flex gap-2">
+                <input type="number" min={1} placeholder="Capacidad" value={newWinCap} onChange={(e) => setNewWinCap(e.target.value)} className="flex-1 px-2 py-1.5 text-xs rounded border bg-background" />
+                <button type="submit" className="px-4 py-1.5 bg-amber-500 text-white font-bold text-xs rounded hover:bg-amber-600">Añadir</button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>

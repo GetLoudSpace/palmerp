@@ -15,7 +15,7 @@ model Tenant {
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   deletedAt           DateTime?
-  
+   
   // Relations
   users               User[]
   contacts            Contact[]
@@ -28,6 +28,7 @@ model Tenant {
   consignments        Consignment[]
   shops               Shop[]
   coreProducts        CoreProduct[]
+  stockMovements      StockMovement[]
 }
 
 model User {
@@ -305,20 +306,22 @@ enum DataTransferDirection {
 // ==========================================
 
 model CoreProduct {
-  id            String          @id @default(cuid())
-  tenantId      String
-  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  code          String?         // SKU / Código de barras
-  name          String
-  description   String?
-  productType   ProductType     @default(STORABLE)
-  price         Decimal         @default(0.00) @db.Decimal(10, 2)
-  cost          Decimal         @default(0.00) @db.Decimal(10, 2)
-  uom           String          @default("ud") // Unidad de medida (kg, g, l, ml, ud)
-  isSellable    Boolean         @default(true)
-  isPurchasable Boolean         @default(true)
-  isComponent   Boolean         @default(false)
-  image         String?
+  id                  String          @id @default(cuid())
+  tenantId            String
+  tenant              Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  code                String?         // SKU / Código de barras
+  name                String
+  description         String?
+  productType         ProductType     @default(STORABLE)
+  price               Decimal         @default(0.00) @db.Decimal(10, 2)
+  cost                Decimal         @default(0.00) @db.Decimal(10, 2)
+  uom                 String          @default("ud") // Unidad de medida (kg, g, l, ml, ud)
+  isSellable          Boolean         @default(true)
+  isPurchasable       Boolean         @default(true)
+  isComponent         Boolean         @default(false)
+  image               String?
+  stockQty            Decimal         @default(0.00) @db.Decimal(10, 3) // Stock físico para ingredientes (ej. kg harina)
+  lowStockThreshold   Decimal?        @db.Decimal(10, 3)
 
   // Relaciones BOM (Ingredientes / Receta)
   bomLinesAsParent     BomLine[] @relation("ParentProduct")
@@ -326,6 +329,7 @@ model CoreProduct {
 
   // Relación con E-Commerce
   shopProducts         Product[]
+  stockMovements      StockMovement[]
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -334,6 +338,30 @@ model CoreProduct {
   @@index([tenantId, productType])
   @@index([tenantId, isSellable])
   @@index([tenantId, isComponent])
+}
+
+model StockMovement {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  coreProductId String
+  coreProduct   CoreProduct @relation(fields: [coreProductId], references: [id], onDelete: Cascade)
+  type          StockMovementType
+  qty           Decimal  @db.Decimal(10, 3)
+  uom           String   @default("kg")
+  reason        String?  // "ORDER #1234", "MANUAL_ADJUST", "WASTE"
+  orderId       String?
+  createdAt     DateTime @default(now())
+
+  @@index([tenantId, createdAt])
+  @@index([coreProductId, createdAt])
+  @@index([orderId])
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUST
 }
 
 model BomLine {
@@ -427,36 +455,65 @@ model PickupPoint {
   shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   name      String
   address   String?
-  schedule  String?
+  schedule  String?  // legacy libre, mantener compat
   isActive  Boolean  @default(true)
 
   orders    Order[]
+  windows   PickupWindow[]
 
   createdAt DateTime @default(now())
 
   @@index([shopId])
 }
 
+model PickupWindow {
+  id            String   @id @default(cuid())
+  pickupPointId String
+  pickupPoint   PickupPoint @relation(fields: [pickupPointId], references: [id], onDelete: Cascade)
+  label         String   // ej. "Mañana 08:00-13:00"
+  start         String   // "08:00"
+  end           String   // "13:00"
+  capacity      Int      @default(30)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+
+  orders        Order[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([pickupPointId])
+  @@index([pickupPointId, isActive])
+}
+
 model Order {
-  id            String       @id @default(cuid())
-  shopId        String
-  shop          Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  pickupPointId String?
-  pickupPoint   PickupPoint? @relation(fields: [pickupPointId], references: [id])
-  customerName  String
-  customerPhone String?
-  status        OrderStatus  @default(PENDING)
-  notes         String?
-  totalAmount   Decimal      @db.Decimal(10, 2)
+  id              String       @id @default(cuid())
+  shopId          String
+  shop            Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  pickupPointId   String?
+  pickupPoint     PickupPoint? @relation(fields: [pickupPointId], references: [id])
+  pickupWindowId  String?
+  pickupWindow    PickupWindow? @relation(fields: [pickupWindowId], references: [id])
+  pickupDate      DateTime?    // día de recogida elegido por cliente
+  pickupCode      String?      @unique // 4 dígitos numéricos para verificación
+  verifiedAt      DateTime?
+  verifiedById    String?
+  customerName    String
+  customerPhone   String?
+  status          OrderStatus  @default(PENDING)
+  notes           String?
+  totalAmount     Decimal      @db.Decimal(10, 2)
 
-  lines         OrderLine[]
+  lines           OrderLine[]
 
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  deletedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
 
   @@index([shopId, createdAt])
   @@index([shopId, status])
+  @@index([pickupCode])
+  @@index([pickupWindowId])
 }
 
 model OrderLine {
