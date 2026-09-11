@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import crypto from "node:crypto";
+import bcrypt from "bcryptjs";
 import db from "@/lib/db";
 import { getMockTenants, saveMockTenants } from "@/lib/mockDb";
 import { ProvisioningService } from "@/lib/provisioning";
@@ -126,9 +128,70 @@ export async function POST(req: Request) {
     if (!Array.isArray(tenants)) return NextResponse.json({ success: false, error: "Invalid tenants data" }, { status: 400 });
     saveMockTenants(tenants);
     try {
-      for (const t of tenants) await db.tenant.update({ where: { id: t.id }, data: { isActive: t.isActive } });
+      for (const t of tenants as Array<{ id: string; isActive?: boolean; users?: Array<{ id: string; name: string; email: string; role: string; password?: string }> }>) {
+        try {
+          if (typeof t.isActive === "boolean") {
+            await db.tenant.update({ where: { id: t.id }, data: { isActive: t.isActive } });
+          }
+        } catch (e) {
+          console.warn("Could not sync tenant isActive", t.id, e);
+        }
+
+        // Sincroniza usuarios creados/editados desde el modal Superadmin
+        if (Array.isArray(t.users)) {
+          try {
+            const existingUsers = await db.user.findMany({ where: { tenantId: t.id } });
+            for (const u of t.users) {
+              const emailNorm = String(u.email ?? "").trim().toLowerCase();
+              if (!emailNorm || !u.name) continue;
+              const roleNorm = String(u.role).toUpperCase() === "ADMIN" ? "ADMIN" : "STAFF";
+              const hasRealPassword = typeof u.password === "string" && u.password.trim().length > 0 && u.password !== "••••••••";
+
+              const byId = existingUsers.find((e) => e.id === u.id);
+              const byEmail = existingUsers.find((e) => e.email.toLowerCase() === emailNorm);
+
+              if (byId) {
+                const data: Record<string, unknown> = { name: String(u.name).trim(), email: emailNorm, role: roleNorm as never };
+                if (hasRealPassword) (data as Record<string, string>).passwordHash = await bcrypt.hash(String(u.password), 10);
+                await db.user.update({ where: { id: byId.id }, data: data as never });
+              } else if (byEmail) {
+                const data: Record<string, unknown> = { name: String(u.name).trim(), role: roleNorm as never };
+                if (hasRealPassword) (data as Record<string, string>).passwordHash = await bcrypt.hash(String(u.password), 10);
+                await db.user.update({ where: { id: byEmail.id }, data: data as never });
+              } else {
+                const pwdPlain = hasRealPassword ? String(u.password) : crypto.randomBytes(12).toString("base64url");
+                const hash = await bcrypt.hash(pwdPlain, 10);
+                await db.user.create({
+                  data: {
+                    tenantId: t.id,
+                    name: String(u.name).trim(),
+                    email: emailNorm,
+                    passwordHash: hash,
+                    role: roleNorm as never,
+                  },
+                });
+              }
+            }
+            // Eliminaciones: si un usuario existe en DB pero ya no está en la lista enviada, lo borramos (excepto si es el único ADMIN)
+            const incomingIds = new Set((t.users as Array<{ id: string }>).map((u) => u.id));
+            const incomingEmails = new Set((t.users as Array<{ email: string }>).map((u) => String(u.email).toLowerCase()));
+            for (const eu of existingUsers) {
+              const stillPresent = incomingIds.has(eu.id) || incomingEmails.has(eu.email.toLowerCase());
+              if (!stillPresent) {
+                const remainingAdmins = existingUsers.filter((x) => x.role === "ADMIN" && x.id !== eu.id).length + (t.users as Array<{ role: string }>).filter((x) => String(x.role).toUpperCase() === "ADMIN").length;
+                if (eu.role === "ADMIN" && remainingAdmins === 0) continue; // nunca borrar último admin
+                try {
+                  await db.user.delete({ where: { id: eu.id } });
+                } catch {}
+              }
+            }
+          } catch (e) {
+            console.warn("Could not sync users for tenant", t.id, e);
+          }
+        }
+      }
     } catch (e) {
-      console.warn("Could not sync isActive to DB (mock fallback)", e);
+      console.warn("Could not sync tenants to DB (mock fallback)", e);
     }
     return NextResponse.json({ success: true });
   } catch (error: unknown) {

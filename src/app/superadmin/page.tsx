@@ -662,7 +662,7 @@ export default function SuperadminPage() {
     showToast("Usuario removido.");
   };
 
-  const handleSaveUsers = () => {
+  const handleSaveUsers = async () => {
     if (!selectedTenant) return;
 
     const updatedTenants = tenants.map((t) => {
@@ -683,7 +683,16 @@ export default function SuperadminPage() {
       return t;
     });
 
-    updateTenantsState(updatedTenants);
+    await updateTenantsState(updatedTenants);
+    // Refresca desde DB para obtener IDs canónicos y hashes persistidos
+    try {
+      const res = await fetch("/api/superadmin/instances");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.tenants)) {
+        setTenants(data.tenants);
+        localStorage.setItem("palmera_superadmin_tenants", JSON.stringify(data.tenants));
+      }
+    } catch {}
     setSelectedTenant(null);
     showToast("Usuarios actualizados correctamente en la instancia.");
   };
@@ -766,12 +775,53 @@ export default function SuperadminPage() {
     }
   };
 
-  const handleUserAccess = (user: SuperadminUser, tenant: SuperadminTenant) => {
-    const url = `${window.location.protocol}//${tenant.slug}.localhost:3000/login?user=${user.id}`;
-    window.open(url, "_blank");
-    showToast(`Redirigiendo como ${user.name}...`);
-    setAccessMenuOpen(null);
-    setSelectedUserForAccess(null);
+  const handleUserAccess = async (user: SuperadminUser, tenant: SuperadminTenant) => {
+    try {
+      const res = await fetch("/api/superadmin/access-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId: tenant.id, userId: user.id }),
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        window.open(data.url, "_blank");
+        showToast(`Redirigiendo como ${user.name}...`);
+      } else {
+        showToast(data.error || "Error al generar acceso para ese usuario.");
+      }
+    } catch {
+      showToast("Error de conexión al generar acceso.");
+    } finally {
+      setAccessMenuOpen(null);
+      setSelectedUserForAccess(null);
+    }
+  };
+
+  const handleAccessAsUserFromModal = async (user: SuperadminUser) => {
+    if (!selectedTenant) return;
+    try {
+      // Si el tenant aún no está persistido en DB (id mock), intentamos guardar primero
+      const isMockId = selectedTenant.id.startsWith("t-") || selectedTenant.id.startsWith("usr-");
+      if (isMockId) {
+        showToast("Guarda primero los cambios para persistir el usuario y luego accede.");
+        return;
+      }
+      const res = await fetch("/api/superadmin/access-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId: selectedTenant.id, userId: user.id }),
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        window.open(data.url, "_blank");
+        showToast(`Accediendo como ${user.name}...`);
+      } else {
+        // Fallback: si aún no existe en DB, sugerir guardar
+        showToast(data.error || "Usuario aún no persistido. Guarda los cambios.");
+      }
+    } catch {
+      showToast("Error al generar enlace de acceso.");
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -1478,7 +1528,15 @@ export default function SuperadminPage() {
                         </div>
 
                         {/* Actions */}
-                        <div className="md:col-span-1 flex justify-end md:justify-center pt-3 md:pt-4">
+                        <div className="md:col-span-1 flex justify-end md:justify-center pt-3 md:pt-4 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleAccessAsUserFromModal(user)}
+                            className="p-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all cursor-pointer"
+                            title="Acceder como este usuario (bypass automático)"
+                          >
+                            <Icons.LogIn className="h-4 w-4" />
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteUserFromEditable(user.id)}

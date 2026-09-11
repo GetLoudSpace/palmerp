@@ -10,27 +10,36 @@ import db from "@/lib/db";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { tenantId, role } = body;
+    const { tenantId, role, userId } = body as { tenantId?: string; role?: string; userId?: string };
 
-    if (!tenantId || role !== "ADMIN") {
-      return NextResponse.json({ success: false, error: "Parámetros inválidos" }, { status: 400 });
+    if (!tenantId) {
+      return NextResponse.json({ success: false, error: "Parámetros inválidos: tenantId requerido" }, { status: 400 });
     }
 
     // 1. Verificar que el tenant existe
     const tenant = await db.tenant.findUnique({
       where: { id: tenantId },
-      include: { users: { where: { role: "ADMIN" }, take: 1 } }
     });
 
     if (!tenant) {
       return NextResponse.json({ success: false, error: "Instancia no encontrada" }, { status: 404 });
     }
 
-    if (!tenant.users || tenant.users.length === 0) {
-      return NextResponse.json({ success: false, error: "Administrador no encontrado en la instancia" }, { status: 404 });
+    let targetUser: { id: string } | null = null;
+
+    if (userId) {
+      const u = await db.user.findFirst({ where: { id: userId, tenantId: tenant.id } });
+      if (!u) return NextResponse.json({ success: false, error: "Usuario no encontrado en la instancia" }, { status: 404 });
+      targetUser = u;
+    } else if (role === "ADMIN") {
+      const admin = await db.user.findFirst({ where: { tenantId: tenant.id, role: "ADMIN" }, orderBy: { createdAt: "asc" } });
+      if (!admin) return NextResponse.json({ success: false, error: "Administrador no encontrado en la instancia" }, { status: 404 });
+      targetUser = admin;
+    } else {
+      return NextResponse.json({ success: false, error: "Parámetros inválidos: se requiere userId o role ADMIN" }, { status: 400 });
     }
 
-    const adminUser = tenant.users[0];
+    const adminUser = targetUser as { id: string };
 
     // 2. Generar un token efímero y firmado
     const token = crypto.randomBytes(32).toString("hex");
