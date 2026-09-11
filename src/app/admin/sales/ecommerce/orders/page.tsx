@@ -28,7 +28,6 @@ export default function OrdersManagerPage() {
   };
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [verifyCodes, setVerifyCodes] = useState<Record<string, string>>({});
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     try {
@@ -46,20 +45,8 @@ export default function OrdersManagerPage() {
     }
   };
 
-  const handleVerify = async (orderId: string) => {
-    const code = verifyCodes[orderId];
-    if (!code || code.trim().length !== 4) { alert("Introduce los 4 dígitos del cliente"); return; }
-    try {
-      const res = await fetch("/api/shop/orders", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, code: code.trim() }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setOrders(orders.map((o) => (o.id === orderId ? { ...o, status: "DELIVERED", verifiedAt: data.order.verifiedAt } : o)));
-      } else alert(data.error || "Código incorrecto");
-    } catch (e) { console.error(e); }
+  const handleRecogido = async (orderId: string) => {
+    await handleUpdateStatus(orderId, "DELIVERED");
   };
 
   const filteredOrders = orders.filter((o) => {
@@ -201,29 +188,24 @@ export default function OrdersManagerPage() {
                 </div>
               )}
 
-              {/* Verificación por código 4 dígitos */}
-              {(order.status === "READY" || order.status === "CONFIRMED" || order.status === "PENDING") && order.pickupCode && (
-                <div className="flex gap-1.5 items-center">
-                  <input type="text" maxLength={4} inputMode="numeric" placeholder="4 dígitos" value={verifyCodes[order.id] || ""} onChange={(e) => setVerifyCodes({ ...verifyCodes, [order.id]: e.target.value.replace(/\D/g, "").slice(0,4) })} className="flex-1 px-2 py-1.5 text-xs rounded-lg border border-border/50 bg-background font-mono tracking-widest text-center" />
-                  <button onClick={() => handleVerify(order.id)} className="px-3 py-1.5 bg-gray-900 text-white font-bold text-xs rounded-lg hover:bg-black flex items-center gap-1"><Icons.ShieldCheck className="h-3.5 w-3.5" /> Verificar</button>
-                </div>
-              )}
-
-              {/* Action Buttons for Status */}
+              {/* Acciones simplificadas: Recogido / Finalizar sin código */}
               <div className="pt-2 border-t border-border/20 flex flex-wrap gap-1.5">
                 {order.status === "PENDING" && (
                   <button onClick={() => handleUpdateStatus(order.id, "CONFIRMED")} className="flex-1 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700">Confirmar</button>
                 )}
                 {(order.status === "PENDING" || order.status === "CONFIRMED") && (
-                  <button onClick={() => handleUpdateStatus(order.id, "READY")} className="flex-1 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-lg hover:bg-emerald-700">Listo para Recogida</button>
+                  <button onClick={() => handleUpdateStatus(order.id, "READY")} className="flex-1 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-lg hover:bg-emerald-700">Listo</button>
                 )}
-                {order.status === "READY" && (
-                  <button onClick={() => handleVerify(order.id)} className="flex-1 py-1.5 bg-gray-800 text-white font-bold text-xs rounded-lg hover:bg-black">Entregar con código</button>
+                {(order.status === "READY" || order.status === "CONFIRMED" || order.status === "PENDING") && (
+                  <button onClick={() => handleRecogido(order.id)} className="flex-1 py-1.5 bg-gray-900 text-white font-bold text-xs rounded-lg hover:bg-black flex items-center justify-center gap-1.5">
+                    <Icons.CheckCircle2 className="h-4 w-4" /> {order.status === "READY" ? "Recogido" : "Finalizar pedido"}
+                  </button>
                 )}
                 {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
                   <button onClick={() => handleUpdateStatus(order.id, "CANCELLED")} className="px-2.5 py-1.5 text-red-500 hover:bg-red-500/10 font-bold text-xs rounded-lg">Cancelar</button>
                 )}
               </div>
+              {order.pickupCode && <div className="text-[10px] text-muted-foreground text-center">Código cliente: <span className="font-mono font-bold">{order.pickupCode}</span> — buscable arriba</div>}
             </div>
           ))}
         </div>

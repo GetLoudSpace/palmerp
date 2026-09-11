@@ -11,6 +11,7 @@ export default function EcommerceDashboardPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile");
+  const [dashSearch, setDashSearch] = useState("");
 
   useEffect(() => {
     loadData();
@@ -55,6 +56,14 @@ export default function EcommerceDashboardPage() {
     navigator.clipboard.writeText(text);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 3000);
+  };
+
+  const handleDashRecogido = async (orderId: string) => {
+    try {
+      const res = await fetch("/api/shop/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, status: "DELIVERED" }) });
+      const data = await res.json();
+      if (data.success) setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: "DELIVERED" } : o)));
+    } catch {}
   };
 
   if (loading) {
@@ -238,53 +247,57 @@ export default function EcommerceDashboardPage() {
         </Link>
       </div>
 
-      {/* Recent Orders Preview */}
+      {/* Gestión rápida de pedidos — en dashboard principal */}
       <div className="bg-card border border-border/40 rounded-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-border/30 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/30 pb-3">
           <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
             <Icons.Clock className="h-4 w-4 text-amber-500" />
-            Últimos Pedidos Entrantes
+            Pedidos — gestión rápida
           </h3>
-          <Link
-            href="/admin/sales/ecommerce/orders"
-            className="text-xs font-bold text-amber-500 hover:underline"
-          >
-            Ver todos los pedidos →
-          </Link>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Icons.Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input type="text" placeholder="Buscar código o nombre..." value={dashSearch} onChange={(e) => setDashSearch(e.target.value)} className="pl-8 pr-3 py-1.5 text-xs rounded-lg border bg-background w-48" />
+            </div>
+            <Link href="/admin/sales/ecommerce/orders" className="text-xs font-bold text-amber-500 hover:underline whitespace-nowrap">
+              Ver todos →
+            </Link>
+          </div>
         </div>
 
         {orders.length === 0 ? (
-          <div className="py-8 text-center text-xs text-muted-foreground">
-            Aún no hay ningún pedido registrado hoy. ¡Comparte el enlace en tu grupo de WhatsApp!
-          </div>
+          <div className="py-8 text-center text-xs text-muted-foreground">Aún no hay pedidos. ¡Comparte el enlace!</div>
         ) : (
-          <div className="divide-y divide-border/20">
-            {orders.slice(0, 5).map((order) => (
-              <div key={order.id} className="py-3 flex items-center justify-between text-xs">
-                <div>
-                  <div className="font-bold text-foreground">{order.customerName}</div>
-                  <div className="text-muted-foreground text-[10px]">
-                    {order.pickupPoint?.name || "Sin punto asignado"} • {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          <div className="divide-y divide-border/20 max-h-[380px] overflow-y-auto pr-1">
+            {orders
+              .filter((o) => {
+                if (!dashSearch) return true;
+                const q = dashSearch.toLowerCase();
+                return o.customerName?.toLowerCase().includes(q) || o.pickupCode?.toLowerCase().includes(q) || o.id.toLowerCase().includes(q);
+              })
+              .slice(0, 20)
+              .map((order) => (
+                <div key={order.id} className="py-3 flex items-center justify-between gap-3 text-xs">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-foreground flex items-center gap-2">
+                      <span className="font-mono text-[11px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-black">{order.pickupCode || order.id.slice(-6).toUpperCase()}</span>
+                      {order.customerName}
+                    </div>
+                    <div className="text-muted-foreground text-[10px] truncate">
+                      {order.pickupPoint?.name || "Sin punto"} • {order.pickupWindow?.label || ""} • {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} • {order.lines?.length || 0} prod
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-extrabold hidden sm:inline">{Number(order.totalAmount).toFixed(2)}€</span>
+                    <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] uppercase ${order.status === "PENDING" ? "bg-amber-500/10 text-amber-500" : order.status === "CONFIRMED" ? "bg-blue-500/10 text-blue-500" : order.status === "READY" ? "bg-emerald-500/10 text-emerald-500" : "bg-gray-500/10 text-gray-500"}`}>{order.status}</span>
+                    {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+                      <button onClick={() => handleDashRecogido(order.id)} className="px-2.5 py-1 rounded-lg bg-gray-900 text-white font-bold text-[11px] hover:bg-black flex items-center gap-1">
+                        <Icons.CheckCircle2 className="h-3 w-3" /> Recogido
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-extrabold text-foreground">{Number(order.totalAmount).toFixed(2)}€</span>
-                  <span
-                    className={`px-2 py-0.5 rounded-md font-bold text-[10px] uppercase ${
-                      order.status === "PENDING"
-                        ? "bg-amber-500/10 text-amber-500"
-                        : order.status === "CONFIRMED"
-                        ? "bg-blue-500/10 text-blue-500"
-                        : order.status === "READY"
-                        ? "bg-emerald-500/10 text-emerald-500"
-                        : "bg-gray-500/10 text-gray-500"
-                    }`}
-                  >
-                    {order.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>
