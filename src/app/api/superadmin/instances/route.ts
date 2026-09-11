@@ -46,6 +46,38 @@ function normalizeSlug(value: unknown): string {
   return raw.replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 }
 
+async function registerVercelDomain(domain: string): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
+  const token = process.env.VERCEL_API_TOKEN || process.env.VERCEL_TOKEN;
+  const projectId = process.env.VERCEL_PROJECT_ID;
+  const teamId = process.env.VERCEL_TEAM_ID;
+  if (!token || !projectId) {
+    console.warn("[vercel] VERCEL_TOKEN/VERCEL_PROJECT_ID no configurados — se omite registro automático de dominio. Añádelo manual en Vercel → Settings → Domains o configura las vars.");
+    return { ok: false, skipped: true, error: "VERCEL_TOKEN/VERCEL_PROJECT_ID not set" };
+  }
+  try {
+    let url = `https://api.vercel.com/v10/projects/${projectId}/domains`;
+    if (teamId) url += `?teamId=${teamId}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ name: domain }),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      // 409 = ya existe, se considera ok
+      if (res.status === 409 || errText.includes("already exists")) return { ok: true };
+      console.warn(`[vercel] Failed to register domain ${domain}:`, errText);
+      return { ok: false, error: errText };
+    }
+    console.log(`[vercel] Domain ${domain} registrado en Vercel.`);
+    return { ok: true };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.warn(`[vercel] Error registrando dominio ${domain}:`, msg);
+    return { ok: false, error: msg };
+  }
+}
+
 function serializeError(error: unknown): Record<string, unknown> {
   if (!error) return { message: String(error) };
   if (error instanceof AggregateError) {
@@ -104,7 +136,10 @@ export async function POST(req: Request) {
           domain: domainRaw || undefined, timezone, modes, deploymentType: "SAAS",
         });
         if (!result.success) return NextResponse.json({ success: false, error: "Provisioning failed", details: result }, { status: 500 });
-        return NextResponse.json({ ...result, source: "database" });
+        // Registro automático en Vercel (fire-and-forget, no bloquea provisioning)
+        const vercelDomain = domainRaw || `${slug}.palmerp.es`;
+        const vercel = await registerVercelDomain(vercelDomain);
+        return NextResponse.json({ ...result, source: "database", vercelDomain, vercelRegistered: vercel.ok, vercelSkipped: vercel.skipped, vercelError: vercel.error });
       } catch (provisionError: unknown) {
         const details = serializeError(provisionError);
         const msg = (details.message as string) || String(provisionError);
