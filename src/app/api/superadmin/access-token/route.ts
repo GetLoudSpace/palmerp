@@ -16,9 +16,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Parámetros inválidos: tenantId requerido" }, { status: 400 });
     }
 
-    // 1. Verificar que el tenant existe
+    // 1. Verificar que el tenant existe — select sin deletedAt para compatibilidad con DB sin migración soft-deletes
     const tenant = await db.tenant.findUnique({
       where: { id: tenantId },
+      select: { id: true, slug: true },
     });
 
     if (!tenant) {

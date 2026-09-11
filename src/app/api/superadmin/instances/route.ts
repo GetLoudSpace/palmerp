@@ -9,8 +9,16 @@ const provisioningService = new ProvisioningService();
 
 export async function GET() {
   try {
+    // Select explícito sin deletedAt para evitar Invalid prisma.tenant.findMany si la columna soft-delete aún no está migrada en Supabase
     const tenants = await db.tenant.findMany({
-      include: {
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        domain: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
         users: {
           select: { id: true, name: true, email: true, role: true, createdAt: true },
         },
