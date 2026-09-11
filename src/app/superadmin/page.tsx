@@ -1507,19 +1507,21 @@ export default function SuperadminPage() {
 
                         {/* Password Management */}
                         <div className="md:col-span-3 space-y-1">
-                          <label className="text-[9px] font-bold text-stone-500 uppercase tracking-wider block mb-0.5">Contraseña</label>
+                          <label className="text-[9px] font-bold text-stone-500 uppercase tracking-wider block mb-0.5">Contraseña — editable</label>
                           <div className="flex gap-1.5">
                             <input
                               type="text"
-                              readOnly
-                              value={user.password || "••••••••"}
-                              className="flex-1 rounded-lg border border-stone-200 bg-stone-100 py-1.5 px-2 text-[10px] text-[#f27059] font-mono outline-hidden"
+                              value={user.password || ""}
+                              placeholder="•••••••• (dejar vacío = sin cambio)"
+                              onChange={(e) => handleEditUserField(user.id, "password", e.target.value)}
+                              onFocus={(e) => { if (e.target.value === "••••••••") handleEditUserField(user.id, "password", ""); }}
+                              className="flex-1 rounded-lg border border-stone-200 bg-white py-1.5 px-2 text-[10px] text-stone-900 font-mono outline-hidden focus:border-[#f27059] placeholder:text-stone-400"
                             />
                             <button
                               type="button"
                               onClick={() => handleGeneratePasswordForUser(user.id)}
-                              className="px-2.5 rounded-lg bg-[#f7b267]/10 text-[#f27059] border border-[#f7b267]/30 text-[10px] font-black hover:bg-[#f7b267]/25 transition-all cursor-pointer flex items-center justify-center gap-1"
-                              title="Generar contraseña segura aleatoria y mandar email"
+                              className="px-2.5 rounded-lg bg-[#f7b267]/10 text-[#f27059] border border-[#f7b267]/30 text-[10px] font-black hover:bg-[#f7b267]/25 transition-all cursor-pointer flex items-center justify-center gap-1 shrink-0"
+                              title="Generar contraseña segura aleatoria"
                             >
                               <Icons.KeyRound className="h-3.5 w-3.5" />
                               <span>Generar</span>
