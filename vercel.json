@@ -18,5 +18,11 @@
       "source": "/api/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/daily-backups",
+      "schedule": "30 23 * * *"
+    }
   ]
 }

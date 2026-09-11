@@ -1,159 +1,289 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import React, { useEffect, useState, useCallback } from "react";
 import * as Icons from "lucide-react";
-import { coreModules, PalmModesRegistry } from "@/modules/registry";
 import { getTenantStorageKey } from "@/lib/clientStorage";
-
-const PageIcon = ({ name, className }: { name: string; className?: string }) => {
-  const IconComponent = (Icons as any)[name];
-  if (!IconComponent) return <Icons.HelpCircle className={className} />;
-  return <IconComponent className={className} />;
-};
+import { defaultDashboardLayout, validateLayout } from "@/lib/dashboard/registry";
+import type { DashboardLayout, DashboardWidgetConfig } from "@/lib/dashboard/types";
+import WidgetCard from "@/components/dashboard/WidgetCard";
+import AddWidgetModal from "@/components/dashboard/AddWidgetModal";
 
 export default function AdminDashboard() {
   const [activeModes, setActiveModes] = useState<string[]>([]);
-  const [search, setSearch] = useState("");
+  const [layout, setLayout] = useState<DashboardLayout>(defaultDashboardLayout);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  // Persist layout to storage + API
+  const persistLayout = useCallback(
+    (next: DashboardLayout) => {
+      setLayout(next);
+      try {
+        const key = getTenantStorageKey("palmera_dashboard_layout");
+        localStorage.setItem(key, JSON.stringify(next));
+        window.dispatchEvent(new Event("palmera_dashboard_updated"));
+      } catch {}
+      fetch("/api/admin/dashboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ layout: next }),
+      }).catch(() => {});
+    },
+    []
+  );
+
+  // Load active modes + layout
   useEffect(() => {
-    const key = getTenantStorageKey("palmera_active_modes");
-    const load = async () => {
+    const modesKey = getTenantStorageKey("palmera_active_modes");
+    const layoutKey = getTenantStorageKey("palmera_dashboard_layout");
+
+    const loadModes = async () => {
       try {
         const res = await fetch("/api/admin/modes");
         if (res.ok) {
           const data = await res.json();
           if (data.success && Array.isArray(data.modes)) {
             setActiveModes(data.modes);
-            localStorage.setItem(key, JSON.stringify(data.modes));
+            localStorage.setItem(modesKey, JSON.stringify(data.modes));
             return;
           }
         }
       } catch {}
-      const saved = localStorage.getItem(key);
+      const saved = localStorage.getItem(modesKey);
+      if (saved) {
+        try {
+          setActiveModes(JSON.parse(saved));
+        } catch {}
+      }
+    };
+
+    const loadLayout = async () => {
+      // try API first
+      try {
+        const res = await fetch("/api/admin/dashboard");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && validateLayout(data.layout)) {
+            setLayout(data.layout);
+            localStorage.setItem(layoutKey, JSON.stringify(data.layout));
+            setLoaded(true);
+            return;
+          }
+        }
+      } catch {}
+      // fallback localStorage
+      const saved = localStorage.getItem(layoutKey);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          setActiveModes(Array.isArray(parsed) ? parsed : []);
-        } catch {
-          setActiveModes([]);
-        }
-      } else {
-        setActiveModes([]);
+          if (validateLayout(parsed)) {
+            setLayout(parsed);
+            setLoaded(true);
+            return;
+          }
+        } catch {}
       }
+      // default
+      setLayout(defaultDashboardLayout);
+      try {
+        localStorage.setItem(layoutKey, JSON.stringify(defaultDashboardLayout));
+      } catch {}
+      setLoaded(true);
     };
-    load();
+
+    loadModes();
+    loadLayout();
+
     const handler = () => {
-      const v = localStorage.getItem(key);
+      const v = localStorage.getItem(modesKey);
       if (v) {
-        try { setActiveModes(JSON.parse(v)); } catch {}
+        try {
+          setActiveModes(JSON.parse(v));
+        } catch {}
       }
     };
     window.addEventListener("palmera_modes_updated", handler);
     window.addEventListener("storage", handler);
+    const dashboardHandler = () => {
+      const v = localStorage.getItem(layoutKey);
+      if (v) {
+        try {
+          const parsed = JSON.parse(v);
+          if (validateLayout(parsed)) setLayout(parsed);
+        } catch {}
+      }
+    };
+    window.addEventListener("palmera_dashboard_updated", dashboardHandler);
     return () => {
       window.removeEventListener("palmera_modes_updated", handler);
       window.removeEventListener("storage", handler);
+      window.removeEventListener("palmera_dashboard_updated", dashboardHandler);
     };
   }, []);
 
-  const modeApps = activeModes.map((id) => PalmModesRegistry[id]).filter(Boolean);
+  // editing state persist
+  useEffect(() => {
+    const key = getTenantStorageKey("palmera_dashboard_editing");
+    const saved = localStorage.getItem(key);
+    if (saved === "true") setIsEditing(true);
+  }, []);
+  useEffect(() => {
+    try {
+      const key = getTenantStorageKey("palmera_dashboard_editing");
+      localStorage.setItem(key, String(isEditing));
+    } catch {}
+  }, [isEditing]);
 
-  const allApps = [
-    ...coreModules.map((m) => ({ ...m, type: "core" as const })),
-    ...modeApps.map((m) => ({ id: m.id, name: m.name, icon: m.icon, category: m.category, menuItems: m.menuItems, type: "mode" as const })),
-  ];
+  const handleRemove = (id: string) => {
+    const next: DashboardLayout = { ...layout, widgets: layout.widgets.filter((w) => w.id !== id) };
+    persistLayout(next);
+    showToast("Métrica eliminada");
+  };
 
-  const filtered = allApps.filter((app) =>
-    app.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleUpdate = (id: string, patch: Partial<DashboardWidgetConfig>) => {
+    const next: DashboardLayout = {
+      ...layout,
+      widgets: layout.widgets.map((w) => (w.id === id ? { ...w, ...patch } : w)),
+    };
+    persistLayout(next);
+  };
+
+  const handleMove = (id: string, dir: "up" | "down") => {
+    const idx = layout.widgets.findIndex((w) => w.id === id);
+    if (idx === -1) return;
+    const nextIdx = dir === "up" ? idx - 1 : idx + 1;
+    if (nextIdx < 0 || nextIdx >= layout.widgets.length) return;
+    const arr = [...layout.widgets];
+    const tmp = arr[idx];
+    arr[idx] = arr[nextIdx];
+    arr[nextIdx] = tmp;
+    persistLayout({ ...layout, widgets: arr });
+  };
+
+  const handleAdd = (widget: DashboardWidgetConfig) => {
+    persistLayout({ ...layout, widgets: [...layout.widgets, widget] });
+    setShowAdd(false);
+    showToast(`Añadido: ${widget.title}`);
+  };
+
+  const handleReset = () => {
+    if (!confirm("¿Restablecer el escritorio al layout por defecto? Se perderán los cambios actuales.")) return;
+    persistLayout(defaultDashboardLayout);
+    showToast("Escritorio restablecido");
+  };
+
+  const existingSources = new Set(layout.widgets.map((w) => w.source));
+
+  if (!loaded) {
+    return (
+      <div className="space-y-4 max-w-7xl mx-auto">
+        <div className="h-24 rounded-2xl bg-muted/30 animate-pulse border border-border/20" />
+        <div className="grid grid-cols-12 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="col-span-12 sm:col-span-6 lg:col-span-4 h-40 rounded-2xl bg-muted/20 animate-pulse border border-border/20" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] -m-6 bg-gradient-to-br from-[#fafaf9] via-[#f5f5f4] to-[#e7e5e4] dark:from-[#1c1917] dark:via-[#292524] dark:to-[#1c1917] p-6 md:p-10">
-      {/* Header - Apple style */}
-      <div className="max-w-6xl mx-auto mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between border-b border-border/30 pb-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
-            Escritorio
-          </h1>
-          <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
-            {filtered.length} aplicaciones instaladas • Gestiona tu negocio como en Odoo, con diseño Apple
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Escritorio</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Panel de métricas editable • {layout.widgets.length} widgets • {activeModes.length} sectores activos • Visualiza lo que quieras en modo gráfico
           </p>
         </div>
-        <div className="relative w-full md:w-80">
-          <Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar aplicación..."
-            className="w-full pl-9 pr-4 h-10 rounded-full bg-white/80 dark:bg-stone-800/80 backdrop-blur border border-stone-200/60 dark:border-stone-700/60 text-sm outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
-          />
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setIsEditing((v) => !v)}
+            className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-bold transition-colors ${isEditing ? "bg-amber-500 text-white border-amber-500 shadow" : "bg-card border-border hover:bg-muted"}`}
+          >
+            {isEditing ? <Icons.Check className="h-3.5 w-3.5" /> : <Icons.Pencil className="h-3.5 w-3.5" />}
+            {isEditing ? "Terminar edición" : "Editar panel"}
+          </button>
+          {isEditing && (
+            <>
+              <button onClick={() => setShowAdd(true)} className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-metallic-orange px-3 text-xs font-bold text-white shadow">
+                <Icons.Plus className="h-3.5 w-3.5" /> Añadir métrica
+              </button>
+              <button onClick={handleReset} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold hover:bg-muted">
+                <Icons.RotateCcw className="h-3.5 w-3.5" /> Restablecer
+              </button>
+            </>
+          )}
+          {!isEditing && (
+            <a href="/admin/settings/modules" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold hover:bg-muted">
+              <Icons.LayoutGrid className="h-3.5 w-3.5" /> Gestionar sectores
+            </a>
+          )}
         </div>
       </div>
 
-      {/* Odoo-like desktop grid - Apple design */}
-      <div className="max-w-6xl mx-auto">
-        {filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-sm mb-4">
-              <Icons.Package className="h-8 w-8 text-stone-400" />
-            </div>
-            <p className="text-sm text-stone-500">No hay aplicaciones que coincidan</p>
-            <Link href="/admin/settings/modules" className="text-sm text-amber-600 hover:underline mt-2 inline-block">
-              Gestionar modos →
-            </Link>
+      {isEditing && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-start gap-3">
+          <Icons.Info className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+          <div className="text-xs leading-relaxed text-muted-foreground">
+            <span className="font-bold text-amber-700 dark:text-amber-500">Modo edición activo:</span> cambia el tamaño (S/M/L), el tipo de gráfico (línea/barra/área/donut), el periodo (7d/30d/90d), mueve widgets con ↑↓ y elimina los que no necesites. Los cambios se guardan automáticamente por tenant.
           </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8">
-            {filtered.map((app) => (
-              <Link
-                key={app.id}
-                href={app.menuItems[0]?.path || "/admin"}
-                className="group flex flex-col items-center gap-3 p-4 rounded-3xl hover:bg-white/60 dark:hover:bg-stone-800/60 hover:shadow-xl hover:shadow-stone-200/50 dark:hover:shadow-black/20 hover:-translate-y-1 transition-all duration-300"
-              >
-                <div className="relative">
-                  <div className="h-20 w-20 rounded-[22px] bg-white dark:bg-stone-800 border border-stone-200/60 dark:border-stone-700/60 shadow-lg shadow-stone-200/60 dark:shadow-black/30 flex items-center justify-center group-hover:shadow-xl group-hover:shadow-amber-500/10 group-hover:border-amber-500/20 group-hover:scale-105 transition-all duration-300">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-[#f25c54] flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
-                      <PageIcon name={app.icon} className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                  {app.type === "core" && (
-                    <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-stone-900 shadow-sm" title="Core" />
-                  )}
-                </div>
-                <div className="text-center space-y-0.5 max-w-[110px]">
-                  <p className="text-[13px] font-semibold text-stone-900 dark:text-stone-100 leading-tight line-clamp-2">
-                    {app.name}
-                  </p>
-                  <p className="text-[10px] font-medium text-stone-400 dark:text-stone-500 uppercase tracking-wider">
-                    {app.category}
-                  </p>
-                </div>
-              </Link>
-            ))}
+        </div>
+      )}
 
-            {/* Add more apps card - Apple style */}
-            <Link
-              href="/admin/settings/modules"
-              className="group flex flex-col items-center gap-3 p-4 rounded-3xl border-2 border-dashed border-stone-200 dark:border-stone-700 hover:border-amber-500/30 hover:bg-amber-500/[0.04] transition-all duration-300"
-            >
-              <div className="h-20 w-20 rounded-[22px] bg-stone-50 dark:bg-stone-800/50 border border-dashed border-stone-200 dark:border-stone-700 flex items-center justify-center group-hover:border-amber-500/20 group-hover:bg-white dark:group-hover:bg-stone-800 transition-all">
-                <Icons.Plus className="h-7 w-7 text-stone-400 group-hover:text-amber-500 transition-colors" />
-              </div>
-              <div className="text-center">
-                <p className="text-[13px] font-semibold text-stone-600 dark:text-stone-400">Añadir app</p>
-                <p className="text-[10px] text-stone-400 uppercase tracking-wider">Catálogo</p>
-              </div>
-            </Link>
-          </div>
-        )}
+      {/* Grid */}
+      <div className="grid grid-cols-12 gap-4">
+        {layout.widgets.map((w, idx) => (
+          <WidgetCard
+            key={w.id}
+            widget={w}
+            isEditing={isEditing}
+            onUpdate={(patch) => handleUpdate(w.id, patch)}
+            onRemove={() => handleRemove(w.id)}
+            onMove={(dir) => handleMove(w.id, dir)}
+            isFirst={idx === 0}
+            isLast={idx === layout.widgets.length - 1}
+            activeModes={activeModes}
+          />
+        ))}
       </div>
 
-      {/* Footer hint - Apple */}
-      <div className="max-w-6xl mx-auto mt-12 flex items-center justify-center gap-2 text-[11px] text-stone-400 dark:text-stone-500">
+      {layout.widgets.length === 0 && (
+        <div className="text-center py-16 rounded-2xl border border-dashed border-border/50 bg-muted/10">
+          <div className="mx-auto h-14 w-14 rounded-2xl bg-card border border-border flex items-center justify-center mb-3">
+            <Icons.LayoutGrid className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-semibold text-foreground">Tu escritorio está vacío</p>
+          <p className="text-xs text-muted-foreground mt-1">Añade métricas para construir tu panel a medida.</p>
+          <button onClick={() => setShowAdd(true)} className="mt-4 inline-flex h-8 items-center gap-1.5 rounded-lg bg-amber-500 px-4 text-xs font-bold text-white">
+            <Icons.Plus className="h-3.5 w-3.5" /> Añadir primera métrica
+          </button>
+        </div>
+      )}
+
+      <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground pt-2">
         <Icons.Sparkles className="h-3 w-3" />
-        <span>Arrastra, busca y entra • Diseño Apple • Core: {coreModules.length} • Modos: {modeApps.length}</span>
+        <span>
+          {isEditing ? "Edición: los cambios se guardan al instante • Pulsa Terminar edición para salir" : "Tip: pulsa Editar panel para personalizar • Todo vinculado a tus sectores activos"}
+        </span>
       </div>
+
+      {showAdd && <AddWidgetModal onClose={() => setShowAdd(false)} onAdd={handleAdd} activeModes={activeModes} existingSources={existingSources} />}
+
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-[90] bg-gradient-to-r from-emerald-600 to-emerald-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg border border-emerald-400 flex items-center gap-2 animate-in slide-in-from-bottom-2">
+          <Icons.CheckCircle className="h-4 w-4" />
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
