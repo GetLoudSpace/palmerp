@@ -67,6 +67,7 @@ model Contact {
   tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name           String
   phone          String?
+  phoneNormalized String?    // E164 sin +, ej. 34622334455 (solo dígitos, 9-15)
   email          String?
   contactType    ContactType @default(INDIVIDUAL)
   companyName    String?
@@ -93,6 +94,8 @@ model Contact {
   passportNumber String?
   loyaltyPoints  Int         @default(0)
 
+  orders         Order[]
+
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   deletedAt      DateTime?
@@ -100,6 +103,8 @@ model Contact {
   @@index([tenantId])
   @@index([email])
   @@index([tenantId, email])
+  @@index([phoneNormalized])
+  @@index([tenantId, phoneNormalized])
   @@index([createdAt])
   @@index([contactType])
 }
@@ -403,6 +408,7 @@ model Shop {
   mode                 ShopMode          @default(MINIMAL)
   templateId           String            @default("obrador-tradicional")
   theme                Json?
+  sections             Json?             // Sitebuilder bloques [{id,type,props,isVisible,sortOrder}]
   customHtml           String?           @db.Text
   customCss            String?           @db.Text
   customDomain         String?           @unique
@@ -410,6 +416,11 @@ model Shop {
   domainVerifyToken    String?
   isActive             Boolean           @default(true)
   businessContext      String?           @db.Text
+  paymentProvider      String?           @default("CASH") // "CASH" | "REDSYS"
+  redsysMerchantCode   String?
+  redsysTerminal       String?           @default("1")
+  redsysSecretKey      String?
+  redsysEnv            String?           @default("test") // "test" | "live"
 
   products             Product[]
   pickupPoints         PickupPoint[]
@@ -487,33 +498,41 @@ model PickupWindow {
 }
 
 model Order {
-  id              String       @id @default(cuid())
-  shopId          String
-  shop            Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  pickupPointId   String?
-  pickupPoint     PickupPoint? @relation(fields: [pickupPointId], references: [id])
-  pickupWindowId  String?
-  pickupWindow    PickupWindow? @relation(fields: [pickupWindowId], references: [id])
-  pickupDate      DateTime?    // día de recogida elegido por cliente
-  pickupCode      String?      @unique // 4 dígitos numéricos para verificación
-  verifiedAt      DateTime?
-  verifiedById    String?
-  customerName    String
-  customerPhone   String?
-  status          OrderStatus  @default(PENDING)
-  notes           String?
-  totalAmount     Decimal      @db.Decimal(10, 2)
+  id                  String       @id @default(cuid())
+  shopId              String
+  shop                Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  pickupPointId       String?
+  pickupPoint         PickupPoint? @relation(fields: [pickupPointId], references: [id])
+  pickupWindowId      String?
+  pickupWindow        PickupWindow? @relation(fields: [pickupWindowId], references: [id])
+  pickupDate          DateTime?    // día de recogida elegido por cliente
+  pickupCode          String?      @unique // 4 dígitos numéricos para verificación
+  verifiedAt          DateTime?
+  verifiedById        String?
+  customerName        String
+  customerPhone       String?
+  customerPhoneNormalized String?
+  contactId           String?
+  contact             Contact?     @relation(fields: [contactId], references: [id])
+  status              OrderStatus  @default(PENDING)
+  notes               String?
+  totalAmount         Decimal      @db.Decimal(10, 2)
+  paymentProvider     String?      // "CASH" | "REDSYS"
+  paymentStatus       String?      // "PENDING" | "PAID" | "FAILED"
+  paymentId           String?
 
-  lines           OrderLine[]
+  lines               OrderLine[]
 
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  deletedAt       DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  deletedAt           DateTime?
 
   @@index([shopId, createdAt])
   @@index([shopId, status])
   @@index([pickupCode])
   @@index([pickupWindowId])
+  @@index([contactId])
+  @@index([customerPhoneNormalized])
 }
 
 model OrderLine {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
+import { normalizePhoneES } from "@/lib/phone";
 const prisma: any = db;
 
 export async function POST(
@@ -10,7 +11,7 @@ export async function POST(
 
   try {
     const body = await req.json();
-    const { customerName, customerPhone, pickupPointId, pickupWindowId, pickupDate, items, notes } = body;
+    const { customerName, customerPhone, pickupPointId, pickupWindowId, pickupDate, items, notes, paymentProvider } = body;
 
     if (!customerName || !customerName.trim()) {
       return NextResponse.json({ error: "Indica tu nombre para el pedido." }, { status: 400 });
@@ -125,6 +126,27 @@ export async function POST(
         });
       }
 
+      // Upsert contacto por teléfono (sin +34) para historial Belpane
+      let contactId: string | null = null;
+      let phoneNorm: string | null = null;
+      if (customerPhone && String(customerPhone).trim()) {
+        phoneNorm = normalizePhoneES(String(customerPhone));
+        const tenantId = shop.tenantId;
+        const existing = await tx.contact.findFirst({ where: { tenantId, OR: [{ phoneNormalized: phoneNorm }, { phone: String(customerPhone).trim() }] } });
+        if (existing) {
+          contactId = existing.id;
+          // actualiza phoneNormalized si faltaba
+          if (!existing.phoneNormalized) {
+            try { await tx.contact.update({ where: { id: existing.id }, data: { phoneNormalized: phoneNorm } }); } catch {}
+          }
+        } else {
+          const created = await tx.contact.create({
+            data: { tenantId, name: String(customerName).trim(), phone: String(customerPhone).trim(), phoneNormalized: phoneNorm, contactType: "INDIVIDUAL" },
+          });
+          contactId = created.id;
+        }
+      }
+
       const order = await tx.order.create({
         data: {
           shopId: shop.id,
@@ -134,6 +156,10 @@ export async function POST(
           pickupCode,
           customerName: customerName.trim(),
           customerPhone: customerPhone ? customerPhone.trim() : null,
+          customerPhoneNormalized: phoneNorm,
+          contactId,
+          paymentProvider: paymentProvider || shop.paymentProvider || "CASH",
+          paymentStatus: (paymentProvider || shop.paymentProvider) === "REDSYS" ? "PENDING" : "PAID",
           notes: notes ? notes.trim() : null,
           totalAmount,
           lines: { create: orderLinesData },

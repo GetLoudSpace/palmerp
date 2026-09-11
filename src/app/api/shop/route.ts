@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, description, mode, templateId, isActive, businessContext, customHtml, customCss } = body;
+    const { name, description, mode, templateId, isActive, businessContext, customHtml, customCss, paymentProvider, redsysMerchantCode, redsysTerminal, redsysSecretKey, redsysEnv, sections, logo, coverImage } = body;
 
     let shop = await prisma.shop.findFirst({ where: { tenantId: token.tenantId } });
 
@@ -82,6 +82,14 @@ export async function POST(req: NextRequest) {
           ...(businessContext !== undefined && { businessContext }),
           ...(customHtml !== undefined && { customHtml }),
           ...(customCss !== undefined && { customCss }),
+          ...(sections !== undefined && { sections }),
+          ...(logo !== undefined && { logo }),
+          ...(coverImage !== undefined && { coverImage }),
+          ...(paymentProvider !== undefined && { paymentProvider }),
+          ...(redsysMerchantCode !== undefined && { redsysMerchantCode }),
+          ...(redsysTerminal !== undefined && { redsysTerminal }),
+          ...(redsysSecretKey !== undefined && { redsysSecretKey }),
+          ...(redsysEnv !== undefined && { redsysEnv }),
         },
       });
     }

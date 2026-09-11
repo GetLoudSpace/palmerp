@@ -13,6 +13,11 @@ export default function ShopConfiguratorPage() {
   const [windows, setWindows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [paymentProvider, setPaymentProvider] = useState("CASH");
+  const [redsysMerchantCode, setRedsysMerchantCode] = useState("");
+  const [redsysTerminal, setRedsysTerminal] = useState("1");
+  const [redsysSecretKey, setRedsysSecretKey] = useState("");
+  const [redsysEnv, setRedsysEnv] = useState("test");
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [newWinPointId, setNewWinPointId] = useState("");
   const [newWinLabel, setNewWinLabel] = useState("");
@@ -53,6 +58,11 @@ export default function ShopConfiguratorPage() {
         setTemplateId(data.shop.templateId || "obrador-tradicional");
         setProducts(data.shop.products || []);
         setPickupPoints(data.shop.pickupPoints || []);
+        setPaymentProvider(data.shop.paymentProvider || "CASH");
+        setRedsysMerchantCode(data.shop.redsysMerchantCode || "");
+        setRedsysTerminal(data.shop.redsysTerminal || "1");
+        setRedsysSecretKey(data.shop.redsysSecretKey || "");
+        setRedsysEnv(data.shop.redsysEnv || "test");
       }
       // cargar franjas configurables
       try {
@@ -650,6 +660,50 @@ export default function ShopConfiguratorPage() {
             </form>
           )}
         </div>
+      </div>
+
+      {/* Redsys Config */}
+      <div className="bg-card border border-border/40 p-6 rounded-2xl space-y-4">
+        <h2 className="text-sm font-extrabold text-foreground uppercase tracking-wider flex items-center gap-2">
+          <Icons.CreditCard className="h-4 w-4 text-emerald-600" /> Configuración Redsys (pago online)
+        </h2>
+        <p className="text-xs text-muted-foreground">Configura el pago con tarjeta. Si eliges CASH, solo habrá pago en recogida.</p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div>
+            <label className="text-xs font-bold block mb-1">Proveedor</label>
+            <select value={paymentProvider} onChange={(e) => setPaymentProvider(e.target.value)} className="w-full px-3 py-1.5 text-xs rounded border bg-background">
+              <option value="CASH">Solo efectivo en recogida</option>
+              <option value="REDSYS">Redsys (tarjeta)</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-bold block mb-1">Entorno</label>
+            <select value={redsysEnv} onChange={(e) => setRedsysEnv(e.target.value)} className="w-full px-3 py-1.5 text-xs rounded border bg-background">
+              <option value="test">Test (Sis-t)</option>
+              <option value="live">Live (Sis)</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-bold block mb-1">Terminal</label>
+            <input type="text" value={redsysTerminal} onChange={(e) => setRedsysTerminal(e.target.value)} placeholder="1" className="w-full px-3 py-1.5 text-xs rounded border bg-background" />
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="text-xs font-bold block mb-1">Merchant Code (FUC)</label>
+            <input type="text" value={redsysMerchantCode} onChange={(e) => setRedsysMerchantCode(e.target.value)} placeholder="999008881" className="w-full px-3 py-1.5 text-xs rounded border bg-background font-mono" />
+          </div>
+          <div>
+            <label className="text-xs font-bold block mb-1">Clave secreta 3DES (base64)</label>
+            <input type="password" value={redsysSecretKey} onChange={(e) => setRedsysSecretKey(e.target.value)} placeholder="sq7H..." className="w-full px-3 py-1.5 text-xs rounded border bg-background font-mono" />
+          </div>
+        </div>
+        <button onClick={async () => {
+          const res = await fetch("/api/shop", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ paymentProvider, redsysMerchantCode, redsysTerminal, redsysSecretKey, redsysEnv }) });
+          const data = await res.json();
+          if (data.success) showToast("Configuración Redsys guardada");
+          else showToast(data.error || "Error");
+        }} className="w-full py-2 bg-emerald-600 text-white font-bold text-xs rounded-lg hover:bg-emerald-700">Guardar configuración de pago</button>
       </div>
     </div>
   );

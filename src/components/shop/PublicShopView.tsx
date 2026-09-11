@@ -40,6 +40,7 @@ interface ShopData {
   templateId: string;
   customHtml?: string | null;
   customCss?: string | null;
+  paymentProvider?: string | null;
   products: Product[];
   pickupPoints: PickupPoint[];
 }
@@ -63,6 +64,11 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
   const [submitting, setSubmitting] = useState(false);
   const [successOrder, setSuccessOrder] = useState<any | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showCart, setShowCart] = useState(false);
+  const [phoneLogin, setPhoneLogin] = useState("");
+  const [phoneContact, setPhoneContact] = useState<any | null>(null);
+  const [phoneOrders, setPhoneOrders] = useState<any[]>([]);
+  const [phoneLoading, setPhoneLoading] = useState(false);
 
   const tpl: MinimalTemplateDef =
     MINIMAL_TEMPLATES.find((t) => t.id === shop.templateId) || MINIMAL_TEMPLATES[0];
@@ -78,6 +84,26 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
     const qty = cart[p.id] || 0;
     return sum + Number(p.price) * qty;
   }, 0);
+
+  const handlePhoneLookup = async () => {
+    const p = phoneLogin.trim().replace(/\D/g, "");
+    if (p.length < 9) { setErrorMsg("Introduce 9 dígitos sin +34"); return; }
+    setPhoneLoading(true);
+    try {
+      const res = await fetch(`/api/shop/${shop.slug}/client?phone=${encodeURIComponent(p)}`);
+      const data = await res.json();
+      if (data.success) {
+        setPhoneContact(data.contact);
+        setPhoneOrders(data.orders || []);
+        if (data.contact) {
+          setCustomerName(data.contact.name || customerName);
+          setCustomerPhone(p.slice(-9));
+        }
+        setErrorMsg(null);
+      } else setErrorMsg(data.error || "No se encontró");
+    } catch { setErrorMsg("Error al consultar"); }
+    finally { setPhoneLoading(false); }
+  };
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,16 +219,33 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
 
       {/* Header Banner */}
       <header className={`bg-gradient-to-r ${tpl.headerStyle} text-white py-10 px-4 shadow-lg text-center relative overflow-hidden`}>
-        <div className="max-w-3xl mx-auto space-y-3 relative z-10">
+        <div className="max-w-3xl mx-auto space-y-4 relative z-10">
           <span className="inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest text-white/90">
             {tpl.name} • Pedidos Directos
           </span>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight">{shop.name}</h1>
-          {shop.description && (
-            <p className="text-sm sm:text-base text-white/80 max-w-xl mx-auto">{shop.description}</p>
-          )}
+          {shop.description && <p className="text-sm sm:text-base text-white/80 max-w-xl mx-auto">{shop.description}</p>}
+          <button onClick={() => document.getElementById("palmera-order-section")?.scrollIntoView({ behavior: "smooth" })} className="inline-flex items-center gap-2 bg-white text-gray-900 px-6 py-3 rounded-full font-black text-sm shadow-lg hover:scale-105 transition-transform">
+            <Icons.ShoppingBag className="h-5 w-5 text-amber-600" /> Pedir pan
+          </button>
         </div>
       </header>
+
+      {/* Sticky cart + phone bar */}
+      <div className="sticky top-0 z-30 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+        <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs">
+            <Icons.Phone className="h-4 w-4 text-emerald-600" />
+            <input type="tel" inputMode="numeric" placeholder="Tu teléfono (sin +34)" value={phoneLogin} onChange={(e) => setPhoneLogin(e.target.value.replace(/\D/g, "").slice(0,9))} onKeyDown={(e)=> e.key==="Enter" && handlePhoneLookup()} className="w-36 px-2 py-1.5 rounded-lg border text-xs bg-gray-50 dark:bg-gray-800" />
+            <button onClick={handlePhoneLookup} disabled={phoneLoading} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 disabled:opacity-50">{phoneLoading ? "..." : "Ver pedidos"}</button>
+            {phoneContact && <span className="hidden sm:inline text-emerald-600 font-bold">Hola, {phoneContact.name} • {phoneOrders.length} pedidos</span>}
+          </div>
+          <button onClick={() => setShowCart(true)} className="relative inline-flex items-center gap-2 bg-amber-500 text-white px-4 py-2 rounded-full font-black text-xs shadow hover:bg-amber-600">
+            <Icons.ShoppingCart className="h-4 w-4" /> {totalItems} • {totalPrice.toFixed(2)}€
+            {totalItems>0 && <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">{totalItems}</span>}
+          </button>
+        </div>
+      </div>
 
       {/* Main Content: Render Custom HTML or Minimal Template Catalog */}
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
@@ -417,9 +460,57 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
             <p className="text-[10px] text-center text-gray-400">
               Pago directo en el punto de recogida. No se requiere tarjeta online.
             </p>
+            <div className="flex gap-2">
+              <button type="submit" disabled={submitting} className="flex-1 py-3 rounded-xl font-black text-xs bg-amber-500 text-white hover:bg-amber-600 flex items-center justify-center gap-2">
+                <Icons.Package className="h-4 w-4" /> Recoger en tienda • {totalPrice.toFixed(2)}€
+              </button>
+              <button type="button" onClick={async (e)=>{ e.preventDefault(); const shopRes = await fetch(`/api/shop/${shop.slug}/client?phone=${encodeURIComponent(customerPhone||phoneLogin)}`).then(r=>r.json()).catch(()=>null); handlePlaceOrder(e as any); }} className="flex-1 py-3 rounded-xl font-black text-xs bg-emerald-600 text-white hover:bg-emerald-700 flex items-center justify-center gap-2">
+                <Icons.CreditCard className="h-4 w-4" /> Pagar con Redsys
+              </button>
+            </div>
           </form>
         )}
       </main>
+
+      {/* Cart Popup */}
+      {showCart && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={()=>setShowCart(false)}>
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl" onClick={e=>e.stopPropagation()}>
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="font-black flex items-center gap-2"><Icons.ShoppingCart className="h-5 w-5 text-amber-500" /> Tu carrito ({totalItems})</h3>
+              <button onClick={()=>setShowCart(false)} className="p-2 rounded-full hover:bg-gray-100"><Icons.X className="h-5 w-5" /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {Object.entries(cart).filter(([,q])=> (q as number)>0).map(([pid,qty])=>{
+                const p = shop.products.find(x=>x.id===pid);
+                if(!p) return null;
+                return <div key={pid} className="flex justify-between items-center p-2 rounded-xl bg-gray-50 dark:bg-gray-800"><div><div className="font-bold text-sm">{p.name}</div><div className="text-xs text-gray-500">{Number(p.price).toFixed(2)}€ × {qty as number}</div></div><div className="flex items-center gap-1"><button onClick={()=>updateQuantity(pid,-1, p.currentStock)} className="h-7 w-7 rounded bg-white border">-</button><span className="w-6 text-center font-bold text-xs">{String(qty)}</span><button onClick={()=>updateQuantity(pid,1, p.currentStock)} className="h-7 w-7 rounded bg-white border">+</button></div></div>;
+              })}
+              {totalItems===0 && <div className="text-center py-8 text-sm text-gray-500">Carrito vacío</div>}
+            </div>
+            <div className="p-4 border-t space-y-3">
+              <div className="flex justify-between font-black">Total <span>{totalPrice.toFixed(2)}€</span></div>
+              {phoneOrders.length>0 && <div className="text-xs text-gray-600">Historial: {phoneOrders.length} pedidos previos con este teléfono</div>}
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={(e)=>{ setShowCart(false); handlePlaceOrder(e as any); }} className="py-3 rounded-xl bg-amber-500 text-white font-bold text-xs flex items-center justify-center gap-1"><Icons.Package className="h-4 w-4" /> Recoger</button>
+                <button onClick={(e)=>{ setShowCart(false); handlePlaceOrder(e as any); }} className="py-3 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1"><Icons.CreditCard className="h-4 w-4" /> Pagar Redsys</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phone history mini */}
+      {phoneContact && phoneOrders.length>0 && (
+        <div className="max-w-3xl mx-auto px-4 pb-4">
+          <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-xs">
+            <div className="font-bold text-emerald-700">Historial de {phoneContact.name} ({phoneLogin})</div>
+            <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+              {phoneOrders.slice(0,5).map((o:any)=><div key={o.id} className="flex justify-between"><span>#{o.pickupCode || o.id.slice(-6)} {o.pickupWindow?.label || ""} {new Date(o.pickupDate||o.createdAt).toLocaleDateString()}</span><span>{Number(o.totalAmount).toFixed(2)}€ {o.status}</span></div>)}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
