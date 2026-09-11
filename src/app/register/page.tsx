@@ -217,7 +217,7 @@ function RegisterForm() {
                 className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 pr-20 pl-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all font-mono"
               />
               <span className="absolute right-3 text-[10px] font-semibold text-muted-foreground/70 pointer-events-none">
-                .palmera.io
+                .palmerp.es
               </span>
             </div>
           </div>

@@ -13,7 +13,7 @@ async function main() {
   console.log('Starting seed...');
   const tenantSlug = process.env.PALMERA_INSTANCE_SLUG || 'gastroshows';
   const companyName = process.env.PALMERA_INSTANCE_NAME || 'Gastroshows S.L.';
-  const domain = process.env.PALMERA_INSTANCE_DOMAIN || `${tenantSlug}.palmera.io`;
+  const domain = process.env.PALMERA_INSTANCE_DOMAIN || `${tenantSlug}.palmerp.es`;
   const adminName = process.env.PALMERA_INSTANCE_ADMIN_NAME || 'Renato García';
   const adminEmail = (process.env.PALMERA_INSTANCE_ADMIN_EMAIL || 'admin@gastroshows.es').toLowerCase();
   const adminPassword = process.env.PALMERA_INSTANCE_ADMIN_PASSWORD || 'gastroshows123';

@@ -22,7 +22,7 @@ export async function GET() {
     console.warn("DB no disponible (single-DB), fallback a mock JSON:", error);
     const mockTenants = getMockTenants();
     const mockAuditLogs = [
-      { id: "al-1", tenant: "gastroshows", action: "USER_LOGIN", userId: "u2", details: "Renato García (admin@gastroshows.es) inició sesión en gastroshows.palmera.io", ipAddress: "192.168.1.45", createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString() },
+      { id: "al-1", tenant: "gastroshows", action: "USER_LOGIN", userId: "u2", details: "Renato García (admin@gastroshows.es) inició sesión en gastroshows.palmerp.es", ipAddress: "192.168.1.45", createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString() },
       { id: "al-2", tenant: "sport2live", action: "CRM_CONTACT_CREATED", userId: "u4", details: "Alex Ruiz creó el contacto 'Federación de Tenis' (CIF: A88372619)", ipAddress: "82.34.12.98", createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString() },
       { id: "al-3", tenant: "gastroshows", action: "MODE_ACTIVATED", userId: "u2", details: "El sector Atención al cliente fue activado por el administrador.", ipAddress: "192.168.1.45", createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
       { id: "al-4", tenant: "delish-catering", action: "INSTANCE_SUSPENDED", userId: "SYSTEM", details: "Instancia suspendida temporalmente por falta de pago.", ipAddress: "127.0.0.1", createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
           const newId = `t-${Date.now()}`;
           const now = new Date().toISOString();
           const newTenant = {
-            id: newId, slug, name, domain: domainRaw || `${slug}.palmera.io`, isActive: true, createdAt: now,
+            id: newId, slug, name, domain: domainRaw || `${slug}.palmerp.es`, isActive: true, createdAt: now,
             users: [{ id: `u-${Date.now()}`, name: adminName, email: adminEmail, role: "ADMIN" as const, createdAt: now, password: body.adminPassword || undefined }],
           };
           saveMockTenants([newTenant, ...mockTenants] as never);

@@ -242,16 +242,16 @@ export default function SuperadminPage() {
       "npm run instance:provision --",
       `  --slug ${tenant.slug}`,
       `  --name "${tenant.name}"`,
-      `  --domain ${tenant.domain || `${tenant.slug}.palmera.io`}`,
+      `  --domain ${tenant.domain || `${tenant.slug}.palmerp.es`}`,
       "  --admin-name \"Admin\"",
-      `  --admin-email admin@${tenant.domain || `${tenant.slug}.palmera.io`}`,
+      `  --admin-email admin@${tenant.domain || `${tenant.slug}.palmerp.es`}`,
     ].join("\n");
   };
 
   const openInstanceManagement = (tenant: SuperadminTenant) => {
     setSelectedInstance(tenant);
     setInstanceName(tenant.name);
-    setInstanceDomain(tenant.domain || `${tenant.slug}.palmera.io`);
+    setInstanceDomain(tenant.domain || `${tenant.slug}.palmerp.es`);
   };
 
   const patchTenant = async (tenantId: string, payload: Record<string, unknown>) => {
@@ -1051,7 +1051,7 @@ export default function SuperadminPage() {
                               rel="noopener noreferrer"
                               className="font-mono text-xs text-[#f27059] hover:text-[#f25c54] hover:underline flex items-center gap-1 mt-0.5"
                             >
-                              <span>{tenant.slug}.palmera.io</span>
+                              <span>{tenant.slug}.palmerp.es</span>
                               <Icons.ExternalLink className="h-3 w-3" />
                             </a>
                           </div>
@@ -1380,7 +1380,7 @@ export default function SuperadminPage() {
                     <span>Gestionar Usuarios: <span className="text-[#f4845f]">{selectedTenant.name}</span></span>
                   </h2>
                   <p className="text-[11px] text-stone-500">
-                    Modifica, elimina, genera contraseñas seguras o añade miembros para {selectedTenant.slug}.palmera.io.
+                    Modifica, elimina, genera contraseñas seguras o añade miembros para {selectedTenant.slug}.palmerp.es.
                   </p>
                 </div>
                 {selectedUserForAccess && (
@@ -1603,7 +1603,7 @@ export default function SuperadminPage() {
                   <span>Gestionar instancia</span>
                 </h2>
                 <p className="text-[11px] text-stone-500 font-mono">
-                  {selectedInstance.slug}.palmera.io
+                  {selectedInstance.slug}.palmerp.es
                 </p>
               </div>
               <button
@@ -1814,7 +1814,7 @@ export default function SuperadminPage() {
                   <span>Crear instancia SAAS</span>
                 </h2>
                 <p className="mt-1 text-xs leading-relaxed text-stone-500">
-                  Se creará en <span className="font-mono font-bold text-stone-700">este mismo VPS</span> (DB <span className="font-mono">palmera_&lt;slug&gt;</span>). Subdominio <span className="font-mono">slug.palmera.io</span> vía proxy existente.
+                  Se creará en <span className="font-mono font-bold text-stone-700">este mismo VPS</span> (DB <span className="font-mono">palmera_&lt;slug&gt;</span>). Subdominio <span className="font-mono">slug.palmerp.es</span> vía proxy existente.
                 </p>
               </div>
               <button
@@ -1899,10 +1899,10 @@ export default function SuperadminPage() {
                   <input
                     value={createData.domain}
                     onChange={(e) => setCreateData((p) => ({ ...p, domain: e.target.value }))}
-                    placeholder="ej. gastroshows.palmera.io"
+                    placeholder="ej. gastroshows.palmerp.es"
                     className="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-xs font-mono text-stone-900 outline-hidden focus:border-[#f27059]"
                   />
-                  <span className="text-[9px] text-stone-400">Vacío = {createData.slug ? `${createData.slug}.palmera.io` : "slug.palmera.io"} en este VPS.</span>
+                  <span className="text-[9px] text-stone-400">Vacío = {createData.slug ? `${createData.slug}.palmerp.es` : "slug.palmerp.es"} en este VPS.</span>
                 </label>
               </div>
 

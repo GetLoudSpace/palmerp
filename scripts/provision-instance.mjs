@@ -125,7 +125,7 @@ async function main() {
   const adminEmail = required(args.get("admin-email") || process.env.PALMERA_INSTANCE_ADMIN_EMAIL, "--admin-email or PALMERA_INSTANCE_ADMIN_EMAIL").toLowerCase();
   const adminName = required(args.get("admin-name") || process.env.PALMERA_INSTANCE_ADMIN_NAME, "--admin-name or PALMERA_INSTANCE_ADMIN_NAME");
   const adminPassword = args.get("admin-password") || process.env.PALMERA_INSTANCE_ADMIN_PASSWORD || crypto.randomBytes(18).toString("base64url");
-  const domain = args.get("domain") || process.env.PALMERA_INSTANCE_DOMAIN || `${slug}.palmera.io`;
+  const domain = args.get("domain") || process.env.PALMERA_INSTANCE_DOMAIN || `${slug}.palmerp.es`;
   const timezone = args.get("timezone") || process.env.PALMERA_INSTANCE_TIMEZONE || "Europe/Madrid";
   const modes = (args.get("modes") || process.env.PALMERA_INSTANCE_MODES || DEFAULT_MODES.join(",")).split(",").map((m) => m.trim()).filter(Boolean);
 
