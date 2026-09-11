@@ -69,7 +69,7 @@
         "Vista en `/admin/conversaciones` para auditar la bandeja de correos/notificaciones del sistema",
         "Buscador y filtros de actividad (ej. acciones críticas del sistema registradas en AuditLog)"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 6,

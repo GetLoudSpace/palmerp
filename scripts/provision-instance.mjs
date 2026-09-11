@@ -82,6 +82,42 @@ async function seedSingleDb(databaseUrl, instance) {
   }
 }
 
+async function registerVercelDomain(domain) {
+  const token = process.env.VERCEL_API_TOKEN || process.env.VERCEL_TOKEN;
+  const projectId = process.env.VERCEL_PROJECT_ID;
+  const teamId = process.env.VERCEL_TEAM_ID;
+
+  if (!token || !projectId) {
+    console.log("[vercel] VERCEL_API_TOKEN or VERCEL_PROJECT_ID not set. Skipping Vercel domain registration.");
+    return;
+  }
+
+  try {
+    let url = `https://api.vercel.com/v10/projects/${projectId}/domains`;
+    if (teamId) {
+      url += `?teamId=${teamId}`;
+    }
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: domain }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn(`[vercel] Failed to register domain ${domain}:`, errText);
+    } else {
+      console.log(`[vercel] Domain ${domain} registered successfully on Vercel.`);
+    }
+  } catch (error) {
+    console.warn(`[vercel] Error registering domain ${domain}:`, error.message);
+  }
+}
+
 async function main() {
   const args = parseArgs();
   const slug = normalizeSlug(required(args.get("slug") || process.env.PALMERA_INSTANCE_SLUG, "--slug or PALMERA_INSTANCE_SLUG"));
@@ -101,6 +137,7 @@ async function main() {
   }
 
   await seedSingleDb(databaseUrl, { slug, name, domain, adminEmail, adminName, adminPassword, timezone, modes });
+  await registerVercelDomain(domain);
 
   console.log("");
   console.log("Instance provisioned successfully (single-DB).");
