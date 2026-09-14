@@ -43,6 +43,8 @@ model Tenant {
   eduReleases         EduRelease[]
   eduStreamStats      EduStreamStat[]
   eduTrash            EduTrash[]
+  eduRooms            EduRoom[]
+  eduCalendarLinks    EduCalendarLink[]
 }
 
 model User {
@@ -55,6 +57,7 @@ model User {
   role         UserRole @default(STAFF)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  eduLessonsAsTeacher EduLesson[]
 
   @@unique([tenantId, email])
   @@index([email])
@@ -826,6 +829,39 @@ model EduSong {
   @@index([tenantId, instrument])
 }
 
+model EduRoom {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String   // "Aula 1", "Sala B", "Estudio"
+  color     String?  // hex
+  capacity  Int?     @default(1)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lessons   EduLesson[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, isActive])
+}
+
+model EduCalendarLink {
+  id                 String   @id @default(cuid())
+  tenantId           String
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId             String?  // User.id profesor dueño
+  googleCalendarId   String?  // "primary" o id calendario
+  googleAccessToken  String?  @db.Text
+  googleRefreshToken String?  @db.Text
+  syncEnabled        Boolean  @default(false)
+  lastSyncAt         DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([tenantId, userId])
+  @@unique([tenantId, userId, googleCalendarId])
+}
+
 model EduLesson {
   id                  String          @id @default(cuid())
   tenantId            String
@@ -843,6 +879,13 @@ model EduLesson {
   ratingFocus         Int?
   nextGoals           String?         @db.Text
   teacherId           String?
+  teacher             User?           @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  roomId              String?
+  room                EduRoom?        @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  googleEventId       String?
+  googleCalendarId    String?
+  googleSyncStatus    String?         // pending | synced | error
+  googleSyncError     String?         @db.Text
   whatsappSentAt      DateTime?
   whatsappMessageId   String?
   batchToken          String?         // token agregador r/batch
@@ -854,6 +897,9 @@ model EduLesson {
   @@index([tenantId, studentId])
   @@index([tenantId, date])
   @@index([studentId, date])
+  @@index([tenantId, teacherId])
+  @@index([tenantId, roomId])
+  @@index([googleEventId])
 }
 
 model EduSharedResource {

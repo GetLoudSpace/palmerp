@@ -208,11 +208,11 @@ export const PalmModesRegistry: Record<string, PalmModeConfig> = {
   EDUCACION: {
     id: "EDUCACION",
     name: "Educación",
-    description: "Seguimiento multi-instrumento, biblioteca, WhatsApp Cloud API y portal artista premium.",
+    description: "Agenda calendario (aulas/profesores), seguimiento multi-instrumento, biblioteca, WhatsApp Cloud y portal artista.",
     icon: "GraduationCap",
     category: "Operaciones",
     menuItems: [
-      { label: "Panel Profesor", path: "/admin/education" },
+      { label: "Agenda", path: "/admin/education" },
       { label: "Alumnos", path: "/admin/education/students" },
       { label: "Clases & Seguimiento", path: "/admin/education/lessons" },
       { label: "Biblioteca", path: "/admin/education/library" },
