@@ -96,17 +96,26 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     };
   }, []);
 
-  // Filter core modules
-  const coreBase = coreModules.filter((m) => m.id !== "settings");
-  const coreSettings = coreModules.filter((m) => m.id === "settings");
+  const userRole = (session?.user as any)?.role as string | undefined;
+  const isProfessor = userRole === "PROFESSOR";
 
-  // Get active mode configurations
-  const activeModeConfigs = activeModes
+  // Filter core modules: profesor solo ve educación + conversaciones mínimas
+  const coreBase = coreModules.filter((m) => {
+    if (isProfessor) return m.id === "conversations"; // profesor no ve contactos globales ni ajustes
+    return m.id !== "settings";
+  });
+  const coreSettings = isProfessor ? [] : coreModules.filter((m) => m.id === "settings");
+
+  // Get active mode configurations — profesor solo EDUCACION aunque admin haya activado otros
+  const activeModeConfigsAll = activeModes
     .map((modeId) => PalmModesRegistry[modeId])
     .filter(Boolean);
+  const activeModeConfigs = isProfessor
+    ? activeModeConfigsAll.filter((m) => m.id === "EDUCACION")
+    : activeModeConfigsAll;
 
   const operationsModes = activeModeConfigs.filter((m) => m.category === "Operaciones");
-  const supportModes = activeModeConfigs.filter((m) => m.category === "Soporte" || m.category === "Estrategia");
+  const supportModes = isProfessor ? [] : activeModeConfigs.filter((m) => m.category === "Soporte" || m.category === "Estrategia");
 
   // Keep the active area open after route and browser back/forward navigation.
   useEffect(() => {

@@ -282,6 +282,7 @@ enum UserRole {
   ADMIN
   STAFF
   DEV
+  PROFESSOR
 }
 
 enum ContactType {
