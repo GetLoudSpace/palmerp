@@ -20,11 +20,7 @@ export default function AdminTopbar({ onMenuClick, isMenuOpen }: AdminTopbarProp
     ...Object.values(PalmModesRegistry).flatMap((module) => [module.name, ...module.menuItems.map((item) => item.label)]),
   ];
 
-  const [shopSlug, setShopSlug] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("/api/shop").then(r=>r.json()).then(d=>{ if(d?.success && d.shop?.slug) setShopSlug(d.shop.slug); }).catch(()=>{});
-  }, []);
 
   // Initialize theme from HTML class list
   useEffect(() => {
@@ -84,11 +80,6 @@ export default function AdminTopbar({ onMenuClick, isMenuOpen }: AdminTopbarProp
 
       {/* Right side: Global Actions (Search, Dark Mode, Profile) */}
       <div className="flex items-center gap-3">
-        {shopSlug && (
-          <a href={`/shop/${shopSlug}`} target="_blank" rel="noopener noreferrer" className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-amber-500 text-white px-3.5 py-1.5 text-xs font-black shadow hover:bg-amber-600">
-            <Icons.ShoppingBag className="h-4 w-4" /> Pedir pan (vista cliente)
-          </a>
-        )}
         {/* Search Bar - hidden on mobile */}
         <SmartSearchInput value={globalSearch} onChange={setGlobalSearch} suggestions={searchSuggestions} placeholder="Buscar en Palmera..." className="hidden w-64 md:block" />
 

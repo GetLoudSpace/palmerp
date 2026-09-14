@@ -15,6 +15,8 @@ import FunnelTab from "./FunnelTab";
 export default function SalesDashboard() {
   const [activeTab, setActiveTab] = useState<"overview" | "prospecting" | "opportunities" | "followup" | "contacts" | "analytics" | "scouter" | "funnel">("overview");
 
+  const [shopSlug, setShopSlug] = useState<string | null>(null);
+
   // Summary Metrics
   const [stats, setStats] = useState({
     leadsCount: 0,
@@ -81,6 +83,7 @@ export default function SalesDashboard() {
 
   useEffect(() => {
     loadDashboardStats();
+    fetch("/api/shop").then(r=>r.json()).then(d=>{ if(d?.success && d.shop?.slug) setShopSlug(d.shop.slug); }).catch(()=>{});
 
     // Listen to changes in other tabs
     window.addEventListener("palmera_leads_updated", loadDashboardStats);
@@ -99,8 +102,15 @@ export default function SalesDashboard() {
       {/* Dynamic Tab Navigation Header */}
       <div className="flex flex-col gap-4 border-b border-border/30 pb-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-foreground tracking-tight md:text-2xl">Módulo de Ventas & CRM</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Espacio de trabajo unificado para la prospección de clientes, oportunidades y análisis de ventas.</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-xl font-extrabold text-foreground tracking-tight md:text-2xl">Módulo de Ventas & CRM</h2>
+            {shopSlug && (
+              <a href={`/shop/${shopSlug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 text-white px-3 py-1.5 text-xs font-black shadow hover:bg-amber-600">
+                <Icons.ShoppingBag className="h-3.5 w-3.5" /> Pedir pan (vista cliente)
+              </a>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">Espacio de trabajo unificado para la prospección de clientes, oportunidades y análisis de ventas. La vista cliente de la tienda (e-commerce/pedidos) vive solo aquí, no en otros modos como Educación.</p>
         </div>
 
         {/* Tab Links */}
