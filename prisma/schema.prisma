@@ -29,6 +29,20 @@ model Tenant {
   shops               Shop[]
   coreProducts        CoreProduct[]
   stockMovements      StockMovement[]
+  eduStudents         EduStudent[]
+  eduSkills           EduSkill[]
+  eduExercises        EduExercise[]
+  eduSongs            EduSong[]
+  eduLessons          EduLesson[]
+  eduCourseGoals      EduCourseGoal[]
+  eduTerms            EduTerm[]
+  eduSharedResources  EduSharedResource[]
+  eduOutboxMessages   EduOutboxMessage[]
+  eduArtistProfiles   EduArtistProfile[]
+  eduSongProjects     EduSongProject[]
+  eduReleases         EduRelease[]
+  eduStreamStats      EduStreamStat[]
+  eduTrash            EduTrash[]
 }
 
 model User {
@@ -95,6 +109,8 @@ model Contact {
   loyaltyPoints  Int         @default(0)
 
   orders         Order[]
+  eduStudentAsContact EduStudent[] @relation("EduStudentContact")
+  eduStudentAsTutor   EduStudent[] @relation("EduStudentTutor")
 
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -577,5 +593,468 @@ enum DomainStatus {
   PENDING
   VERIFIED
   FAILED
+}
+
+// ==========================================
+// EDUCACIÓN — MODO MULTI-INSTRUMENTO + ARTISTA
+// ==========================================
+
+enum EduLevel {
+  INICIACION
+  BASICO
+  INTERMEDIO
+  AVANZADO
+}
+
+enum EduTier {
+  ALUMNO
+  ARTISTA
+}
+
+enum EduGoalScope {
+  COURSE
+  TRIMESTER_1
+  TRIMESTER_2
+  TRIMESTER_3
+}
+
+enum EduGoalStatus {
+  PENDING
+  IN_PROGRESS
+  ACHIEVED
+  POSTPONED
+}
+
+enum EduExerciseType {
+  TECHNIQUE
+  CHORD
+  RHYTHM
+  THEORY
+  WARMUP
+  HOMEWORK
+}
+
+enum EduLessonStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum SongStatus {
+  IDEA
+  WRITING
+  DEMO
+  PRODUCING
+  MIX
+  MASTER
+  READY
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AudioStage {
+  DEMO
+  PRODUCING
+  MIX
+  MASTER
+  STEMS
+}
+
+enum ReleaseStatus {
+  DRAFT
+  SUBMITTED
+  LIVE
+  TAKEDOWN
+}
+
+model EduStudent {
+  id                   String   @id @default(cuid())
+  tenantId             String
+  tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contactId            String   @unique
+  contact              Contact  @relation("EduStudentContact", fields: [contactId], references: [id], onDelete: Restrict)
+  tutorContactId       String?
+  tutorContact         Contact? @relation("EduStudentTutor", fields: [tutorContactId], references: [id], onDelete: SetNull)
+  instruments          String[] // ["GUITARRA","VOZ"]
+  primaryInstrument    String?
+  levelByInstrument    Json?    // { GUITARRA: "BASICO", PIANO: "INICIACION" }
+  musicalTastes        String[] // ["rock","flamenco"]
+  favArtists           String[]
+  favSongs             String[]
+  availablePracticeMinPerDay Int?
+  tier                 EduTier  @default(ALUMNO)
+  isArtist             Boolean  @default(false)
+  portalToken          String   @unique @default(uuid())
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  deletedAt            DateTime?
+  lessons              EduLesson[]
+  courseGoals          EduCourseGoal[]
+  sharedResources      EduSharedResource[]
+  outboxMessages       EduOutboxMessage[]
+  artistProfile        EduArtistProfile?
+  songProjects         EduSongProject[]
+  skillAssessments     EduSkillAssessment[]
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@index([tutorContactId])
+  @@index([tenantId, isActive])
+  @@index([tenantId, isArtist])
+}
+
+model EduSkill {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  instrument String  // GUITARRA | BAJO | PIANO | BATERIA | VOZ | COMMON
+  key       String
+  label     String
+  category  String   // tecnica | ritmo | teoria | repertorio
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  assessments EduSkillAssessment[]
+
+  @@unique([tenantId, instrument, key])
+  @@index([tenantId, instrument])
+}
+
+model EduSkillAssessment {
+  id         String   @id @default(cuid())
+  tenantId   String
+  studentId  String
+  student    EduStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  skillId    String
+  skill      EduSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  rating     Int      // 1-5
+  comment    String?
+  assessedBy String?
+  lessonId   String?
+  lesson     EduLesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  assessedAt DateTime @default(now())
+
+  @@index([tenantId, studentId])
+  @@index([studentId, skillId, assessedAt])
+  @@index([skillId])
+}
+
+model EduCourseGoal {
+  id          String       @id @default(cuid())
+  tenantId    String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     EduStudent   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  instrument  String?
+  scope       EduGoalScope
+  title       String
+  description String?      @db.Text
+  targetDate  DateTime?
+  status      EduGoalStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([tenantId, studentId])
+  @@index([studentId, scope])
+}
+
+model EduTerm {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  courseYear String  // "2025-2026"
+  label     String   // "Trimestre 1"
+  scope     EduGoalScope
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, courseYear, scope])
+  @@index([tenantId, courseYear])
+}
+
+model EduExercise {
+  id          String          @id @default(cuid())
+  tenantId    String
+  tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title       String
+  type        EduExerciseType @default(TECHNIQUE)
+  instrument  String          // GUITARRA | COMMON etc
+  level       EduLevel        @default(BASICO)
+  difficulty  Int             @default(3) // 1-5
+  estimatedMin Int            @default(10)
+  skillKeys   String[]
+  description String?         @db.Text
+  tabContent  String?         @db.Text
+  tabUrl      String?
+  mediaUrls   String[]
+  sourceUrl   String?
+  sourceType  String?         // VIDEO | BLOG | TAB | IMAGE
+  isCurated   Boolean         @default(true)
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  sharedResources EduSharedResource[]
+
+  @@index([tenantId])
+  @@index([tenantId, instrument, level])
+  @@index([tenantId, difficulty])
+}
+
+model EduSong {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title       String
+  artist      String
+  genre       String?
+  level       EduLevel @default(BASICO)
+  instrument  String?
+  instruments String[] // multi
+  key         String?
+  capo        Int?
+  skillKeys   String[]
+  externalUrl String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sharedResources EduSharedResource[]
+
+  @@index([tenantId])
+  @@index([tenantId, instrument])
+}
+
+model EduLesson {
+  id                  String          @id @default(cuid())
+  tenantId            String
+  tenant              Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  studentId           String
+  student             EduStudent      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  instrument          String          // instrumento de esta clase
+  date                DateTime        @default(now())
+  durationMin         Int             @default(45)
+  status              EduLessonStatus @default(SCHEDULED)
+  taughtSkills        String[]
+  notes               String?         @db.Text
+  homeworkExerciseIds String[]
+  songIds             String[]
+  ratingFocus         Int?
+  nextGoals           String?         @db.Text
+  teacherId           String?
+  whatsappSentAt      DateTime?
+  whatsappMessageId   String?
+  batchToken          String?         // token agregador r/batch
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  assessments         EduSkillAssessment[]
+  sharedResources     EduSharedResource[]
+
+  @@index([tenantId, studentId])
+  @@index([tenantId, date])
+  @@index([studentId, date])
+}
+
+model EduSharedResource {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  token      String   @unique @default(uuid())
+  lessonId   String?
+  lesson     EduLesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  studentId  String
+  student    EduStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  exerciseId String?
+  exercise   EduExercise? @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
+  songId     String?
+  song       EduSong? @relation(fields: [songId], references: [id], onDelete: SetNull)
+  batchToken String?  // agrupador
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId, studentId])
+  @@index([batchToken])
+  @@index([token])
+}
+
+model EduOutboxMessage {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     EduStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lessonId    String?
+  channel     String   @default("WHATSAPP_CLOUD")
+  waMessageId String?
+  toPhone     String
+  body        String   @db.Text
+  link        String?
+  batchToken  String?
+  status      String   @default("QUEUED") // QUEUED | SENT | DELIVERED | READ | FAILED
+  error       String?  @db.Text
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, studentId, createdAt])
+  @@index([waMessageId])
+  @@index([batchToken])
+}
+
+model EduArtistProfile {
+  studentId   String   @id
+  student     EduStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  stageName   String?
+  bio         String?  @db.Text
+  avatarUrl   String?
+  socials     Json?    // {instagram,tiktok,youtube,spotifyArtistId}
+  distributor String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+model EduSongProject {
+  id          String     @id @default(cuid())
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  artistId    String
+  artist      EduStudent @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  title       String
+  genre       String?
+  instrument  String?
+  status      SongStatus @default(IDEA)
+  bpm         Int?
+  key         String?
+  capo        Int?
+  projectId   String?    // FK futuro GESTION_PROYECTOS
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+  lyrics      EduLyric[]
+  audios      EduAudioAsset[]
+  releases    EduRelease[]
+  streamStats EduStreamStat[]
+
+  @@index([tenantId, artistId, status])
+  @@index([tenantId, status])
+}
+
+model EduLyric {
+  id            String   @id @default(cuid())
+  songProjectId String
+  songProject   EduSongProject @relation(fields: [songProjectId], references: [id], onDelete: Cascade)
+  version       Int      @default(1)
+  content       String   @db.Text
+  coWriters     String[]
+  language      String?  @default("es")
+  isExplicit    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+  versions      EduLyricVersion[]
+
+  @@index([songProjectId, version])
+}
+
+model EduLyricVersion {
+  id        String   @id @default(cuid())
+  lyricId   String
+  lyric     EduLyric @relation(fields: [lyricId], references: [id], onDelete: Cascade)
+  version   Int
+  content   String   @db.Text
+  diff      Json?
+  createdAt DateTime @default(now())
+
+  @@index([lyricId, version])
+}
+
+model EduAudioAsset {
+  id            String     @id @default(cuid())
+  songProjectId String
+  songProject   EduSongProject @relation(fields: [songProjectId], references: [id], onDelete: Cascade)
+  stage         AudioStage @default(DEMO)
+  fileUrl       String
+  fileName      String?
+  mimeType      String?
+  durationSec   Int?
+  waveform      Json?
+  version       Int        @default(1)
+  notes         String?    @db.Text
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+  deletedBy     String?
+
+  @@index([songProjectId, stage])
+  @@index([songProjectId, deletedAt])
+}
+
+model EduRelease {
+  id            String        @id @default(cuid())
+  tenantId      String
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  songProjectId String
+  songProject   EduSongProject @relation(fields: [songProjectId], references: [id], onDelete: Cascade)
+  releaseDate   DateTime?
+  distributor   String?
+  upc           String?
+  isrc          String?
+  platforms     String[]
+  coverUrl      String?
+  status        ReleaseStatus @default(DRAFT)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([tenantId])
+  @@index([songProjectId])
+}
+
+model EduStreamStat {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  songProjectId String
+  songProject   EduSongProject @relation(fields: [songProjectId], references: [id], onDelete: Cascade)
+  platform      String   // spotify | apple | youtube | tiktok
+  date          DateTime @db.Date
+  plays         Int      @default(0)
+  listeners     Int?
+  revenue       Decimal? @db.Decimal(10, 4)
+  fetchedAt     DateTime @default(now())
+
+  @@unique([songProjectId, platform, date])
+  @@index([tenantId, platform, date])
+}
+
+model EduTrash {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  entityType String   // EduLyric | EduAudioAsset | EduSongProject
+  entityId   String
+  payload    Json
+  deletedAt  DateTime @default(now())
+  expiresAt  DateTime
+  restoredAt DateTime?
+  deletedBy  String?
+
+  @@index([tenantId, entityType])
+  @@index([expiresAt])
+}
+
+model EduExerciseSearchCache {
+  id        String   @id @default(cuid())
+  tenantId  String
+  queryHash String
+  query     Json
+  results   Json
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, queryHash])
+  @@index([createdAt])
 }
 

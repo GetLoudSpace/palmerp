@@ -96,6 +96,20 @@
         "Historial persistente en localStorage/base de datos y filtros de búsqueda integrados"
       ],
       "status": "done"
+    },
+    {
+      "id": 8,
+      "name": "education_mode",
+      "title": "Modo Educación — Seguimiento multi-instrumento + Biblioteca + WhatsApp + Portal Artista",
+      "description": "Modo Educación para profesor multi-instrumento (guitarra/bajo/piano/batería/voz+extensibles). Perfil alumno 1:1 Contact con tutor, objetivos curso/trimestres fijos+configurables, habilidades 1-5 con progresión, biblioteca con buscador web 20 unificado (tablatura/dificultad/tiempo), ejercicios/canciones auto-propuestas, formulario fin clase con envío WhatsApp Cloud API (1 link agregador r/batch + log), portal artista premium upsell manual con letras+audios (grabadora getUserMedia + player unificado + papelera 30d + versionado) y rimador español.",
+      "acceptance": [
+        "PalmModesRegistry incluye EDUCACION con menuItems Panel/Alumnos/Clases/Biblioteca/Artista y rutas /admin/education/* operativas mobile-first 100%",
+        "Prisma schema con EduStudent (1:1 Contact + tutorContactId Restrict), EduSkill/EduSkillAssessment 1-5, EduCourseGoal/EduTerm, EduExercise/EduSong (+instrument, difficulty, tab, estimatedMin), EduLesson (+instrument), EduSharedResource/EduOutboxMessage, EduArtistProfile/EduSongProject/EduLyric/EduAudioAsset/EduTrash/EduRelease con tenantId+RLS y npx prisma generate OK",
+        "Biblioteca con buscador web Brave/Search-like que devuelve 20 candidatos normalizados misma estructura y guardado 1-click, y motor propuestas exprés (2/5/15min) filtrado por instrumento/skill gap",
+        "Formulario fin clase guarda EduLesson+assessments y dispara WhatsApp Cloud API (graph.facebook.com) con template + link agregador r/batch/[token] y log en EduOutboxMessage + AuditLog, con fallback wa.me y batch del día",
+        "Portal artista (solo isArtist) con Kanban/Gantt por status, editor letras con rimador español (consonante/asonante), grabadora getUserMedia con permiso + player unificado, papelera 30d + versionado/restore, y gestión releases con adapter distribuidora pluggable"
+      ],
+      "status": "in_progress"
     }
   ]
 }
