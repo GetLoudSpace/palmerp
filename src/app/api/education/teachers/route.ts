@@ -22,20 +22,26 @@ export async function POST(req: NextRequest) {
 
     const pass = password || Math.random().toString(36).slice(2,12) + "A1!";
     const hash = await bcrypt.hash(pass, 10);
+    // Profesor = User STAFF (no ADMIN) con perfil EduTeacherProfile (acceso solo EDUCACION)
     const user = await (db as any).user.create({
-      data: { tenantId, name: String(name), email: emailNorm, passwordHash: hash, role: "PROFESSOR" },
+      data: { tenantId, name: String(name), email: emailNorm, passwordHash: hash, role: "STAFF" },
     });
-
-    // Audit + setting de profesores (opcional)
+    // Perfil profesor vinculado (instrumentos) — marca acceso limitado
     try{
-      await (db as any).auditLog.create({ data:{ tenantId, userId: String(token.id||token.sub), action:"EDU_TEACHER_INVITED", table:"User", recordId: user.id, details:`Profesor ${name} <${emailNorm}> instrumentos ${(instruments||[]).join(",")} — invitacion PROFESSOR solo EDUCACION, phone ${phone||""}`, success:true } });
+      await (db as any).eduTeacherProfile.create({
+        data: { tenantId, userId: user.id, instruments: Array.isArray(instruments) ? instruments : [], isActive: true },
+      });
+    } catch{}
+    // Audit
+    try{
+      await (db as any).auditLog.create({ data:{ tenantId, userId: String(token.id||token.sub), action:"EDU_TEACHER_INVITED", table:"User", recordId: user.id, details:`Profesor ${name} <${emailNorm}> STAFF (profesor) instrumentos ${(instruments||[]).join(",")} — solo EDUCACION, no core, phone ${phone||""}`, success:true } });
     } catch{}
 
-    return NextResponse.json({ success:true, user:{ id: user.id, email: user.email, role: user.role }, tempPassword: pass });
+    return NextResponse.json({ success:true, user:{ id: user.id, email: user.email, role: user.role, isProfessor:true }, tempPassword: pass });
   } catch (e:any) {
     // fallback mock si DB no disponible (preview): simular éxito
     if (String(e?.message||"").includes("connect") || String(e?.message||"").includes("Tenant")) {
-      return NextResponse.json({ success:true, user:{ id:"mock_"+Date.now(), email: emailNorm, role:"PROFESSOR" }, tempPassword: password || "mockPass123!", mocked:true });
+      return NextResponse.json({ success:true, user:{ id:"mock_"+Date.now(), email: emailNorm, role:"STAFF", isProfessor:true }, tempPassword: password || "mockPass123!", mocked:true });
     }
     return NextResponse.json({ error: String(e?.message??e) }, { status:500 });
   }
@@ -45,6 +51,13 @@ export async function GET(req: NextRequest){
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   if (!token?.tenantId) return NextResponse.json({ error:"No autorizado" }, { status:401 });
   try{
+    // Profesores = STAFF con EduTeacherProfile (y legacy PROFESSOR para compat)
+    const teachers = await (db as any).eduTeacherProfile.findMany({ where:{ tenantId: String(token.tenantId) }, include:{ user:true }, orderBy:{ createdAt:"desc" } }).catch(()=>null);
+    if (teachers && Array.isArray(teachers) && teachers.length) {
+      const users = teachers.map((t:any)=> ({ ...t.user, instruments: t.instruments, teacherProfileId: t.id }));
+      return NextResponse.json({ success:true, users, teachers });
+    }
+    // fallback legacy: users con role PROFESSOR
     const users = await (db as any).user.findMany({ where:{ tenantId: String(token.tenantId), role:"PROFESSOR" }, orderBy:{ createdAt:"desc" } });
     return NextResponse.json({ success:true, users });
   } catch(e:any){

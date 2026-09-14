@@ -45,6 +45,7 @@ model Tenant {
   eduTrash            EduTrash[]
   eduRooms            EduRoom[]
   eduCalendarLinks    EduCalendarLink[]
+  eduTeacherProfiles  EduTeacherProfile[]
 }
 
 model User {
@@ -58,6 +59,7 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   eduLessonsAsTeacher EduLesson[]
+  eduTeacherProfile EduTeacherProfile?
 
   @@unique([tenantId, email])
   @@index([email])
@@ -1103,5 +1105,20 @@ model EduExerciseSearchCache {
 
   @@unique([tenantId, queryHash])
   @@index([createdAt])
+}
+
+model EduTeacherProfile {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instruments String[] // instrumentos que imparte
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId, isActive])
+  @@index([tenantId])
 }
 

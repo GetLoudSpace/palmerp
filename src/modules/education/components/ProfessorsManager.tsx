@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import * as Icons from "lucide-react";
+import { useSession } from "next-auth/react";
 import { getTenantStorageKey, getTenantSlugClient } from "@/lib/clientStorage";
 import { EDUCATION_INSTRUMENTS } from "../lib/instruments";
 
@@ -22,6 +23,9 @@ function genPass() {
 }
 
 export default function ProfessorsManager() {
+  const { data: session } = useSession();
+  const userRole = (session?.user as any)?.role as string | undefined;
+  const isAdmin = userRole === "ADMIN" || userRole === "DEV";
   const [professors, setProfessors] = useState<Professor[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<{name:string; email:string; phone:string; instruments:string[]}>({name:"", email:"", phone:"", instruments:[]});
@@ -57,16 +61,18 @@ export default function ProfessorsManager() {
 
   const submit = async (e:React.FormEvent)=>{
     e.preventDefault();
+    if (!isAdmin) return alert("Solo ADMIN puede crear profesores (STAFF no tiene permiso)");
     if (!form.name.trim() || !form.email.trim()) return alert("Nombre y email requeridos");
     const pass = genPass();
     const slug = getTenantSlugClient();
-    const accessLink = `${window.location.protocol}//${slug}.${window.location.host.replace(/^[^.]+\./,"")}/login?onboarding=true&email=${encodeURIComponent(form.email)}&role=PROFESSOR`;
-    // Intentar crear User real via API (si falla, queda solo localStorage mock como UsersSettingsPage)
+    const accessLink = `${window.location.protocol}//${slug}.${window.location.host.replace(/^[^.]+\./,"")}/login?onboarding=true&email=${encodeURIComponent(form.email)}&role=STAFF`;
+    // Intentar crear User STAFF + EduTeacherProfile via API (solo ADMIN)
     let createdUserId: string | undefined;
     try{
       const res = await fetch("/api/education/teachers", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name: form.name, email: form.email, phone: form.phone, instruments: form.instruments, password: pass }) });
       const data = await res.json().catch(()=>null);
-      if (res.ok && data?.success) createdUserId = data.user?.id;
+      if (!res.ok) { alert(data?.error || "Error al crear profesor (solo ADMIN)"); return; }
+      if (data?.success) createdUserId = data.user?.id;
     } catch{}
     const p: Professor = { id: "prof_"+Date.now().toString(36), name: form.name, email: form.email, phone: form.phone, instruments: form.instruments.length?form.instruments:["GUITARRA"], isActive:true, userId: createdUserId, createdAt: new Date().toISOString() };
     persist([...professors, p]);
@@ -74,13 +80,13 @@ export default function ProfessorsManager() {
     setShowEmail(true);
     setShowForm(false);
     setForm({name:"", email:"", phone:"", instruments:[]});
-    setToast(`Profesor ${p.name} creado — email de acceso enviado (PROFESSOR)`);
+    setToast(`Profesor ${p.name} creado — STAFF (solo EDUCACION) — email enviado`);
     setTimeout(()=>setToast(null),3000);
     // audit local
     try{
       const k=getTenantStorageKey("palmera_audit_logs");
       const logs=JSON.parse(localStorage.getItem(k)||"[]");
-      logs.unshift({id:"log_"+Date.now(), action:"EDU_PROFESSOR_CREATED", details:`Profesor ${p.name} <${p.email}> instrumentos ${p.instruments.join(",")} — acceso solo EDUCACION, rol PROFESSOR`, timestamp: new Date().toISOString()});
+      logs.unshift({id:"log_"+Date.now(), action:"EDU_PROFESSOR_CREATED", details:`Profesor ${p.name} <${p.email}> STAFF instrumentos ${p.instruments.join(",")} — solo EDUCACION, no admin, acceso limitado a crear clases/slots y modificar alumno (no opciones modulo)`, timestamp: new Date().toISOString()});
       localStorage.setItem(k, JSON.stringify(logs.slice(0,20)));
     } catch{}
   };
@@ -95,8 +101,8 @@ export default function ProfessorsManager() {
       {toast && <div className="fixed bottom-4 right-4 z-50 bg-foreground text-background px-4 py-2 rounded-xl text-xs font-bold">{toast}</div>}
 
       <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400"><Icons.GraduationCap className="h-4 w-4" /> Arquitectura por revisar</div>
-        <p className="mt-1 text-xs text-muted-foreground">Profesor = <code>UserRole.PROFESSOR</code> <span className="font-mono">prisma/schema.prisma:281</span> con <code>tenantId</code> + RLS vía <code>EduLesson.teacherId</code>. Sidebar filtra: PROFESSOR solo ve <code>EDUCACION</code> + conversaciones. Calendario <code>EducationAgenda</code> es compartido (ve demás profesores) pero filtros por aula/profesor permiten foco. Invite crea <code>User</code> vía <code>POST /api/education/teachers</code> (bcrypt) y email onboarding <code>/login?onboarding&amp;role=PROFESSOR</code>. Futuro: desconectar Google Calendar por profesor vía <code>EduCalendarLink.userId</code>.</p>
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400"><Icons.ShieldCheck className="h-4 w-4" /> Arquitectura por revisar</div>
+        <p className="mt-1 text-xs text-muted-foreground">Profesor = <code>User STAFF</code> (no ADMIN) + <code>EduTeacherProfile</code> <span className="font-mono">prisma/schema.prisma:281/1109</span> con <code>tenantId</code> + RLS vía <code>EduLesson.teacherId</code>. Sidebar: <code>ADMIN</code> crea profesores, <code>STAFF</code> solo ve sus cosas — usa funcionalidades disponibles (crear clases, slots en agenda, modificar info alumno) pero no puede añadir opciones al módulo ni tocar core. Calendario <code>EducationAgenda</code> compartido (ve demás profesores, filtros por aula/profesor). Invite <code>POST /api/education/teachers</code> (solo ADMIN, bcrypt, role STAFF + perfil) y email <code>/login?onboarding&amp;role=STAFF</code>. Futuro: Google por profesor <code>EduCalendarLink.userId</code>.</p>
       </div>
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -109,7 +115,7 @@ export default function ProfessorsManager() {
             <Icons.Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
             <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Buscar..." className="rounded-xl border border-border/40 bg-background pl-8 pr-3 py-2 text-xs w-44" />
           </div>
-          <button onClick={()=>setShowForm(true)} className="rounded-xl bg-foreground px-4 py-2 text-xs font-bold text-background flex items-center gap-1"><Icons.UserPlus className="h-4 w-4" /> Nuevo profesor</button>
+          <button onClick={()=>{ if(!isAdmin) return alert("Solo ADMIN puede crear profesores"); setShowForm(true); }} disabled={!isAdmin} className={`rounded-xl px-4 py-2 text-xs font-bold flex items-center gap-1 ${isAdmin?"bg-foreground text-background":"bg-muted text-muted-foreground cursor-not-allowed border border-border/40"}`} title={isAdmin?"Crear profesor STAFF":"Solo ADMIN"}><Icons.UserPlus className="h-4 w-4" /> Nuevo profesor</button>
         </div>
       </div>
 
@@ -119,15 +125,21 @@ export default function ProfessorsManager() {
             <div className="flex gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 font-black border border-amber-500/20">{p.name.charAt(0).toUpperCase()}</div>
               <div>
-                <div className="text-sm font-bold flex items-center gap-2">{p.name} <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${p.isActive?"bg-emerald-500/10 text-emerald-700 border-emerald-500/20":"bg-stone-500/10 border-stone-500/20"}`}>{p.isActive?"Activo":"Archivado"}</span> <span className="rounded-full bg-violet-500/10 text-violet-700 border border-violet-500/20 px-2 py-0.5 text-[10px]">PROFESSOR</span></div>
+                <div className="text-sm font-bold flex items-center gap-2">{p.name} <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${p.isActive?"bg-emerald-500/10 text-emerald-700 border-emerald-500/20":"bg-stone-500/10 border-stone-500/20"}`}>{p.isActive?"Activo":"Archivado"}</span> <span className="rounded-full bg-blue-500/10 text-blue-700 border border-blue-500/20 px-2 py-0.5 text-[10px]">STAFF · Profesor</span></div>
                 <div className="text-xs text-muted-foreground flex flex-wrap gap-2"><span>{p.email}</span>{p.phone && <span>· {p.phone}</span>}</div>
                 <div className="mt-1 flex flex-wrap gap-1">{(p.instruments||[]).map(k=> <span key={k} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold">{k}</span>)} {p.userId && <span className="text-[10px] font-mono text-muted-foreground">→ User {p.userId.slice(0,6)}</span>}</div>
                 <div className="text-[11px] text-muted-foreground">Creado {new Date(p.createdAt).toLocaleDateString("es-ES")} · verá solo EDUCACION, pero calendario compartido ve demás profesores</div>
               </div>
             </div>
             <div className="flex flex-col gap-1">
-              <button onClick={()=>toggle(p.id)} className="rounded-lg border border-border/40 p-2 text-xs">{p.isActive?"Desactivar":"Activar"}</button>
-              <button onClick={()=>del(p.id)} className="rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-red-600"><Icons.Trash2 className="h-4 w-4" /></button>
+              {isAdmin ? (
+                <>
+                  <button onClick={()=>toggle(p.id)} className="rounded-lg border border-border/40 p-2 text-xs">{p.isActive?"Desactivar":"Activar"}</button>
+                  <button onClick={()=>del(p.id)} className="rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-red-600"><Icons.Trash2 className="h-4 w-4" /></button>
+                </>
+              ) : (
+                <span className="text-[10px] text-muted-foreground px-2">Solo ADMIN</span>
+              )}
             </div>
           </div>
         ))}
@@ -138,7 +150,7 @@ export default function ProfessorsManager() {
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/40 p-0 md:p-4">
           <form onSubmit={submit} className="w-full max-w-xl rounded-t-[1.5rem] md:rounded-2xl bg-card p-5 shadow-xl">
             <div className="flex items-center justify-between"><h3 className="font-bold">Nuevo profesor — acceso solo Educación</h3><button type="button" onClick={()=>setShowForm(false)} className="p-2"><Icons.X className="h-5 w-5" /></button></div>
-            <p className="text-xs text-muted-foreground">Se creará <code>User</code> con <code>role=PROFESSOR</code> y <code>tenantId</code> actual. Recibirá email con link <code>/login?onboarding</code>.</p>
+            <p className="text-xs text-muted-foreground">Se creará <code>User STAFF</code> (no ADMIN) + <code>EduTeacherProfile</code> con <code>tenantId</code>. STAFF solo podrá crear clases/slots y modificar alumno, no añadir opciones al módulo ni tocar core. Solo ADMIN puede ejecutar esta acción.</p>
             <div className="mt-3 grid gap-3">
               <label className="text-xs font-bold">Nombre*<input required value={form.name} onChange={(e)=>setForm({...form, name:e.target.value})} placeholder="Ej. Ana García" className="mt-1 w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm" /></label>
               <label className="text-xs font-bold">Email* (llega invitación)<input required type="email" value={form.email} onChange={(e)=>setForm({...form, email:e.target.value})} placeholder="ana@getloud.es" className="mt-1 w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm" /></label>
@@ -161,9 +173,9 @@ export default function ProfessorsManager() {
                 <div className="flex"><span className="w-16 font-bold uppercase text-[9px] text-muted-foreground/60">Asunto:</span><span className="text-white font-bold">Invitación Profesor — Acceso solo Educación (GetLoud)</span></div>
               </div>
               <div className="p-4 space-y-3 text-foreground/90 text-[11px] leading-relaxed">
-                <p>Hola <strong>{emailDetails.name}</strong>, has sido dado de alta como <strong>PROFESSOR</strong> en GetLoud.</p>
+                <p>Hola <strong>{emailDetails.name}</strong>, has sido dado de alta como <strong>STAFF Profesor</strong> en GetLoud.</p>
                 <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-border/30 space-y-1.5">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Rol:</span><span className="font-bold text-violet-400">PROFESSOR — solo EDUCACION</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Rol:</span><span className="font-bold text-blue-400">STAFF · Profesor — solo EDUCACION (no admin)</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Contraseña temporal:</span><span className="font-mono text-emerald-400">{emailDetails.tempPassword}</span></div>
                 </div>
                 <p>Calendario es compartido: verás slots de demás profesores (filtrable por profesor/aula), pero tus clases vinculadas son las tuyas (<code>EduLesson.teacherId</code>).</p>

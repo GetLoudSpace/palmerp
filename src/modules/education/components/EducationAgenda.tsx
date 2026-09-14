@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import * as Icons from "lucide-react";
+import { useSession } from "next-auth/react";
 import { getTenantStorageKey, getTenantSlugClient } from "@/lib/clientStorage";
 import { EDUCATION_INSTRUMENTS } from "../lib/instruments";
 import { buildGoogleEventFromLesson } from "../lib/googleCalendar";
@@ -31,6 +32,8 @@ function fmtHour(h:number){ return `${String(h).padStart(2,"0")}:00`; }
 export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (l:LessonAgenda)=>void }) {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [students, setStudents] = useState<StudentRef[]>([]);
+  const { data: session } = useSession();
+  const isAdminAgenda = (session?.user as any)?.role === "ADMIN" || (session?.user as any)?.role === "DEV";
   const [users, setUsers] = useState<UserRef[]>([]);
   const [lessons, setLessons] = useState<LessonAgenda[]>([]);
   const [view, setView] = useState<"week"|"day">("week");
@@ -313,7 +316,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
           <option value="ALL">Todas las aulas</option>
           {rooms.map(r=> <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
-        <button onClick={()=>setShowRoomMgr(true)} className="rounded-lg border border-border/40 p-1.5"><Icons.Plus className="h-4 w-4" /></button>
+        {isAdminAgenda && <button onClick={()=>setShowRoomMgr(true)} className="rounded-lg border border-border/40 p-1.5" title="Crear aula — solo ADMIN"><Icons.Plus className="h-4 w-4" /></button>}
 
         <div className="flex items-center gap-1.5 text-xs font-bold ml-2"><Icons.UserCheck className="h-4 w-4 text-sky-500" /> Profesor</div>
         <select value={filterTeacher} onChange={(e)=>setFilterTeacher(e.target.value)} className="rounded-xl border border-border/40 bg-background px-3 py-1.5 text-xs">
@@ -396,7 +399,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
               <div className="grid grid-cols-3 gap-2">
                 <label className="text-xs font-bold">Hora<input type="number" min={8} max={21} value={form.hour} onChange={(e)=>setForm({...form, hour: parseInt(e.target.value)||10})} className="mt-1 w-full rounded-xl border border-border/40 bg-background px-3 py-2 text-xs" /></label>
                 <label className="text-xs font-bold">Min<input type="number" min={0} max={45} step={15} value={form.minute} onChange={(e)=>setForm({...form, minute: parseInt(e.target.value)||0})} className="mt-1 w-full rounded-xl border border-border/40 bg-background px-3 py-2 text-xs" /></label>
-                <label className="text-xs font-bold">Aula nueva<button type="button" onClick={()=>setShowRoomMgr(true)} className="mt-1 w-full rounded-xl border border-dashed border-border/40 bg-muted/20 px-3 py-2 text-xs">+ Crear aula</button></label>
+                <label className="text-xs font-bold">Aula nueva{isAdminAgenda ? <button type="button" onClick={()=>setShowRoomMgr(true)} className="mt-1 w-full rounded-xl border border-dashed border-border/40 bg-muted/20 px-3 py-2 text-xs">+ Crear aula</button> : <div className="mt-1 rounded-xl bg-muted px-3 py-2 text-[11px] text-muted-foreground">Solo ADMIN crea aulas</div>}</label>
               </div>
               <label className="text-xs font-bold">Notas slot<textarea value={form.notes} onChange={(e)=>setForm({...form, notes:e.target.value})} placeholder="Objetivo de la clase..." rows={2} className="mt-1 w-full rounded-xl border border-border/40 bg-background px-3 py-2 text-xs" /></label>
 
