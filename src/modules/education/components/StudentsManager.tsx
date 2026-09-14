@@ -23,7 +23,8 @@ export default function StudentsManager() {
   const [form, setForm] = useState<{contactId:string; instruments:string[]; primary:string; tier:"ALUMNO"|"ARTISTA"; tastes:string; artists:string; level:string; tutorId:string}>({contactId:"", instruments:[], primary:"GUITARRA", tier:"ALUMNO", tastes:"", artists:"", level:"BASICO", tutorId:""});
   const [toast, setToast] = useState<string|null>(null);
 
-  // load contacts from CRM storage + students from own storage
+  const safeArray = (a: unknown): string[] => Array.isArray(a) ? (a as string[]) : [];
+  // load contacts from CRM storage + students from own storage (with legacy migration: join crash fix)
   useEffect(()=>{
     const slug = getTenantSlugClient();
     const ck = `palmera_contacts_${slug}`;
@@ -31,7 +32,30 @@ export default function StudentsManager() {
     if (raw) try{ const parsed = JSON.parse(raw); setContacts(parsed.map((c:any)=>({id:c.id,name:c.name,phone:c.phone||""}))); } catch{}
     const sk = getTenantStorageKey("edu_students");
     const sraw = localStorage.getItem(sk);
-    if (sraw) try{ setStudents(JSON.parse(sraw)); } catch{}
+    if (sraw) try{
+      const parsed = JSON.parse(sraw);
+      const arr: any[] = Array.isArray(parsed) ? parsed : [];
+      const normalized: Student[] = arr.map((s:any)=> ({
+        id: String(s.id || uuid()),
+        contactName: String(s.contactName || s.name || "Alumno"),
+        contactPhone: String(s.contactPhone || s.phone || ""),
+        instruments: safeArray(s.instruments).length ? safeArray(s.instruments) : (s.primaryInstrument ? [String(s.primaryInstrument)] : ["GUITARRA"]),
+        primaryInstrument: s.primaryInstrument ? String(s.primaryInstrument) : (safeArray(s.instruments)[0] || "GUITARRA"),
+        tier: (s.tier==="ARTISTA"?"ARTISTA":"ALUMNO") as Student["tier"],
+        musicalTastes: safeArray(s.musicalTastes),
+        favArtists: safeArray(s.favArtists),
+        levelByInstrument: (s.levelByInstrument && typeof s.levelByInstrument==="object") ? s.levelByInstrument : {},
+        tutorName: s.tutorName ? String(s.tutorName) : undefined,
+        tutorPhone: s.tutorPhone ? String(s.tutorPhone) : undefined,
+        portalToken: String(s.portalToken || uuid()),
+        createdAt: String(s.createdAt || new Date().toISOString()),
+      }));
+      setStudents(normalized);
+      // persist migrated shape so legacy data never crashes again
+      if (normalized.length !== arr.length || arr.some((s:any)=> !Array.isArray(s.musicalTastes) || !Array.isArray(s.favArtists) || !Array.isArray(s.instruments))) {
+        localStorage.setItem(sk, JSON.stringify(normalized));
+      }
+    } catch{}
     else { // seed
       const seed: Student[] = [
         { id:"s1", contactName:"Lucía Martín", contactPhone:"+34 600 111 222", instruments:["GUITARRA","VOZ"], primaryInstrument:"GUITARRA", tier:"ARTISTA", musicalTastes:["indie","pop"], favArtists:["Rosalía"], levelByInstrument:{GUITARRA:"BASICO"}, portalToken:uuid(), createdAt: new Date().toISOString() },
@@ -76,11 +100,11 @@ export default function StudentsManager() {
     setToast("Alumno archivado — papelera 30d. Restaurable."); setTimeout(()=>setToast(null),3000);
   };
 
-  const filtered = students.filter(s=> filter==="ALL" || s.instruments.includes(filter));
+  const filtered = students.filter(s=> filter==="ALL" || (Array.isArray(s.instruments) ? s.instruments.includes(filter) : false));
 
   const openEdit = (s: Student)=>{
     setSelected(s);
-    setForm({ contactId: contacts.find(c=>c.name===s.contactName)?.id || "", instruments: s.instruments, primary: s.primaryInstrument||s.instruments[0]||"GUITARRA", tier: s.tier, tastes: s.musicalTastes.join(", "), artists: s.favArtists.join(", "), level: (s.levelByInstrument?.[s.primaryInstrument||""]||"BASICO"), tutorId: contacts.find(c=>c.name===s.tutorName)?.id || "" });
+    setForm({ contactId: contacts.find(c=>c.name===s.contactName)?.id || "", instruments: safeArray(s.instruments), primary: s.primaryInstrument||safeArray(s.instruments)[0]||"GUITARRA", tier: s.tier, tastes: safeArray(s.musicalTastes).join(", "), artists: safeArray(s.favArtists).join(", "), level: (s.levelByInstrument?.[s.primaryInstrument||""]||"BASICO"), tutorId: contacts.find(c=>c.name===s.tutorName)?.id || "" });
     setShowForm(true);
   };
 
@@ -107,10 +131,10 @@ export default function StudentsManager() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2"><span className="text-sm font-bold">{s.contactName}</span><span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold`}>{s.tier}</span>{s.tier==="ARTISTA"&&<Icons.Star className="h-4 w-4 text-amber-500" />}</div>
-                  <div className="mt-1 flex flex-wrap gap-1">{s.instruments.map((k)=>{ const d=getInstrumentDef(k); return <span key={k} className="rounded-full border bg-muted px-2 py-0.5 text-[10px] font-bold">{d.label} · {s.levelByInstrument?.[k]||"—"}</span>; })}</div>
+                  <div className="mt-1 flex flex-wrap gap-1">{safeArray(s.instruments).map((k)=>{ const d=getInstrumentDef(k); return <span key={k} className="rounded-full border bg-muted px-2 py-0.5 text-[10px] font-bold">{d.label} · {s.levelByInstrument?.[k]||"—"}</span>; })}</div>
                   <div className="mt-1 text-[11px] text-muted-foreground">Contacto manda: {s.contactPhone || "sin teléfono"} · Tutor: {s.tutorName || "—"}</div>
-                  <div className="text-[11px] text-muted-foreground">Gustos: {s.musicalTastes.join(", ")||"—"} · Artistas: {s.favArtists.join(", ")||"—"}</div>
-                  <div className="text-[11px] text-muted-foreground">Portal token: <span className="font-mono">{s.portalToken.slice(0,8)}…</span> · r/batch/{s.portalToken.slice(0,6)}</div>
+                  <div className="text-[11px] text-muted-foreground">Gustos: {safeArray(s.musicalTastes).join(", ")||"—"} · Artistas: {safeArray(s.favArtists).join(", ")||"—"}</div>
+                  <div className="text-[11px] text-muted-foreground">Portal token: <span className="font-mono">{String(s.portalToken||"").slice(0,8)}…</span> · r/batch/{String(s.portalToken||"").slice(0,6)}</div>
                 </div>
                 <div className="flex flex-col gap-1">
                   <button onClick={()=>openEdit(s)} className="rounded-lg border border-border/40 p-2"><Icons.Pencil className="h-4 w-4" /></button>

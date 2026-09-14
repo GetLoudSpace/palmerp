@@ -21,10 +21,34 @@ export default function LessonsManager() {
   const [showNew, setShowNew] = useState(false);
   const [newLesson, setNewLesson] = useState<{studentName:string; studentPhone:string; instrument:string; date:string}>({studentName:"", studentPhone:"", instrument:"GUITARRA", date: new Date().toISOString().slice(0,16)});
 
+  const safeArr = (a: unknown): string[] => Array.isArray(a) ? (a as string[]) : [];
   useEffect(()=>{
     const key = getTenantStorageKey("edu_lessons");
     const raw = localStorage.getItem(key);
-    if (raw) try{ setLessons(JSON.parse(raw)); } catch{ setLessons([]);} 
+    if (raw) try{
+      const parsed = JSON.parse(raw);
+      const arr: any[] = Array.isArray(parsed) ? parsed : [];
+      const normalized: LessonRow[] = arr.map((l:any)=> ({
+        id: String(l.id || "l_"+Date.now()),
+        studentName: String(l.studentName || l.name || "Alumno"),
+        studentPhone: String(l.studentPhone || l.phone || ""),
+        instrument: String(l.instrument || "GUITARRA"),
+        date: String(l.date || new Date().toISOString()),
+        durationMin: Number(l.durationMin || 45),
+        status: String(l.status || "SCHEDULED"),
+        taughtSkills: safeArr(l.taughtSkills),
+        notes: l.notes ? String(l.notes) : undefined,
+        ratingFocus: l.ratingFocus ?? undefined,
+        homeworkIds: safeArr(l.homeworkIds),
+        songIds: safeArr(l.songIds),
+        whatsappSentAt: l.whatsappSentAt ? String(l.whatsappSentAt) : undefined,
+        batchToken: l.batchToken ? String(l.batchToken) : undefined,
+      }));
+      setLessons(normalized);
+      if (arr.some((l:any)=> !Array.isArray(l.taughtSkills) || !Array.isArray(l.homeworkIds) || !Array.isArray(l.songIds))) {
+        localStorage.setItem(key, JSON.stringify(normalized));
+      }
+    } catch{ setLessons([]);} 
     else {
       const seed: LessonRow[] = [
         { id:"l1", studentName:"Lucía Martín", studentPhone:"+34 600 111 222", instrument:"GUITARRA", date: new Date().toISOString(), durationMin:45, status:"SCHEDULED", taughtSkills:[] },
@@ -44,7 +68,7 @@ export default function LessonsManager() {
 
   const openFinish = (l: LessonRow)=>{
     setShowFinish(l);
-    setForm({instrument:l.instrument, duration:l.durationMin, skills:l.taughtSkills, notes:l.notes||"", rating:l.ratingFocus||3, homework:l.homeworkIds||[], songs:l.songIds||[]});
+    setForm({instrument:l.instrument, duration:l.durationMin, skills:safeArr(l.taughtSkills), notes:l.notes||"", rating:l.ratingFocus||3, homework:safeArr(l.homeworkIds), songs:safeArr(l.songIds)});
   };
 
   const doFinish = async (e: React.FormEvent)=>{
@@ -65,7 +89,7 @@ export default function LessonsManager() {
     const sharedKey = getTenantStorageKey("edu_shared");
     const out = JSON.parse(localStorage.getItem(outKey)||"[]");
     const shared = JSON.parse(localStorage.getItem(sharedKey)||"[]");
-    const body = buildLessonWhatsAppMessage({ studentName: showFinish.studentName, instrumentLabel: form.instrument, skillsLabel: form.skills.join(", ")||undefined, link: batchLink, count: hwIds.length + form.songs.length });
+    const body = buildLessonWhatsAppMessage({ studentName: showFinish.studentName, instrumentLabel: form.instrument, skillsLabel: safeArr(form.skills).join(", ")||undefined, link: batchLink, count: hwIds.length + safeArr(form.songs).length });
     // Cloud API dryRun: try fetch if Setting has creds, else fallback wa.me
     const phone = showFinish.studentPhone;
     let waUrl = buildWaMeUrl(phone, body);
@@ -132,7 +156,7 @@ export default function LessonsManager() {
         {filtered.map((l)=>(
           <div key={l.id} className="rounded-2xl border border-border/40 bg-card p-4">
             <div className="flex items-start justify-between gap-2">
-              <div><div className="text-sm font-bold">{l.studentName} <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{l.instrument}</span></div><div className="text-xs text-muted-foreground">{new Date(l.date).toLocaleString("es-ES")} · {l.durationMin}′ · {l.status} {l.whatsappSentAt?"· WhatsApp ✓":"· pendiente"}</div><div className="text-xs">Skills: {l.taughtSkills.join(", ")||"—"} {l.notes?`· ${l.notes}`:""}</div>{l.batchToken && <div className="text-[11px] font-mono text-amber-600">r/batch/{l.batchToken}</div>}</div>
+              <div><div className="text-sm font-bold">{l.studentName} <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{l.instrument}</span></div><div className="text-xs text-muted-foreground">{new Date(l.date).toLocaleString("es-ES")} · {l.durationMin}′ · {l.status} {l.whatsappSentAt?"· WhatsApp ✓":"· pendiente"}</div><div className="text-xs">Skills: {safeArr(l.taughtSkills).join(", ")||"—"} {l.notes?`· ${l.notes}`:""}</div>{l.batchToken && <div className="text-[11px] font-mono text-amber-600">r/batch/{l.batchToken}</div>}</div>
               <div className="flex flex-col gap-1">
                 <button onClick={()=>openFinish(l)} className={`rounded-xl px-3 py-2 text-xs font-bold ${l.status==="COMPLETED"&&l.whatsappSentAt?"bg-emerald-500 text-white":"bg-foreground text-background"}`}>{l.whatsappSentAt?"Reenviar":"Finalizar"}</button>
                 <a href={`/r/batch/${l.batchToken||"demo"}`} target="_blank" rel="noreferrer" className="rounded-xl border border-border/40 px-3 py-1.5 text-center text-xs font-bold">Ver link</a>

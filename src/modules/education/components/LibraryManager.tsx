@@ -34,11 +34,17 @@ export default function LibraryManager() {
   const [candidates, setCandidates] = useState<Exercise[]>([]);
   const [toast, setToast] = useState<string|null>(null);
 
+  const safeArr = (a: unknown): string[] => Array.isArray(a) ? (a as string[]) : [];
   useEffect(()=>{
     const ek = getTenantStorageKey("edu_exercises");
     const sk = getTenantStorageKey("edu_songs");
     const er = localStorage.getItem(ek); const sr = localStorage.getItem(sk);
-    if (er) try{ setExercises(JSON.parse(er)); } catch{ setExercises(SEED_EX); } else { setExercises(SEED_EX); localStorage.setItem(ek, JSON.stringify(SEED_EX)); }
+    if (er) try{
+      const parsed = JSON.parse(er);
+      const arr: any[] = Array.isArray(parsed) ? parsed : [];
+      const normalized: Exercise[] = arr.map((e:any)=> ({ ...e, skillKeys: safeArr(e.skillKeys), title: String(e.title||"Ejercicio"), instrument: String(e.instrument||"GUITARRA"), level: String(e.level||"BASICO"), difficulty: Number(e.difficulty||3), estimatedMin: Number(e.estimatedMin||10), isCurated: !!e.isCurated }));
+      setExercises(normalized);
+    } catch{ setExercises(SEED_EX); } else { setExercises(SEED_EX); localStorage.setItem(ek, JSON.stringify(SEED_EX)); }
     if (sr) try{ setSongs(JSON.parse(sr)); } catch{ setSongs(SEED_SONG); } else { setSongs(SEED_SONG); localStorage.setItem(sk, JSON.stringify(SEED_SONG)); }
   }, []);
   const persistEx = (next: Exercise[])=>{ setExercises(next); localStorage.setItem(getTenantStorageKey("edu_exercises"), JSON.stringify(next)); };
@@ -122,7 +128,7 @@ export default function LibraryManager() {
               {filteredEx.map((e)=>(
                 <div key={e.id} className="rounded-2xl border border-border/40 bg-background p-3">
                   <div className="flex items-start justify-between"><div className="text-sm font-bold">{e.title} <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-[10px]">{e.instrument} · {e.level}</span></div><span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-700">{e.difficulty}/5 · {e.estimatedMin}′</span></div>
-                  <div className="text-xs text-muted-foreground">Skills: {e.skillKeys.join(", ")}</div>
+                  <div className="text-xs text-muted-foreground">Skills: {safeArr(e.skillKeys).join(", ")||"—"}</div>
                   <div className="text-xs mt-1">{e.description}</div>
                   {e.tabContent && <pre className="mt-2 overflow-auto rounded-lg bg-muted p-2 text-[11px] font-mono">{e.tabContent}</pre>}
                   {e.sourceUrl && <a href={e.sourceUrl} target="_blank" rel="noreferrer" className="text-[11px] text-amber-600 underline">{e.sourceUrl} ({e.sourceType})</a>}
