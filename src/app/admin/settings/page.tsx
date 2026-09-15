@@ -229,6 +229,17 @@ export default function GeneralSettingsPage() {
             </span>
           </div>
 
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-amber-500/10 p-2 text-amber-600 dark:text-amber-400"><Icons.RefreshCw className="h-5 w-5" /></div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-foreground">Actualizaciones Fleet</h3>
+                <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Tu ERP se actualiza como el mío: semáforo verde/amarillo, 1-click con backup previo y verificación. Misma base que uso yo.</p>
+                <a href="/admin/settings/updates" className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-500/20 dark:text-amber-300"><Icons.RefreshCw className="h-4 w-4" />Abrir Actualizaciones</a>
+              </div>
+            </div>
+          </div>
+
           <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-5">
             <div className="flex items-start gap-3">
               <div className="rounded-xl bg-rose-500/10 p-2 text-rose-600 dark:text-rose-400"><Icons.Trash2 className="h-5 w-5" /></div>

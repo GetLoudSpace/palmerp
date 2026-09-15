@@ -12,6 +12,11 @@
     "db:generate": "prisma generate",
     "db:migrate:deploy": "prisma migrate deploy",
     "instance:provision": "node scripts/provision-instance.mjs",
+    "backup:agent": "node scripts/backup-agent.mjs --once",
+    "template:bootstrap": "node scripts/template-bootstrap.mjs",
+    "fleet:update": "node scripts/fleet-update.mjs --apply",
+    "fleet:check": "node scripts/fleet-update.mjs --check",
+    "fleet:sync": "node scripts/fleet-sync.mjs",
     "test": "vitest --environment jsdom --run"
   },
   "engines": {

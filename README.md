@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PalmerP ERP Core — Fleet Independiente (Template)
 
-## Getting Started
+> **¿Instalando para un cliente? Empieza por [`TEMPLATE.md`](./TEMPLATE.md) y sigue [`docs/TEMPLATE-INSTALADOR.md`](./docs/TEMPLATE-INSTALADOR.md) — guía 100% para el agente instalador. Si eres dueño, lee el PDF.**
 
-First, run the development server:
+Este es el **repo base** de PalmerP. Cada cliente tiene su **fleet independiente**: su GitHub (fork de este template), su Vercel, su Supabase, su R2 y su MiniPC siempre ON. Auto-deploy al hacer `git push origin main`.
+
+## Inicio Rápido (Agente Instalador — 15 min)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/tu/palmerp.git cliente-x && cd cliente-x
+npm ci --legacy-peer-deps
+node scripts/template-bootstrap.mjs
+# Responde slug/nombre/email/dominio → genera .env.local + claves + provisiona DB
+# Sigue el output para Vercel/Supabase/MiniPC
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**O manual:** sigue `docs/TEMPLATE-INSTALADOR.md` paso a paso (comandos literales, todas las vars, troubleshooting).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Documentación
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Archivo | Para quién | Qué explica |
+|---|---|---|
+| [`docs/GUIA-COMPLETA-PALMERP.md`](./docs/GUIA-COMPLETA-PALMERP.md) + [PDF](./docs/Guia-Completa-PalmerP-Sistema.pdf) | **Todos (dueño+técnico+tú)** | **Biblia completa visual**: visión, porqués, mapas, usuario 1-min, instalador 0-100%, backup, MiniPC, updates 1-click, troubleshooting, checklists |
+| [`TEMPLATE.md`](./TEMPLATE.md) | Instalador rápido | Mapa 60s + `template-bootstrap` |
+| [`docs/TEMPLATE-INSTALADOR.md`](./docs/TEMPLATE-INSTALADOR.md) | Instalador 100% | Comandos literales, todas las vars, errores y fixes |
+| [`docs/Manual-PalmerP-Triple-Backup-Fleet.pdf`](./docs/Manual-PalmerP-Triple-Backup-Fleet.pdf) | Dueño (entregar) | Triple backup pedagógico sin tecnicismos |
+| [`docs/architecture.md`](./docs/architecture.md) | Dev | Reglas RLS, Single-DB vs Fleet, qué NO hacer |
+| [`.env.example`](./.env.example) | Dev | Todas las env vars con ejemplos |
 
-## Learn More
+## Stack
 
-To learn more about Next.js, take a look at the following resources:
+Next.js 16.2.6 + Prisma 7.8.0 + pg + Supabase pooler 6543 `?pgbouncer=true` + Vercel Cron 02:30 + R2/S3 + systemd agente 02:00
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Triple Backup 3-2-1
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Cada noche 02:00 → 2 artefactos (`logical.json.gz.enc` + `physical.sql.gz.enc`) cifrados solo con `BACKUP_ENCRYPTION_KEY` en 3 destinos: **A** `/data/backups/palmerp` (MiniPC 7d) → **B** R2 cliente (30d) → **C** Vault PalmerP `palmerp-vault` (90d inmutable).
 
-## Deploy on Vercel
+```bash
+npm run backup:agent          # MiniPC: crea ambos artefactos y sube a A/B/C
+curl -H "Authorization: Bearer $CRON_SECRET" https://cliente.vercel.app/api/cron/daily-backups | jq .summary
+curl -H "Authorization: Bearer $FLEET_API_KEY" https://control.palmerp.es/api/fleet/backup-heartbeat | jq .status  # verde <24h
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Verificación (antes de entregar)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx prisma generate
+npx tsc --noEmit --skipLibCheck
+npm run build   # 66 rutas
+./init.sh       # [OK] Entorno listo
+```
+
+## Fleet
+
+```bash
+git remote add upstream https://github.com/tu/palmerp.git
+git fetch upstream && git merge upstream/main && git push origin main  # recibe mejoras → Vercel auto-deploy
+```
+
+Modos: `src/modules/registry.ts` + `Setting palmera_active_modes`. Activar: `POST /api/admin/modes` o `/admin/settings/modules`.
+
+---
+
+*PalmerP — Hecho con mimo en Europa — 2026*

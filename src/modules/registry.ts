@@ -32,6 +32,7 @@ export const coreModules: PalmModule[] = [
       { label: "General", path: "/admin/settings" },
       { label: "Usuarios & Permisos", path: "/admin/settings/users" },
       { label: "Gestión de modos", path: "/admin/settings/modules" },
+      { label: "Actualizaciones", path: "/admin/settings/updates" },
     ],
     requiredRole: "ADMIN",
   },

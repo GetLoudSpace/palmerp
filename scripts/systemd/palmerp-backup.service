@@ -1,0 +1,10 @@
+[Unit]
+Description=PalmerP Triple Backup 02:00
+After=network.target
+
+[Service]
+Type=oneshot
+User=mini
+WorkingDirectory=/opt/palmerp
+EnvironmentFile=/opt/palmerp/.env
+ExecStart=/usr/bin/node /opt/palmerp/scripts/backup-agent.mjs --once

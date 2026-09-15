@@ -1,0 +1,10 @@
+[Unit]
+Description=Run PalmerP backup daily 02:00
+Requires=palmerp-backup.service
+
+[Timer]
+OnCalendar=02:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

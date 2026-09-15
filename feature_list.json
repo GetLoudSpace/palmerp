@@ -109,7 +109,23 @@
         "Formulario fin clase guarda EduLesson+assessments y dispara WhatsApp Cloud API (graph.facebook.com) con template + link agregador r/batch/[token] y log en EduOutboxMessage + AuditLog, con fallback wa.me y batch del día",
         "Portal artista (solo isArtist) con Kanban/Gantt por status, editor letras con rimador español (consonante/asonante), grabadora getUserMedia con permiso + player unificado, papelera 30d + versionado/restore, y gestión releases con adapter distribuidora pluggable"
       ],
-      "status": "in_progress"
+      "status": "blocked"
+    },
+    {
+      "id": 9,
+      "name": "triple_backup",
+      "title": "Sistema Triple Backup Desacoplado (Local + Vault + Storage Cliente) 02:00",
+      "description": "Sistema de backup 3-2-1 desacoplado de externos: destino A local MiniPC siempre ON, B storage seguridad cliente (S3/R2 propio), C vault central Palmerp inmutable 90d. Cron 02:00, ambos artefactos logical JSON + pg_dump físico, cifrado solo clave cliente, checksum y BackupLog. Agente local + restore.",
+      "acceptance": [
+        "prisma/schema.prisma contiene modelo BackupLog (tenantId, destination A/B/C, fileKey, checksum, size, encrypted, status) con npx prisma generate OK",
+        "src/lib/backup/crypto.ts cifra/descifra AES-256-GCM solo con BACKUP_ENCRYPTION_KEY del cliente (no clave maestra Palmerp)",
+        "src/lib/backup/storage-provider.ts expone 3 providers (LocalFs, S3Cliente, PalmerpVault) via src/lib/storage.ts y sube en paralelo",
+        "src/lib/backup/runner.ts genera ambos artefactos logical JSON filtrado tenantId + pg_dump físico, gzip, encrypt, checksum y escribe BackupLog",
+        "src/app/api/cron/daily-backups/route.ts usa runner y sube a A/B/C con retención 7d/30d/90d, vercel.json cron 30 2 * * *",
+        "scripts/backup-agent.mjs agente local systemd 02:00 que hace pull directo DATABASE_URL y sube a 3 destinos aunque Vercel caiga",
+        "API /api/admin/restore y /api/fleet/backup-heartbeat funcionales y Superadmin muestra semáforo backup"
+      ],
+      "status": "done"
     }
   ]
 }

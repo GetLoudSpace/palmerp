@@ -46,6 +46,7 @@ model Tenant {
   eduRooms            EduRoom[]
   eduCalendarLinks    EduCalendarLink[]
   eduTeacherProfiles  EduTeacherProfile[]
+  backupLogs          BackupLog[]
 }
 
 model User {
@@ -1120,5 +1121,46 @@ model EduTeacherProfile {
 
   @@index([tenantId, isActive])
   @@index([tenantId])
+}
+
+// ==========================================
+// TRIPLE BACKUP 3-2-1 — DESACOPLADO EXTERNOS
+// ==========================================
+
+enum BackupDestination {
+  LOCAL
+  CLIENT_STORAGE
+  PALMERP_VAULT
+}
+
+enum BackupKind {
+  LOGICAL_JSON
+  PHYSICAL_DUMP
+}
+
+enum BackupStatus {
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+model BackupLog {
+  id          String            @id @default(cuid())
+  tenantId    String
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  destination BackupDestination
+  kind        BackupKind
+  fileKey     String            // ej. tenants/<id>/daily/2026-09-15.logical.json.gz.enc
+  checksum    String            // SHA256 hex del .enc
+  sizeBytes   Int
+  encrypted   Boolean           @default(true)
+  status      BackupStatus      @default(SUCCESS)
+  error       String?           @db.Text
+  createdAt   DateTime          @default(now())
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, destination, createdAt])
+  @@index([fileKey])
+  @@index([status, createdAt])
 }
 
