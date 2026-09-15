@@ -338,3 +338,22 @@
 
 **Estado:** Módulo de Compras Inteligentes, Gestión de Equipo y Herramientas de Dirección de Restaurante completados y validados.
 
+---
+
+## [2026-09-15] Profesor = Usuario real (fix Educación + Usuarios)
+
+**Objetivo:** Eliminar los profesores de ejemplo no vinculables y hacer que todo profesor nazca de un usuario real del ERP.
+
+### Logros
+1. **Lógica única (`src/lib/professors.ts`)**: crear/editar/archivar/eliminar profesor siempre sobre `User` (role `PROFESSOR`) + `EduTeacherProfile`. Borrado bloqueado con 409 si tiene clases.
+2. **Nueva API `src/app/api/admin/users` (+ `[id]`)**: CRUD real de usuarios (GET/POST/PATCH/DELETE, solo ADMIN/DEV). Rol `PROFESSOR` crea el perfil y vincula a la sección Profesor; salir del rol lo desvincula.
+3. **API `src/app/api/education/teachers`**: reescrita sobre la lógica única (POST crea `PROFESSOR`, + PATCH/DELETE). GET solo datos reales con `lessonCount`.
+4. **UI Profesor (`ProfessorsManager.tsx`)**: fuera seeds `Ana García`/`Carlos Ruiz` y `localStorage`; lista/edita/archiva contra la API.
+5. **UI Usuarios (`admin/settings/users/page.tsx`)**: fuera demos `localStorage` y campos ficticios (`username`, notas); conectada a la API con rol 🎸 Profesor + instrumentos.
+6. **Agenda (`EducationAgenda.tsx`)**: desplegable de profesor desde la API; fuera mocks `Prof. Ana/Carlos/GetLoud`.
+7. **SQL Supabase (`supabase_full.sql`)**: script completo idempotente generado desde `prisma/schema.prisma` (32 tablas, 22 enums, RLS).
+8. **Verificación**: `./init.sh` verde, `npx tsc --noEmit` 0 errores, `npm test` 8/8 OK.
+9. **Seguridad**: `.env.example` revertido a placeholder (la `DATABASE_URL` real va en `.env.local` gitignorado y en el dashboard de Vercel, nunca en git).
+
+**Estado:** Fix verificado y pusheado a `dst/master` para deploy en Vercel. Feature #8 `education_mode` sigue `blocked` (fix parcial).
+

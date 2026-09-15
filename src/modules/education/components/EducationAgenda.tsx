@@ -74,14 +74,24 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
       setStudents(arr.map((s:any)=>({id:s.id, name:s.contactName||s.name, instrument: s.primaryInstrument|| (Array.isArray(s.instruments)?s.instruments[0]:undefined)})));
     } catch{}
 
-    // users: from Tenant users if available, else mock profesores
+    // Profesores reales (usuarios vinculados): la API es la fuente de verdad.
+    // Se usa la caché local solo como placeholder hasta que responde la API. Sin mocks.
+    let seededFromCache = false;
     if (ukRaw) try{
       const pu = JSON.parse(ukRaw);
-      if (Array.isArray(pu) && pu.length) setUsers(pu.map((u:any)=>({id:u.id||u.email, name:u.name||u.email})));
-      else throw new Error("empty");
-    } catch {
-      setUsers([{id:"u1", name:"Prof. Ana"},{id:"u2", name:"Prof. Carlos"},{id:"u3", name:"Prof. GetLoud"}]);
-    }
+      if (Array.isArray(pu) && pu.length) {
+        setUsers(pu.map((u:any)=>({id:u.id||u.email, name:u.name||u.email})));
+        seededFromCache = true;
+      }
+    } catch {}
+    fetch("/api/education/teachers").then(r=>r.json()).then(d=>{
+      const list: any[] = Array.isArray(d?.teachers) ? d.teachers : [];
+      if (list.length) {
+        setUsers(list.filter(t=>t.isActive !== false).map(t=>({id: String(t.userId || t.id), name: String(t.name || t.email)})));
+      } else if (!seededFromCache) {
+        setUsers([]);
+      }
+    }).catch(()=>{ if (!seededFromCache) setUsers([]); });
     if (lessRaw) try{
       const parsed = JSON.parse(lessRaw);
       const arr: any[] = Array.isArray(parsed)?parsed:[];
