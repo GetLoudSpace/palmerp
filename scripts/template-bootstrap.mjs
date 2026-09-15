@@ -170,7 +170,7 @@ FLEET_API_KEY="${fleetKey}"
   console.log("\n=== Próximos pasos 100% (no te saltes ninguno) ===\n");
   console.log("1) VERCEL: importa el fork en vercel.com → Add New Project → Import Git Repository (cliente-x)");
   console.log("   - Environment Variables (Production): pega TODAS las vars de .env.local (DATABASE_URL, NEXTAUTH_*, BACKUP_*, CRON_SECRET, FLEET_API_KEY, etc.)");
-  console.log("   - Production Branch: main");
+  console.log("   - Production Branch: master");
   console.log("   - Deploy → verifica https://<dominio>/api/cron/daily-backups con curl -H \"Authorization: Bearer $CRON_SECRET\" (debe dar success 3 destinos)");
   console.log("");
   console.log("2) R2 CLIENTE (destino B, 30d): crea bucket cliente-backups en Cloudflare R2 del cliente y pon CLIENT_BACKUP_S3_* en Vercel Env + .env del MiniPC");

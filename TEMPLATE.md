@@ -6,7 +6,7 @@ Este repositorio es un **GitHub Template**. Cada cliente tiene **su propia copia
 
 ```
 Tu repo base (palmerp)  ──template──►  Fork del cliente (cliente-x/palmerp)
-        push main ──────────────────►  git pull upstream main → push → Vercel auto-deploy
+        push master ──────────────────►  git pull upstream main → push → Vercel auto-deploy
 ```
 
 **¿Qué estás instalando?**
@@ -36,7 +36,7 @@ Sigue **`docs/TEMPLATE-INSTALADOR.md`** — guía exhaustiva 100% con cada coman
 
 ### Actualizar como tú (cliente 1-click)
 
-El cliente lleva tu mismo flujo: `/admin/settings/updates` → semáforo + `GET /api/admin/updates` → `N commits por detrás`. En Vercel: `git fetch upstream && git merge upstream/main && npm ci && npx prisma migrate deploy && git push`. En MiniPC: `npm run fleet:update` (`scripts/fleet-update.mjs --apply`) que hace backup previo + merge + migrate + build + push + pm2 restart. Ver `TEMPLATE-INSTALADOR.md §13`.
+El cliente lleva tu mismo flujo: `/admin/settings/updates` → semáforo + `GET /api/admin/updates` → `N commits por detrás`. En Vercel: `git fetch upstream && git merge upstream/master && npm ci && npx prisma migrate deploy && git push`. En MiniPC: `npm run fleet:update` (`scripts/fleet-update.mjs --apply`) que hace backup previo + merge + migrate + build + push + pm2 restart. Ver `TEMPLATE-INSTALADOR.md §13`.
 
 ---
 
@@ -44,7 +44,7 @@ El cliente lleva tu mismo flujo: `/admin/settings/updates` → semáforo + `GET 
 
 - [ ] **GitHub:** fork/clone creado desde este template (`Use this template` en GitHub)
 - [ ] **Supabase:** proyecto creado (pooler `6543 ?pgbouncer=true` copiado)
-- [ ] **Vercel:** proyecto importado desde el fork (Production Branch `main`)
+- [ ] **Vercel:** proyecto importado desde el fork (Production Branch `master`)
 - [ ] **R2 Cliente:** bucket para destino B (`CLIENT_BACKUP_S3_*`)
 - [ ] **R2 Vault PalmerP:** bucket `palmerp-vault` para destino C (tu cuenta)
 - [ ] **MiniPC:** Ubuntu + Node 20 + `pg_dump` siempre ON (`/data/backups/palmerp`)
@@ -91,7 +91,7 @@ Si algo falla, ve a **`docs/TEMPLATE-INSTALADOR.md` → §9 Troubleshooting**.
 
 1. Entrégale el **PDF**, la **clave impresa en QR** (¡si la pierde, el backup es irrecuperable!) y el acceso a su Vercel/Supabase/R2.
 2. Enséñale el semáforo: `GET /api/fleet/backup-heartbeat` verde = tranquilo.
-3. Recuérdale: `git push origin main` despliega solo; para recibir tus mejoras: `git fetch upstream && git merge upstream/main`.
+3. Recuérdale: `git push origin master` despliega solo; para recibir tus mejoras: `git fetch upstream && git merge upstream/master`.
 
 ---
 

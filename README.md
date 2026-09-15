@@ -2,7 +2,7 @@
 
 > **¿Instalando para un cliente? Empieza por [`TEMPLATE.md`](./TEMPLATE.md) y sigue [`docs/TEMPLATE-INSTALADOR.md`](./docs/TEMPLATE-INSTALADOR.md) — guía 100% para el agente instalador. Si eres dueño, lee el PDF.**
 
-Este es el **repo base** de PalmerP. Cada cliente tiene su **fleet independiente**: su GitHub (fork de este template), su Vercel, su Supabase, su R2 y su MiniPC siempre ON. Auto-deploy al hacer `git push origin main`.
+Este es el **repo base** de PalmerP. Cada cliente tiene su **fleet independiente**: su GitHub (fork de este template), su Vercel, su Supabase, su R2 y su MiniPC siempre ON. Auto-deploy al hacer `git push origin master`.
 
 ## Inicio Rápido (Agente Instalador — 15 min)
 
@@ -54,7 +54,7 @@ npm run build   # 66 rutas
 
 ```bash
 git remote add upstream https://github.com/tu/palmerp.git
-git fetch upstream && git merge upstream/main && git push origin main  # recibe mejoras → Vercel auto-deploy
+git fetch upstream && git merge upstream/master && git push origin master  # recibe mejoras → Vercel auto-deploy
 ```
 
 Modos: `src/modules/registry.ts` + `Setting palmera_active_modes`. Activar: `POST /api/admin/modes` o `/admin/settings/modules`.

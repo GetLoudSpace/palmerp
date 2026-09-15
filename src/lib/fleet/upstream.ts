@@ -5,7 +5,7 @@ import { getLocalVersion, compareSemver } from "./version";
 
 export interface UpstreamInfo {
   repo: string; // "Palm-ERP/palmerp"
-  branch: string; // "main"
+  branch: string; // "master"
   commit: string | null;
   commitShort: string | null;
   version: string | null; // package.json version del upstream (si se puede leer)
@@ -21,7 +21,7 @@ export interface UpdateCheck {
 }
 
 const DEFAULT_REPO = "Palm-ERP/palmerp";
-const DEFAULT_BRANCH = "main";
+const DEFAULT_BRANCH = "master";
 
 function getRepoAndBranch(): { repo: string; branch: string } {
   const repo = process.env.PALMERP_UPSTREAM_REPO || process.env.PALMERP_UPSTREAM || DEFAULT_REPO;
@@ -65,7 +65,7 @@ function fetchUpstreamViaGitLsRemote(repo: string, branch: string): UpstreamInfo
   try {
     const url = `https://github.com/${repo}.git`;
     const out = execSync(`git ls-remote ${url} refs/heads/${branch}`, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-    // out: "<sha>\trefs/heads/main"
+    // out: "<sha>\trefs/heads/master"
     const sha = out.split(/\s+/)[0] || null;
     return { repo, branch, commit: sha, commitShort: sha ? sha.slice(0, 7) : null, version: null, fetchedAt: new Date().toISOString() };
   } catch {

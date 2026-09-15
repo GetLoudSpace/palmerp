@@ -14,7 +14,7 @@ function sh(cmd) {
 }
 
 const repo = process.env.PALMERP_UPSTREAM_REPO || "Palm-ERP/palmerp";
-const branch = process.env.PALMERP_UPSTREAM_BRANCH || "main";
+const branch = process.env.PALMERP_UPSTREAM_BRANCH || "master";
 
 try {
   const remotes = execSync("git remote", { encoding: "utf8" });

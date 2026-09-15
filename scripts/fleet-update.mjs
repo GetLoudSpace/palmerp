@@ -32,7 +32,7 @@ function shInherit(cmd, opts = {}) {
 async function checkUpstream() {
   // usa el mismo código que src/lib/fleet/upstream.ts pero en mjs sin TS
   const repo = process.env.PALMERP_UPSTREAM_REPO || "Palm-ERP/palmerp";
-  const branch = process.env.PALMERP_UPSTREAM_BRANCH || "main";
+  const branch = process.env.PALMERP_UPSTREAM_BRANCH || "master";
   const token = process.env.GITHUB_TOKEN || "";
   try {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -163,7 +163,7 @@ async function main() {
 
   // 7) Push → Vercel auto-deploy
   try {
-    const branch = (() => { try { return execSync("git rev-parse --abbrev-ref HEAD",{encoding:"utf8"}).trim(); } catch { return "main"; }})();
+    const branch = (() => { try { return execSync("git rev-parse --abbrev-ref HEAD",{encoding:"utf8"}).trim(); } catch { return "master"; }})();
     shInherit(`git push origin ${branch}`, { dryRun });
     log(`✅ Push a origin/${branch} — Vercel desplegará en 1-2 min`);
   } catch (e) {

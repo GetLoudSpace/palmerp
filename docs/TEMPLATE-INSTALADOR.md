@@ -35,8 +35,8 @@
 
 ```
 REPO BASE (tú)  ── GitHub Template ──►  REPO CLIENTE (fork)
-     │                                      │  git push main ──► Vercel cliente (auto-deploy)
-     │  git pull upstream main              │
+     │                                      │  git push master ──► Vercel cliente (auto-deploy)
+     │  git pull upstream master              │
      │  (tú publicas mejoras)               ├──► Supabase cliente (DATABASE_URL pooler 6543)
      │                                      ├──► R2 cliente (CLIENT_BACKUP_S3_* → 30d)
      │                                      ├──► Vault PalmerP (PALMERP_VAULT_R2_* → 90d inmutable)
@@ -82,7 +82,7 @@ openssl version
 
 1. Ve a `https://github.com/tu/palmerp` → botón verde **`Use this template` → Create a new repository**
 2. Owner: cliente (o tu org), Name: `cliente-x`, Private: ✅
-3. **No marques** "Include all branches" (solo `main`)
+3. **No marques** "Include all branches" (solo `master`)
 
 ### 3.2 Si no está marcado como Template
 
@@ -93,7 +93,7 @@ git remote remove origin
 gh repo create cliente-x --private --source=. --remote=origin --push
 # o manual: crea repo vacío en GitHub y:
 git remote add origin https://github.com/cliente/cliente-x.git
-git push -u origin main
+git push -u origin master
 ```
 
 ### 3.3 Configurar upstream (para recibir tus mejoras)
@@ -105,13 +105,13 @@ git remote add upstream https://github.com/tu/palmerp.git
 git remote -v  # debe mostrar origin (cliente) y upstream (tú)
 ```
 
-**Cuando tú publiques una mejora en `palmerp/main`:**
+**Cuando tú publiques una mejora en `palmerp/master`:**
 
 ```bash
 # En el repo del cliente:
 git fetch upstream
-git merge upstream/main --no-edit
-git push origin main  # Vercel del cliente despliega auto
+git merge upstream/master --no-edit
+git push origin master  # Vercel del cliente despliega auto
 ```
 
 > **Agente:** deja este `upstream` configurado siempre. Documenta en README del cliente.
@@ -364,7 +364,7 @@ node scripts/template-bootstrap.mjs
 
 ```bash
 git commit --allow-empty -m "test deploy"
-git push origin main
+git push origin master
 # en Vercel → Deployments debe aparecer nuevo deployment verde en 1-2 min
 ```
 
@@ -561,32 +561,32 @@ psql "$DATABASE_URL" < dump.sql
 
 ```bash
 # En palmerp base (tú):
-git add . && git commit -m "feat: nuevo modo X" && git push origin main
+git add . && git commit -m "feat: nuevo modo X" && git push origin master
 # sube también version: edita package.json "version": "0.2.0"
 
 # En cliente-x (él o tú con acceso) — manual clásico:
 git fetch upstream
-git merge upstream/main --no-edit
+git merge upstream/master --no-edit
 # resuelve conflictos si hay (normalmente no, Core no toca módulos cliente)
-git push origin main  # Vercel despliega auto
+git push origin master  # Vercel despliega auto
 ```
 
 ### Updates 1-click como tú (recomendado)
 
 El cliente **no necesita saber git**. Tiene semáforo y botón:
 
-- **UI:** `/admin/settings/updates` → muestra `v0.1.0 @ abc123` vs `Palm-ERP/palmerp@main @ def456`, `N commits por detrás`, último backup, últimos updates. Botón copia comandos.
+- **UI:** `/admin/settings/updates` → muestra `v0.1.0 @ abc123` vs `Palm-ERP/palmerp@master @ def456`, `N commits por detrás`, último backup, últimos updates. Botón copia comandos.
 - **API:** `GET /api/admin/updates` (check) + `GET /api/fleet/check-update` (público ligero)
-- **Vars:** `.env` → `PALMERP_UPSTREAM_REPO=Palm-ERP/palmerp`, `PALMERP_UPSTREAM_BRANCH=main`, `GITHUB_TOKEN=ghp_...` (solo si repo base privado)
+- **Vars:** `.env` → `PALMERP_UPSTREAM_REPO=Palm-ERP/palmerp`, `PALMERP_UPSTREAM_BRANCH=master`, `GITHUB_TOKEN=ghp_...` (solo si repo base privado)
 - **Vercel (GitHub):** en su portátil dentro del repo cliente:
 
 ```bash
-git fetch upstream && git merge upstream/main --no-edit --no-ff
+git fetch upstream && git merge upstream/master --no-edit --no-ff
 npm ci --legacy-peer-deps
 npx prisma generate
 npx prisma migrate deploy   # o npx prisma db push si no hay migrations
 npm run build               # si falla, no push
-git push origin main        # Vercel despliega 1-2 min
+git push origin master        # Vercel despliega 1-2 min
 ```
 
 - **MiniPC (on-premise):** un comando hace todo con backup previo y verificación:
@@ -613,7 +613,7 @@ curl -X POST https://cliente-x.vercel.app/api/admin/modes \
 # O vía UI: /admin/settings/modules
 
 # Futuro marketplace remoto (cuando exista registry.json):
-# POST /api/admin/modes/install {modeId:"EDUCACION"} → fetch https://raw.githubusercontent.com/tu/palmerp/main/src/modules/education/...
+# POST /api/admin/modes/install {modeId:"EDUCACION"} → fetch https://raw.githubusercontent.com/tu/palmerp/master/src/modules/education/...
 ```
 
 ---
@@ -628,11 +628,11 @@ curl -X POST https://cliente-x.vercel.app/api/admin/modes \
 
 3. **MiniPC (si on-premise):** `node scripts/fleet-update.mjs --apply` hace: backup previo (logical → LOCAL/CLIENT_STORAGE/VAULT) → `git fetch upstream` → `merge` → `npm ci` → `prisma generate/migrate deploy` → `tsc` + `build` → `git push` → `pm2 restart` si existe. Con `--dry-run` no toca nada. Con `--check` solo informa.
 
-4. **Tú publicas:** sube `package.json version` y `git push origin main` en `Palm-ERP/palmerp`. Cada cliente verá `N commits por detrás` en su `/admin/settings/updates`.
+4. **Tú publicas:** sube `package.json version` y `git push origin master` en `Palm-ERP/palmerp`. Cada cliente verá `N commits por detrás` en su `/admin/settings/updates`.
 
 5. **Seguridad:** el script **no hace push si `build` falla** y aborta merge si hay conflictos. Siempre hay backup previo en 3 destinos + vault 90d para rollback (`/api/admin/restore` dryRun).
 
-**Vars necesarias en cliente `.env` para check:** `PALMERP_UPSTREAM_REPO=Palm-ERP/palmerp`, `PALMERP_UPSTREAM_BRANCH=main`, opcional `GITHUB_TOKEN` si tu repo base es privado.
+**Vars necesarias en cliente `.env` para check:** `PALMERP_UPSTREAM_REPO=Palm-ERP/palmerp`, `PALMERP_UPSTREAM_BRANCH=master`, opcional `GITHUB_TOKEN` si tu repo base es privado.
 
 ---
 
@@ -645,7 +645,7 @@ Entrega **física + digital**:
 - [ ] **Accesos:** invite a su email como `ADMIN` en su Vercel Team + Supabase Org + GitHub repo
 - [ ] **URLs:** `https://cliente-x.vercel.app` (prod), `https://cliente-x.vercel.app/admin`, `https://control.palmerp.es` (tu fleet)
 - [ ] **Semáforo:** enséñale `GET /api/fleet/backup-heartbeat` verde = tranquilo (1 min/día)
-- [ ] **Regla:** `git push origin main` despliega; para pedir soporte, que te dé su `tenantId` y un `.enc` (sin clave no puedes abrir)
+- [ ] **Regla:** `git push origin master` despliega; para pedir soporte, que te dé su `tenantId` y un `.enc` (sin clave no puedes abrir)
 
 **Frase para cliente:** *"Si ves verde cada mañana y guardas la clave en caja fuerte, estás cubierto aunque falle Vercel o Supabase. Yo veo el vault pero no puedo abrirlo sin ti."*
 
@@ -667,7 +667,7 @@ Entrega **física + digital**:
 | `backup:agent` → `pg_dump not available` | `postgresql-client` no instalado | `sudo apt install postgresql-client && pg_dump --version` |
 | `POST /api/admin/restore` → `auth failed` | clave mal | usa la `BACKUP_ENCRYPTION_KEY` exacta con la que se cifró (base64 44 chars, sin salto) |
 | `systemctl` → `Failed to enable` | archivos no copiados | `sudo cp scripts/systemd/* /etc/systemd/system/` + `daemon-reload` |
-| `git push` no despliega | Vercel no conectado | Vercel → Import Git Repository debe apuntar al fork del cliente, Production Branch `main` |
+| `git push` no despliega | Vercel no conectado | Vercel → Import Git Repository debe apuntar al fork del cliente, Production Branch `master` |
 | `TenantMismatch` en `/admin` | `tenantSlug` token ≠ subdominio | `middleware.ts` usa `x-tenant-slug`; en localhost usa `cliente-x.localhost:3000`, en prod `cliente-x.vercel.app` |
 
 **Logs útiles:**
@@ -696,7 +696,7 @@ Copia y firma con cliente:
 ☐ DATABASE_URL pooler 6543 verificada con psql select 1
 ☐ npx prisma generate + migrate deploy OK
 ☐ npm run build (66 rutas) + ./init.sh [OK] + npx tsc OK
-☐ Vercel proyecto importado, Production Branch main, auto-deploy probado (git push)
+☐ Vercel proyecto importado, Production Branch master, auto-deploy probado (git push)
 ☐ Vercel cron 02:30 visible en Settings → Cron Jobs
 ☐ MiniPC: /data/backups/palmerp existe, pg_dump OK, backup:agent manual crea 2 .enc y sube a B y C
 ☐ systemd timer 02:00 enable --now OK, list-timers muestra palmerp-backup.timer

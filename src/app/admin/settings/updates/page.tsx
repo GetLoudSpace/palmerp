@@ -42,12 +42,12 @@ export default function UpdatesPage() {
   };
 
   const cmdsVercel = `git fetch upstream
-git merge upstream/main --no-edit --no-ff
+git merge upstream/master --no-edit --no-ff
 npm ci --legacy-peer-deps
 npx prisma generate
 npx prisma migrate deploy
 npm run build
-git push origin main`;
+git push origin master`;
 
   const cmdMini = `node scripts/fleet-update.mjs --apply`;
 
@@ -140,7 +140,7 @@ git push origin main`;
                     {copyOk === "vercel" ? <Icons.Check className="h-3.5 w-3.5 text-emerald-400" /> : <Icons.Copy className="h-3.5 w-3.5 text-zinc-300" />}
                   </button>
                 </div>
-                <div className="text-[11px] text-muted-foreground mt-2">Hace <code>git push origin main</code> → Vercel despliega solo (1-2 min). Verifica en Vercel → Deployments.</div>
+                <div className="text-[11px] text-muted-foreground mt-2">Hace <code>git push origin master</code> → Vercel despliega solo (1-2 min). Verifica en Vercel → Deployments.</div>
               </div>
 
               {/* MiniPC */}
@@ -158,7 +158,7 @@ git push origin main`;
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <a href="https://github.com/Palm-ERP/palmerp/commits/main" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-border/40 bg-card px-3 py-2 text-xs font-bold hover:bg-muted">
+              <a href="https://github.com/Palm-ERP/palmerp/commits/master" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-border/40 bg-card px-3 py-2 text-xs font-bold hover:bg-muted">
                 <Icons.GitBranch className="h-4 w-4" /> Ver cambios upstream
               </a>
               <button onClick={load} className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700">
@@ -175,7 +175,7 @@ git push origin main`;
           <div className="rounded-2xl border border-border/40 bg-muted/10 p-5 text-xs leading-6 text-muted-foreground">
             <div className="font-bold text-foreground">¿Qué actualiza exactamente?</div>
             Todo lo que tú actualizas: <code>src/lib/</code>, <code>src/modules/</code>, <code>prisma/schema.prisma</code> (migrations), <code>src/app/</code>, estilos y el propio sistema de backup. Los datos del cliente (Tenant, Users, Contacts, pedidos) no se tocan. Las migrations son <code>npx prisma migrate deploy</code> (no destructivas).
-            <div className="mt-2">Upstream configurable vía <code>PALMERP_UPSTREAM_REPO=Palm-ERP/palmerp</code> y <code>PALMERP_UPSTREAM_BRANCH=main</code> en <code>.env</code>. Para repos privados, añade <code>GITHUB_TOKEN</code>.</div>
+            <div className="mt-2">Upstream configurable vía <code>PALMERP_UPSTREAM_REPO=Palm-ERP/palmerp</code> y <code>PALMERP_UPSTREAM_BRANCH=master</code> en <code>.env</code>. Para repos privados, añade <code>GITHUB_TOKEN</code>.</div>
           </div>
         </>
       )}

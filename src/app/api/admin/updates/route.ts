@@ -70,15 +70,15 @@ export async function POST(req: Request) {
       }
       return NextResponse.json({
         success: true,
-        message: "Update registrado. En Vercel: git fetch upstream && git merge upstream/main && npm ci && npx prisma migrate deploy && git push. En MiniPC: node scripts/fleet-update.mjs --apply",
+        message: "Update registrado. En Vercel: git fetch upstream && git merge upstream/master && npm ci && npx prisma migrate deploy && git push. En MiniPC: node scripts/fleet-update.mjs --apply",
         nextSteps: [
           "git fetch upstream",
-          "git merge upstream/main --no-edit",
+          "git merge upstream/master --no-edit",
           "npm ci --legacy-peer-deps",
           "npx prisma generate",
           "npx prisma migrate deploy",
           "npm run build",
-          "git push origin main",
+          "git push origin master",
         ],
       });
     }

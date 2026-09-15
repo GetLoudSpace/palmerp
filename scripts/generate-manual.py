@@ -316,7 +316,7 @@ story.append(Spacer(1,2*mm))
 story.append(info_box("No subas .env a Git", "El <b>.gitignore</b> ya ignora <b>.env*</b>. Verifica con <b>git status</b> que no aparece. Las claves solo viven en Vercel Env y en el MiniPC.", bg=AMBER_LIGHT, border=AMBER))
 
 story.append(step_table(3, "Inicializa base de datos", "Crea tablas y usuario admin del tenant.", "npx prisma migrate deploy  &&  npm run instance:provision -- --slug cliente-x --name \"Cliente X SL\" --admin-email admin@cliente.es"))
-story.append(step_table(4, "Conecta Vercel a GitHub", "En Vercel → <b>Add New Project → Import from GitHub</b> selecciona el fork del cliente. Production Branch = <b>main</b>. Cada <b>git push origin main</b> desplegará auto.", "git push origin main  # verifica en Vercel → Deployments que sale verde"))
+story.append(step_table(4, "Conecta Vercel a GitHub", "En Vercel → <b>Add New Project → Import from GitHub</b> selecciona el fork del cliente. Production Branch = <b>master</b>. Cada <b>git push origin master</b> desplegará auto.", "git push origin master  # verifica en Vercel → Deployments que sale verde"))
 story.append(step_table(5, "Verifica el cron 02:30", "Vercel ya tiene <b>vercel.json → crons: 30 2 * * *</b>. Comprueba en Vercel → Settings → Cron Jobs que aparece <b>/api/cron/daily-backups</b>. No toques la hora.", None))
 story.append(step_table(6, "Prueba un backup manual", "Lanza un backup sin esperar a las 02:00. Debe devolver <b>success/partial</b> con 3 destinos.", 'curl -H "Authorization: Bearer $CRON_SECRET" https://cliente.vercel.app/api/cron/daily-backups'))
 story.append(success_box("¿Todo verde?", "Si el JSON trae <b>\"overallStatus\": \"success\"</b> y ves 3 destinos OK, ya duermes tranquilo. Si sale <b>\"not configured\"</b> en algún destino, revisa ese bloque de vars."))
@@ -380,7 +380,7 @@ story.append(info_box("Physical requiere MiniPC", "Si solo ves <b>logical</b> en
 story.append(Paragraph("7 &nbsp; Fleet: cómo gestionas tú las instancias", sH1))
 story.append(Paragraph("Cada cliente tiene su Vercel + Supabase + GitHub + MiniPC. Tú no tocas su base de datos, pero ves salud.", sBody))
 story.append(Paragraph("Modelo Fleet independiente", sH2))
-story.append(Paragraph("Repo base <b>palmerp</b> es <b>template</b>. Cliente hace <b>fork/clone</b> → importa en su Vercel. Tu repo base es <b>upstream</b>: <b>git remote add upstream https://github.com/tu/palmerp.git</b> → <b>git fetch upstream && git merge upstream/main</b> → <b>git push origin main</b> → Vercel del cliente despliega solo. Cada modo nuevo se instala desde repo base vía <b>POST /api/admin/modes/install</b> (manifiesto <b>registry.json</b>).", sBody))
+story.append(Paragraph("Repo base <b>palmerp</b> es <b>template</b>. Cliente hace <b>fork/clone</b> → importa en su Vercel. Tu repo base es <b>upstream</b>: <b>git remote add upstream https://github.com/tu/palmerp.git</b> → <b>git fetch upstream && git merge upstream/master</b> → <b>git push origin master</b> → Vercel del cliente despliega solo. Cada modo nuevo se instala desde repo base vía <b>POST /api/admin/modes/install</b> (manifiesto <b>registry.json</b>).", sBody))
 f1 = [
     [Paragraph("<b>Tú controlas</b>", sTableHeader), Paragraph("<b>Cliente controla</b>", sTableHeader)],
     [Paragraph("Vault central inmutable 90d<br/>Heartbeat/semáforo fleet", sTableCell), Paragraph("Su R2/S3, su Supabase, su MiniPC, su clave", sTableCell)],

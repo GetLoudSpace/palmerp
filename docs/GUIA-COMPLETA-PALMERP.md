@@ -36,11 +36,11 @@ Un SaaS central (`*.palmerp.es` + 1 Supabase) es barato, pero te ata: si Vercel 
 
 ### La solución que montamos
 
-**Fleet independiente:** cada cliente tiene **su** GitHub (fork), **su** Vercel, **su** Supabase, **su** R2 y **su** MiniPC. Tú mantienes el repo base `palmerp` y cada `git push origin main` suyo despliega solo su ERP. Él paga su nube directo, tú pagas solo un bucket vault central.
+**Fleet independiente:** cada cliente tiene **su** GitHub (fork), **su** Vercel, **su** Supabase, **su** R2 y **su** MiniPC. Tú mantienes el repo base `palmerp` y cada `git push origin master` suyo despliega solo su ERP. Él paga su nube directo, tú pagas solo un bucket vault central.
 
 **Triple Backup 3-2-1:** cada noche 02:00 se crean **2 artefactos** (`logical JSON` + `physical pg_dump`) cifrados **solo con su clave** y se guardan en **3 sitios**: A) disco MiniPC (7d), B) su R2 (30d), C) tu vault `palmerp-vault` (90d inmutable). Aunque Vercel y Supabase desaparezcan, tiene 2 copias fuera.
 
-**Updates como tú:** el cliente ve en `/admin/settings/updates` el mismo semáforo que tú, con `v0.1.0 @ abc` vs `Palm-ERP/palmerp@main @ def`, `N commits por detrás`, y copia 7 comandos (Vercel) o 1 comando MiniPC (`npm run fleet:update`) que hace backup → merge → migrate → build → push. Si el build falla, no despliega.
+**Updates como tú:** el cliente ve en `/admin/settings/updates` el mismo semáforo que tú, con `v0.1.0 @ abc` vs `Palm-ERP/palmerp@master @ def`, `N commits por detrás`, y copia 7 comandos (Vercel) o 1 comando MiniPC (`npm run fleet:update`) que hace backup → merge → migrate → build → push. Si el build falla, no despliega.
 
 > **En una frase:** es tu ERP, pero cada cliente duerme en su casa, con 3 llaves y la misma llave inglesa que tú para actualizar.
 
@@ -52,9 +52,9 @@ Un SaaS central (`*.palmerp.es` + 1 Supabase) es barato, pero te ata: si Vercel 
 
 ```
 TÚ (Palm-ERP/palmerp)  ── GitHub Template ──►  CLIENTE-X (fork privado)
-  git push main                                 git clone → npm ci → .env
+  git push master                                 git clone → npm ci → .env
      │  (tú publicas mejora)                     │
-     │  git pull upstream main ───────────────►  git merge upstream/main → git push origin main ──► VERCEL CLIENTE-X
+     │  git pull upstream master ───────────────►  git merge upstream/master → git push origin master ──► VERCEL CLIENTE-X
      │                                           │  ├─ Supabase cliente (DATABASE_URL pooler 6543)
      │                                           │  ├─ R2 cliente (CLIENT_BACKUP_S3_* → B 30d)
      │                                           │  ├─ Vault PalmerP (PALMERP_VAULT_R2_* → C 90d)
@@ -77,10 +77,10 @@ TÚ (Palm-ERP/palmerp)  ── GitHub Template ──►  CLIENTE-X (fork privad
 ### 2.3 Update 1-click
 
 ```
-TÚ: git push origin main en palmerp (bump package.json version)
+TÚ: git push origin master en palmerp (bump package.json version)
         │
 CLIENTE: /admin/settings/updates → ve "3 commits por detrás" (GET /api/admin/updates → src/lib/fleet/upstream.ts via GitHub API o git ls-remote)
-        ├─ Vercel: copia 7 comandos → git push origin main → Vercel deploy
+        ├─ Vercel: copia 7 comandos → git push origin master → Vercel deploy
         └─ MiniPC: npm run fleet:update (= fleet-update.mjs --apply → backup → fetch → merge → npm ci → prisma migrate deploy → build → push → pm2 restart)
                 └─ si build falla → no push; si merge conflicto → abort + stash pop
 ```
@@ -207,7 +207,7 @@ git remote add upstream https://github.com/Palm-ERP/palmerp.git
 git remote -v  # origin (cliente) + upstream (tú)
 ```
 
-*Cuando publiques mejora:* `git fetch upstream && git merge upstream/main --no-edit && git push origin main` → Vercel cliente despliega solo.
+*Cuando publiques mejora:* `git fetch upstream && git merge upstream/master --no-edit && git push origin master` → Vercel cliente despliega solo.
 
 ### 5.3 Supabase — DB pooler
 
@@ -309,7 +309,7 @@ CRON_SECRET="..."
 FLEET_API_KEY="..."
 PALMERP_CONTROL_URL="https://control.palmerp.es"
 PALMERP_UPSTREAM_REPO="Palm-ERP/palmerp"
-PALMERP_UPSTREAM_BRANCH="main"
+PALMERP_UPSTREAM_BRANCH="master"
 # GITHUB_TOKEN="ghp_..." # solo si palmerp privado
 ```
 
@@ -358,7 +358,7 @@ npm run dev                       # http://localhost:3000
 4. Prueba deploy:
 
 ```bash
-git commit --allow-empty -m "test deploy" && git push origin main  # Deployments verde 1-2 min
+git commit --allow-empty -m "test deploy" && git push origin master  # Deployments verde 1-2 min
 ```
 
 ### 5.8 MiniPC — agente 02:00
@@ -462,7 +462,7 @@ Sin MiniPC: esa noche no hay A ni physical (amarillo).
 
 **Principio:** cliente actualiza igual que tú. Un flujo, una verdad.
 
-**Tú publicas:** `package.json version 0.1.0 → 0.2.0` + `git push origin main` en `Palm-ERP/palmerp`.
+**Tú publicas:** `package.json version 0.1.0 → 0.2.0` + `git push origin master` en `Palm-ERP/palmerp`.
 
 **Cliente ve:** `/admin/settings/updates` → `GET /api/admin/updates` → `src/lib/fleet/upstream.ts:1` (GitHub API o `git ls-remote`, `git rev-list --count HEAD..FETCH_HEAD`, semver `compareSemver`) → `N commits por detrás` + backup age + último update. Semáforo amarillo → acción.
 
@@ -470,12 +470,12 @@ Sin MiniPC: esa noche no hay A ni physical (amarillo).
 
 ```bash
 git fetch upstream
-git merge upstream/main --no-edit --no-ff
+git merge upstream/master --no-edit --no-ff
 npm ci --legacy-peer-deps
 npx prisma generate
 npx prisma migrate deploy
 npm run build
-git push origin main  # Vercel despliega
+git push origin master  # Vercel despliega
 ```
 
 **MiniPC (1 comando):**
@@ -526,7 +526,7 @@ Logs: `BackupLog` (tenantId, destination, fileKey, checksum, size, encrypted, st
 | `pg_dump not available` | `postgresql-client` no instalado | `apt install postgresql-client` |
 | `auth failed` restore | clave distinta | usa clave con que se cifró |
 | `TenantMismatch` /admin | token slug ≠ subdominio | `cliente-x.localhost:3000` o `cliente-x.vercel.app` |
-| `git push` no despliega | Vercel no conectado | Import Git Repository debe ser fork cliente, branch `main` |
+| `git push` no despliega | Vercel no conectado | Import Git Repository debe ser fork cliente, branch `master` |
 | `fleet:check` siempre 1 commit por detrás | local sin fetch | `git fetch upstream` o revisa `PALMERP_UPSTREAM_REPO` |
 
 Logs:
@@ -549,7 +549,7 @@ npx prisma studio
 ☐ DATABASE_URL pooler 6543 psql select 1 OK
 ☐ npx prisma generate + migrate deploy OK
 ☐ npm run build 67 rutas + ./init.sh [OK] + tsc OK
-☐ Vercel import, branch main, auto-deploy git push OK
+☐ Vercel import, branch master, auto-deploy git push OK
 ☐ Cron 02:30 visible
 ☐ MiniPC /data/backups ok, pg_dump OK, backup:agent 2 .enc + B/C OK
 ☐ systemd timer 02:00 enable --now OK
