@@ -357,3 +357,16 @@
 
 **Estado:** Fix verificado y pusheado a `dst/master` para deploy en Vercel. Feature #8 `education_mode` sigue `blocked` (fix parcial).
 
+---
+
+## [2026-09-15] GoHighLevel preparado para agenda/calendario
+
+**Objetivo:** Dejar el sistema listo para sincronizar la agenda con GoHighLevel vía API (conexión real pendiente por el usuario).
+
+### Logros
+1. **Adaptador `src/modules/education/lib/gohighlevel.ts`**: GHL API v2 (`Version: 2021-07-28`, verificado contra doc oficial), config por tenant en `Setting` (`ghl_*`, sin migración), `ensureGhlContact`, CRUD appointments, `listGhlCalendars`, `triggerGhlWorkflow`, mapa lessonId↔appointmentId en Setting.
+2. **Ruta `ghl-sync` (POST/DELETE)**: espejo de clases + workflows, skip graceful sin config, AuditLog.
+3. **Ruta `ghl-webhook` (POST)**: inbound con `?secret=`, solo log por defecto (`ghl_inbound_apply` para mutar).
+4. **Agenda enganchada** (crear/borrar slot) + `.env.example` con pasos y placeholders (sin secretos).
+5. **Verificación**: `tsc` OK, tests 8/8 OK, pusheado a `dst/master` para Vercel.
+

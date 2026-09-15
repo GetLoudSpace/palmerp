@@ -270,6 +270,10 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
     try{
       await fetch("/api/education/calendar/sync",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ lessonId: lesson.id, lesson }) });
     } catch{}
+    // espejo GoHighLevel (si no hay config GHL, hace skip): citas + workflows
+    try{
+      await fetch("/api/education/calendar/ghl-sync",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ lessonId: lesson.id, lesson }) });
+    } catch{}
   };
 
   const deleteSlot = ()=>{
@@ -281,6 +285,8 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
     if (editing.googleEventId) {
       fetch("/api/education/calendar/sync",{ method:"DELETE", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ googleEventId: editing.googleEventId, googleCalendarId: editing.googleEventId }) }).catch(()=>{});
     }
+    // también borrar el espejo en GoHighLevel (resuelve por lessonId mapeado)
+    fetch("/api/education/calendar/ghl-sync",{ method:"DELETE", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ lessonId: editing.id }) }).catch(()=>{});
     setShowSlot(null); setEditing(null);
   };
 
@@ -430,6 +436,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
               <button type="submit" className="flex-1 rounded-xl bg-foreground px-4 py-3 text-sm font-bold text-background">{editing?"Guardar cambios":"Crear slot"}</button>
             </div>
             <p className="mt-2 text-[10px] text-muted-foreground">Google Calendar: sincronización opcional en <code>/api/education/calendar/sync</code>. Si configuras <code>EduCalendarLink</code>, el slot se espeja en Google; si desconectas, Palmera sigue mandando (no prioritario Google).</p>
+            <p className="mt-1 text-[10px] text-muted-foreground">GoHighLevel: espejo de citas + workflows en <code>/api/education/calendar/ghl-sync</code> (requiere Settings <code>ghl_sync_enabled</code>, <code>ghl_api_token</code>, <code>ghl_location_id</code>, <code>ghl_calendar_id</code>). Entrada GHL → Palmera en <code>/api/education/calendar/ghl-webhook?secret=…</code>. Ver <code>src/modules/education/lib/gohighlevel.ts</code>.</p>
           </form>
         </div>
       )}
