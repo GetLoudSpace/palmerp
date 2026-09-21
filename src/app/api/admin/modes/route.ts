@@ -1,18 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
-import { getTenantSlugFromHeaders } from "@/lib/tenant";
+import { getTenantSlugFromHeaders, enforcePinnedTenant } from "@/lib/tenant";
 import { getToken } from "next-auth/jwt";
 
 async function resolveSlug(req?: NextRequest) {
   // Instancia pineada: siempre su tenant, se ignora header/JWT ajeno.
   const pinned = (process.env.PINNED_TENANT_SLUG || "").trim().toLowerCase();
   if (pinned) return pinned;
-  const headerSlug = await getTenantSlugFromHeaders();
+  const headerSlug = enforcePinnedTenant(await getTenantSlugFromHeaders());
   if (headerSlug) return headerSlug;
   try {
     const token: any = await getToken({ req: req as any, secret: process.env.NEXTAUTH_SECRET });
-    if (token?.tenantSlug) return String(token.tenantSlug).toLowerCase();
+    const fromJwt = enforcePinnedTenant(token?.tenantSlug ? String(token.tenantSlug).toLowerCase() : null);
+    if (fromJwt) return fromJwt;
   } catch {}
+  // Fallback single-instance local (sin subdominio): evita 401 en localhost/apex
+  const instanceFallback =
+    (process.env.PALMERA_INSTANCE_SLUG || "").trim().toLowerCase() ||
+    (process.env.NEXT_PUBLIC_PINNED_TENANT_SLUG || "").trim().toLowerCase() ||
+    null;
+  if (instanceFallback) return instanceFallback;
   return null;
 }
 
@@ -21,8 +28,8 @@ export async function GET(req: NextRequest) {
     const slug = await resolveSlug(req);
     // Sin tenant resuelto NO devolver success:true+vacío: el sidebar lo interpreta
     // como "cero modos" y SOBRESCRIBE el localStorage bueno dejándolo como fresh install.
-    // success:false → el cliente conserva su estado local hasta loguearse en el tenant correcto.
-    if (!slug) return NextResponse.json({ success: false, error: "No tenant resolved (missing session/subdomain)" }, { status: 401 });
+    // success:false + 200 → el cliente conserva su estado local sin disparar GlobalErrorPopup.
+    if (!slug) return NextResponse.json({ success: false, error: "No tenant resolved (missing session/subdomain)" }, { status: 200 });
     const tenant = await db.tenant.findUnique({ where: { slug } });
     if (!tenant) return NextResponse.json({ success: false, error: "Tenant not found" }, { status: 404 });
     const setting = await db.setting.findUnique({
