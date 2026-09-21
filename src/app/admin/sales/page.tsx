@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
 import SalesDashboard from "@/modules/sales/components/SalesDashboard";
+import { getDefaultSlug } from "@/lib/clientStorage";
 
 export default function SalesPage() {
   const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
@@ -11,7 +12,7 @@ export default function SalesPage() {
   const getStorageKey = () => {
     const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
     const parts = hostname.split(".");
-    const slug = parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+    const slug = parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
     return `palmera_active_modes_${slug}`;
   };
 
@@ -21,7 +22,7 @@ export default function SalesPage() {
       // Wait, let's make sure we check both getTenantStorageKey("palmera_active_modes") and fallback
       const hostname = window.location.hostname;
       const parts = hostname.split(".");
-      const slug = parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+      const slug = parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
       
       const key = `palmera_active_modes_${slug}`;
       const saved = localStorage.getItem(key);
@@ -57,7 +58,7 @@ export default function SalesPage() {
       if (typeof window !== "undefined") {
         const hostname = window.location.hostname;
         const parts = hostname.split(".");
-        const slug = parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+        const slug = parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
         const key = `palmera_active_modes_${slug}`;
 
         let activeIds: string[] = [];
@@ -98,7 +99,7 @@ export default function SalesPage() {
   if (isInstalled === null) {
     return (
       <div className="flex h-[400px] items-center justify-center">
-        <Icons.Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+        <Icons.Loader2 className="h-8 w-8 text-red-500 animate-spin" />
       </div>
     );
   }
@@ -111,7 +112,7 @@ export default function SalesPage() {
     <div className="max-w-4xl mx-auto py-12 px-4 space-y-12">
       {/* Presentation Header */}
       <div className="text-center space-y-4">
-        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20 shadow-md shadow-amber-500/5 animate-pulse">
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500/10 text-red-600 dark:text-red-500 border border-red-500/20 shadow-md shadow-red-500/5 animate-pulse">
           <Icons.DollarSign className="h-8 w-8" />
         </div>
         <div className="space-y-2">
@@ -124,7 +125,7 @@ export default function SalesPage() {
 
       {/* Grid of Key Features */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="flex gap-4 p-5 rounded-2xl border border-border/40 bg-card hover:border-amber-500/20 transition-all duration-200">
+        <div className="flex gap-4 p-5 rounded-2xl border border-border/40 bg-card hover:border-red-500/20 transition-all duration-200">
           <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0">
             <Icons.KanbanSquare className="h-5 w-5" />
           </div>
@@ -136,7 +137,7 @@ export default function SalesPage() {
           </div>
         </div>
 
-        <div className="flex gap-4 p-5 rounded-2xl border border-border/40 bg-card hover:border-amber-500/20 transition-all duration-200">
+        <div className="flex gap-4 p-5 rounded-2xl border border-border/40 bg-card hover:border-red-500/20 transition-all duration-200">
           <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
             <Icons.Target className="h-5 w-5" />
           </div>
@@ -148,8 +149,8 @@ export default function SalesPage() {
           </div>
         </div>
 
-        <div className="flex gap-4 p-5 rounded-2xl border border-border/40 bg-card hover:border-amber-500/20 transition-all duration-200">
-          <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
+        <div className="flex gap-4 p-5 rounded-2xl border border-border/40 bg-card hover:border-red-500/20 transition-all duration-200">
+          <div className="h-10 w-10 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 flex items-center justify-center shrink-0">
             <Icons.CalendarCheck2 className="h-5 w-5" />
           </div>
           <div className="space-y-1">
@@ -160,7 +161,7 @@ export default function SalesPage() {
           </div>
         </div>
 
-        <div className="flex gap-4 p-5 rounded-2xl border border-border/40 bg-card hover:border-amber-500/20 transition-all duration-200">
+        <div className="flex gap-4 p-5 rounded-2xl border border-border/40 bg-card hover:border-red-500/20 transition-all duration-200">
           <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
             <Icons.BarChart3 className="h-5 w-5" />
           </div>
@@ -185,7 +186,7 @@ export default function SalesPage() {
         <button
           onClick={handleInstall}
           disabled={installing}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-metallic-orange text-white text-xs font-bold px-8 shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-metallic-red text-white text-xs font-bold px-8 shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer"
         >
           {installing ? (
             <>

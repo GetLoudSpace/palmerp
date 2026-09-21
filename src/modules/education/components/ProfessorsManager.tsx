@@ -100,11 +100,6 @@ export default function ProfessorsManager() {
     <div className="space-y-4">
       {toast && <div className="fixed bottom-4 right-4 z-50 bg-foreground text-background px-4 py-2 rounded-xl text-xs font-bold">{toast}</div>}
 
-      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400"><Icons.ShieldCheck className="h-4 w-4" /> Arquitectura por revisar</div>
-        <p className="mt-1 text-xs text-muted-foreground">Profesor = <code>User STAFF</code> (no ADMIN) + <code>EduTeacherProfile</code> <span className="font-mono">prisma/schema.prisma:281/1109</span> con <code>tenantId</code> + RLS vía <code>EduLesson.teacherId</code>. Sidebar: <code>ADMIN</code> crea profesores, <code>STAFF</code> solo ve sus cosas — usa funcionalidades disponibles (crear clases, slots en agenda, modificar info alumno) pero no puede añadir opciones al módulo ni tocar core. Calendario <code>EducationAgenda</code> compartido (ve demás profesores, filtros por aula/profesor). Invite <code>POST /api/education/teachers</code> (solo ADMIN, bcrypt, role STAFF + perfil) y email <code>/login?onboarding&amp;role=STAFF</code>. Futuro: Google por profesor <code>EduCalendarLink.userId</code>.</p>
-      </div>
-
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-lg font-black">Profesores ({filtered.length})</h2>
@@ -123,7 +118,7 @@ export default function ProfessorsManager() {
         {filtered.map(p=>(
           <div key={p.id} className="rounded-2xl border border-border/40 bg-card p-4 flex items-start justify-between gap-3">
             <div className="flex gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 font-black border border-amber-500/20">{p.name.charAt(0).toUpperCase()}</div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-700 font-black border border-red-500/20">{p.name.charAt(0).toUpperCase()}</div>
               <div>
                 <div className="text-sm font-bold flex items-center gap-2">{p.name} <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${p.isActive?"bg-emerald-500/10 text-emerald-700 border-emerald-500/20":"bg-stone-500/10 border-stone-500/20"}`}>{p.isActive?"Activo":"Archivado"}</span> <span className="rounded-full bg-blue-500/10 text-blue-700 border border-blue-500/20 px-2 py-0.5 text-[10px]">STAFF · Profesor</span></div>
                 <div className="text-xs text-muted-foreground flex flex-wrap gap-2"><span>{p.email}</span>{p.phone && <span>· {p.phone}</span>}</div>
@@ -155,7 +150,7 @@ export default function ProfessorsManager() {
               <label className="text-xs font-bold">Nombre*<input required value={form.name} onChange={(e)=>setForm({...form, name:e.target.value})} placeholder="Ej. Ana García" className="mt-1 w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm" /></label>
               <label className="text-xs font-bold">Email* (llega invitación)<input required type="email" value={form.email} onChange={(e)=>setForm({...form, email:e.target.value})} placeholder="ana@getloud.es" className="mt-1 w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm" /></label>
               <label className="text-xs font-bold">Teléfono<input value={form.phone} onChange={(e)=>setForm({...form, phone:e.target.value})} placeholder="+34 600..." className="mt-1 w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm" /></label>
-              <div className="text-xs font-bold">Instrumentos que imparte<div className="mt-1 flex flex-wrap gap-1">{Object.values(EDUCATION_INSTRUMENTS).filter(i=>i.key!=="COMMON").map(ins=>{ const active=form.instruments.includes(ins.key); return <button type="button" key={ins.key} onClick={()=>setForm({...form, instruments: active? form.instruments.filter(k=>k!==ins.key): [...form.instruments, ins.key]})} className={`rounded-full border px-3 py-1 text-xs ${active?"bg-amber-500 text-white":"bg-background"}`}>{ins.label}</button>; })}</div></div>
+              <div className="text-xs font-bold">Instrumentos que imparte<div className="mt-1 flex flex-wrap gap-1">{Object.values(EDUCATION_INSTRUMENTS).filter(i=>i.key!=="COMMON").map(ins=>{ const active=form.instruments.includes(ins.key); return <button type="button" key={ins.key} onClick={()=>setForm({...form, instruments: active? form.instruments.filter(k=>k!==ins.key): [...form.instruments, ins.key]})} className={`rounded-full border px-3 py-1 text-xs ${active?"bg-red-500 text-white":"bg-background"}`}>{ins.label}</button>; })}</div></div>
             </div>
             <button type="submit" className="mt-4 w-full rounded-xl bg-foreground px-4 py-3 text-sm font-bold text-background">Crear y enviar email</button>
           </form>
@@ -180,7 +175,7 @@ export default function ProfessorsManager() {
                 </div>
                 <p>Calendario es compartido: verás slots de demás profesores (filtrable por profesor/aula), pero tus clases vinculadas son las tuyas (<code>EduLesson.teacherId</code>).</p>
                 <div className="text-center py-2"><a href={emailDetails.accessLink} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-500 px-4 text-[10px] font-bold text-white">Activar acceso <Icons.ArrowRight className="h-3.5 w-3.5" /></a></div>
-                <div className="text-[10px] font-mono break-all text-amber-500/70">{emailDetails.accessLink}</div>
+                <div className="text-[10px] font-mono break-all text-red-500/70">{emailDetails.accessLink}</div>
               </div>
             </div>
             <div className="flex justify-end"><button onClick={()=>setShowEmail(false)} className="h-8.5 px-4 rounded-xl bg-zinc-800 text-white text-xs font-bold">Cerrar</button></div>

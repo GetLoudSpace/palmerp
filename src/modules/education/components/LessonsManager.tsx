@@ -142,21 +142,21 @@ export default function LessonsManager() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-black">Clases & Seguimiento</h2>
         <div className="flex gap-2">
-          <button onClick={batchSendDay} className="rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white hidden md:flex items-center gap-1"><Icons.Send className="h-4 w-4" /> Enviar día</button>
+          <button onClick={batchSendDay} className="rounded-xl bg-red-500 px-3 py-2 text-xs font-bold text-white hidden md:flex items-center gap-1"><Icons.Send className="h-4 w-4" /> Enviar día</button>
           <button onClick={()=>setShowNew(true)} className="rounded-xl bg-foreground px-3 py-2 text-xs font-bold text-background flex items-center gap-1"><Icons.Plus className="h-4 w-4" /> Nueva</button>
         </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         <button onClick={()=>setFilter("ALL")} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold ${filter==="ALL"?"bg-foreground text-background":"bg-background"}`}>Todos</button>
-        {Object.values(EDUCATION_INSTRUMENTS).filter(i=>i.key!=="COMMON").map((ins)=><button key={ins.key} onClick={()=>setFilter(ins.key)} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold ${filter===ins.key?"bg-amber-500 text-white border-amber-500":"bg-background"}`}>{ins.label}</button>)}
+        {Object.values(EDUCATION_INSTRUMENTS).filter(i=>i.key!=="COMMON").map((ins)=><button key={ins.key} onClick={()=>setFilter(ins.key)} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold ${filter===ins.key?"bg-red-500 text-white border-red-500":"bg-background"}`}>{ins.label}</button>)}
       </div>
 
       <div className="space-y-2">
         {filtered.map((l)=>(
           <div key={l.id} className="rounded-2xl border border-border/40 bg-card p-4">
             <div className="flex items-start justify-between gap-2">
-              <div><div className="text-sm font-bold">{l.studentName} <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{l.instrument}</span></div><div className="text-xs text-muted-foreground">{new Date(l.date).toLocaleString("es-ES")} · {l.durationMin}′ · {l.status} {l.whatsappSentAt?"· WhatsApp ✓":"· pendiente"}</div><div className="text-xs">Skills: {safeArr(l.taughtSkills).join(", ")||"—"} {l.notes?`· ${l.notes}`:""}</div>{l.batchToken && <div className="text-[11px] font-mono text-amber-600">r/batch/{l.batchToken}</div>}</div>
+              <div><div className="text-sm font-bold">{l.studentName} <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{l.instrument}</span></div><div className="text-xs text-muted-foreground">{new Date(l.date).toLocaleString("es-ES")} · {l.durationMin}′ · {l.status} {l.whatsappSentAt?"· WhatsApp ✓":"· pendiente"}</div><div className="text-xs">Skills: {safeArr(l.taughtSkills).join(", ")||"—"} {l.notes?`· ${l.notes}`:""}</div>{l.batchToken && <div className="text-[11px] font-mono text-red-600">r/batch/{l.batchToken}</div>}</div>
               <div className="flex flex-col gap-1">
                 <button onClick={()=>openFinish(l)} className={`rounded-xl px-3 py-2 text-xs font-bold ${l.status==="COMPLETED"&&l.whatsappSentAt?"bg-emerald-500 text-white":"bg-foreground text-background"}`}>{l.whatsappSentAt?"Reenviar":"Finalizar"}</button>
                 <a href={`/r/batch/${l.batchToken||"demo"}`} target="_blank" rel="noreferrer" className="rounded-xl border border-border/40 px-3 py-1.5 text-center text-xs font-bold">Ver link</a>
@@ -169,7 +169,7 @@ export default function LessonsManager() {
         {filtered.length===0 && <div className="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground">Sin clases. Crea una.</div>}
       </div>
 
-      <button onClick={batchSendDay} className="w-full rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs font-bold md:hidden">Enviar pendientes del día (Cloud API)</button>
+      <button onClick={batchSendDay} className="w-full rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-bold md:hidden">Enviar pendientes del día (Cloud API)</button>
 
       {showNew && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/40 p-0 md:p-4">
@@ -202,7 +202,7 @@ export default function LessonsManager() {
                   {SKILLS.map((sk)=>{
                     const active = form.skills.includes(sk);
                     return <div key={sk} className="flex items-center gap-2 rounded-xl border border-border/40 bg-background px-3 py-2">
-                      <button type="button" onClick={()=>setForm({...form, skills: active? form.skills.filter(k=>k!==sk): [...form.skills, sk]})} className={`h-6 w-6 rounded-full border flex items-center justify-center ${active?"bg-amber-500 text-white border-amber-500":""}`}>{active&&<Icons.Check className="h-4 w-4" />}</button>
+                      <button type="button" onClick={()=>setForm({...form, skills: active? form.skills.filter(k=>k!==sk): [...form.skills, sk]})} className={`h-6 w-6 rounded-full border flex items-center justify-center ${active?"bg-red-500 text-white border-red-500":""}`}>{active&&<Icons.Check className="h-4 w-4" />}</button>
                       <span className="flex-1 text-xs font-bold">{sk}</span>
                       {active && <select value={form.rating} onChange={(e)=>setForm({...form, rating: parseInt(e.target.value)})} className="rounded-lg border border-border/40 bg-card px-2 py-1 text-xs"><option value={1}>1</option><option value={2}>2</option><option value={3}>3</option><option value={4}>4</option><option value={5}>5</option></select>}
                     </div>;
@@ -217,7 +217,7 @@ export default function LessonsManager() {
               </div>
               <div>
                 <div className="text-xs font-bold">Canciones</div>
-                <div className="mt-1 flex flex-wrap gap-1">{MOCK_SONG.map((s)=>{ const sel=form.songs.includes(s.id); return <button type="button" key={s.id} onClick={()=>setForm({...form, songs: sel? form.songs.filter(id=>id!==s.id): [...form.songs, s.id]})} className={`rounded-full border px-3 py-1 text-xs ${sel?"bg-amber-500 text-white":"bg-background"}`}>{s.title} · {s.artist}</button>; })}</div>
+                <div className="mt-1 flex flex-wrap gap-1">{MOCK_SONG.map((s)=>{ const sel=form.songs.includes(s.id); return <button type="button" key={s.id} onClick={()=>setForm({...form, songs: sel? form.songs.filter(id=>id!==s.id): [...form.songs, s.id]})} className={`rounded-full border px-3 py-1 text-xs ${sel?"bg-red-500 text-white":"bg-background"}`}>{s.title} · {s.artist}</button>; })}</div>
               </div>
             </div>
             <button disabled={sending} type="submit" className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{sending?<Icons.Loader2 className="h-4 w-4 animate-spin" />:<Icons.Send className="h-4 w-4" />} Guardar y enviar por WhatsApp Cloud API (1 link)</button>

@@ -311,7 +311,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
 
       {/* Filters: aula y profesor (como Google Calendar colores/calendarios) */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/40 bg-card p-3">
-        <div className="flex items-center gap-1.5 text-xs font-bold"><Icons.MapPin className="h-4 w-4 text-amber-500" /> Aula</div>
+        <div className="flex items-center gap-1.5 text-xs font-bold"><Icons.MapPin className="h-4 w-4 text-red-500" /> Aula</div>
         <select value={filterRoom} onChange={(e)=>setFilterRoom(e.target.value)} className="rounded-xl border border-border/40 bg-background px-3 py-1.5 text-xs">
           <option value="ALL">Todas las aulas</option>
           {rooms.map(r=> <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -338,7 +338,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
           <div className="grid" style={{gridTemplateColumns:`60px repeat(${days.length},1fr)`}}>
             <div className="border-b border-r border-border/40 bg-muted/20 p-2 text-[10px] font-bold uppercase text-muted-foreground">Hora</div>
             {days.map(d=>(
-              <div key={d.toISOString()} className={`border-b border-r border-border/40 p-2 text-center ${sameDay(d,new Date())?"bg-amber-500/10":"bg-muted/20"}`}>
+              <div key={d.toISOString()} className={`border-b border-r border-border/40 p-2 text-center ${sameDay(d,new Date())?"bg-red-500/10":"bg-muted/20"}`}>
                 <div className="text-xs font-black">{fmtDay(d)}</div>
                 <div className="text-[11px] text-muted-foreground">{d.toLocaleDateString("es-ES")}</div>
               </div>
@@ -349,7 +349,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
                 {days.map(d=>{
                   const slots = lessonsByDayHour(d,h);
                   return (
-                    <div key={d.toISOString()+h} onClick={()=>openSlot(d,h)} className="relative border-b border-r border-border/20 p-1 hover:bg-amber-500/5 cursor-pointer" style={{minHeight:56}}>
+                    <div key={d.toISOString()+h} onClick={()=>openSlot(d,h)} className="relative border-b border-r border-border/20 p-1 hover:bg-red-500/5 cursor-pointer" style={{minHeight:56}}>
                       {slots.map(l=>{
                         const roomColor = rooms.find(r=>r.id===l.roomId)?.color || "#f59e0b";
                         return (
@@ -360,7 +360,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
                           </div>
                         );
                       })}
-                      {slots.length===0 && <div className="absolute inset-1 rounded-lg border border-dashed border-transparent hover:border-amber-500/30" />}
+                      {slots.length===0 && <div className="absolute inset-1 rounded-lg border border-dashed border-transparent hover:border-red-500/30" />}
                     </div>
                   );
                 })}
@@ -376,7 +376,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
       {showSlot && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/40 p-0 md:p-4">
           <form onSubmit={saveSlot} className="w-full max-w-xl rounded-t-[1.5rem] md:rounded-2xl bg-card p-5 shadow-xl max-h-[92vh] overflow-auto">
-            <div className="flex items-center justify-between"><h3 className="font-bold flex items-center gap-2"><Icons.CalendarPlus className="h-5 w-5 text-amber-500" /> {editing?"Editar slot":"Nuevo slot"} · {new Date(showSlot.date).toLocaleDateString("es-ES")} {String(form.hour).padStart(2,"0")}:{String(form.minute).padStart(2,"0")}</h3><button type="button" onClick={()=>{setShowSlot(null); setEditing(null);}} className="p-2"><Icons.X className="h-5 w-5" /></button></div>
+            <div className="flex items-center justify-between"><h3 className="font-bold flex items-center gap-2"><Icons.CalendarPlus className="h-5 w-5 text-red-500" /> {editing?"Editar slot":"Nuevo slot"} · {new Date(showSlot.date).toLocaleDateString("es-ES")} {String(form.hour).padStart(2,"0")}:{String(form.minute).padStart(2,"0")}</h3><button type="button" onClick={()=>{setShowSlot(null); setEditing(null);}} className="p-2"><Icons.X className="h-5 w-5" /></button></div>
 
             <div className="mt-3 grid gap-3">
               <label className="text-xs font-bold">Alumno * (clase vinculada a alumno)
@@ -405,8 +405,8 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
 
               {/* Seguimiento conectado */}
               {lastForForm && (
-                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3">
-                  <div className="text-xs font-bold flex items-center gap-1"><Icons.History className="h-4 w-4 text-amber-600" /> Conectado al seguimiento</div>
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-3">
+                  <div className="text-xs font-bold flex items-center gap-1"><Icons.History className="h-4 w-4 text-red-600" /> Conectado al seguimiento</div>
                   <div className="mt-1 text-xs"><span className="font-bold">Última clase:</span> {new Date(lastForForm.date).toLocaleDateString("es-ES")} · {lastForForm.taughtSkills.join(", ")||"—"} · {lastForForm.notes||"sin notas"}</div>
                   <div className="text-xs"><span className="font-bold">Propuesta dejar como ejercicio siguiente:</span> {(lastForForm.homeworkIds||[]).join(", ")||"—"} {(lastForForm.songIds||[]).length?`· canciones ${(lastForForm.songIds||[]).join(", ")}`:""}</div>
                   <div className="text-[11px] text-muted-foreground">Se hereda como base para la próxima clase (editable al finalizar).</div>
@@ -430,7 +430,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
             <div className="flex items-center justify-between"><h3 className="font-bold">Nueva aula</h3><button type="button" onClick={()=>setShowRoomMgr(false)} className="p-2"><Icons.X className="h-5 w-5" /></button></div>
             <input value={newRoomName} onChange={(e)=>setNewRoomName(e.target.value)} placeholder="Ej. Aula 3, Sala Juntas, Estudio B" className="mt-3 w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm" />
             <div className="mt-3 flex flex-wrap gap-1.5 text-[11px]">{rooms.map(r=> <span key={r.id} className="rounded-full border px-2 py-1">{r.name}</span>)} </div>
-            <button type="submit" className="mt-4 w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-white">Crear aula</button>
+            <button type="submit" className="mt-4 w-full rounded-xl bg-red-500 px-4 py-3 text-sm font-bold text-white">Crear aula</button>
           </form>
         </div>
       )}

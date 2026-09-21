@@ -134,8 +134,8 @@ export default function ArtistWorkspace() {
   return (
     <div className="space-y-4">
       {toast && <div className="fixed bottom-4 right-4 z-50 bg-foreground text-background px-4 py-2 rounded-xl text-xs font-bold">{toast}</div>}
-      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 flex items-center justify-between">
-        <div><div className="text-xs font-bold uppercase tracking-widest text-amber-700">Portal Artista · Premium upsell manual</div><div className="text-xs text-muted-foreground">Solo visible si tier ARTISTA. Si alumno no es artista, aquí sale "Activar premium".</div></div>
+      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-3 flex items-center justify-between">
+        <div><div className="text-xs font-bold uppercase tracking-widest text-red-700">Portal Artista · Premium upsell manual</div><div className="text-xs text-muted-foreground">Solo visible si tier ARTISTA. Si alumno no es artista, aquí sale "Activar premium".</div></div>
         <button onClick={()=>setShowTrash(!showTrash)} className="rounded-xl bg-card border border-border/40 px-3 py-2 text-xs font-bold flex items-center gap-1"><Icons.Trash2 className="h-4 w-4" /> Papelera {trash.length>0&&`(${trash.length})`}</button>
       </div>
 
@@ -146,7 +146,7 @@ export default function ArtistWorkspace() {
             {trash.length===0 ? <p className="text-xs text-muted-foreground">Vacía</p> : trash.map((t)=>(
               <div key={t.id} className="flex items-center justify-between rounded-xl border border-border/40 bg-background p-3">
                 <div><div className="text-xs font-bold">{t.entityType} · {t.entityId.slice(0,8)}</div><div className="text-[11px] text-muted-foreground">Expira {new Date(t.expiresAt).toLocaleDateString("es-ES")}</div></div>
-                <button onClick={()=>restoreTrash(t.id)} className="rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white">Restaurar</button>
+                <button onClick={()=>restoreTrash(t.id)} className="rounded-xl bg-red-500 px-3 py-2 text-xs font-bold text-white">Restaurar</button>
               </div>
             ))}
           </div>
@@ -154,12 +154,12 @@ export default function ArtistWorkspace() {
       )}
 
       {artists.length===0 ? (
-        <div className="rounded-2xl border border-dashed p-6 text-center"><Icons.Star className="mx-auto h-8 w-8 text-amber-500" /><p className="mt-2 text-sm font-bold">Ningún artista premium</p><p className="text-xs text-muted-foreground">Crea alumno y cambia tier a ARTISTA en Alumnos (solo ADMIN).</p></div>
+        <div className="rounded-2xl border border-dashed p-6 text-center"><Icons.Star className="mx-auto h-8 w-8 text-red-500" /><p className="mt-2 text-sm font-bold">Ningún artista premium</p><p className="text-xs text-muted-foreground">Crea alumno y cambia tier a ARTISTA en Alumnos (solo ADMIN).</p></div>
       ) : (
         <>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {artists.map((a)=>(
-              <button key={a.id} onClick={()=>setArtistId(a.id)} className={`shrink-0 rounded-full border px-4 py-1.5 text-xs font-bold ${artistId===a.id?"bg-amber-500 text-white border-amber-500":"bg-background"}`}>{a.name}</button>
+              <button key={a.id} onClick={()=>setArtistId(a.id)} className={`shrink-0 rounded-full border px-4 py-1.5 text-xs font-bold ${artistId===a.id?"bg-red-500 text-white border-red-500":"bg-background"}`}>{a.name}</button>
             ))}
           </div>
 
@@ -177,7 +177,7 @@ export default function ArtistWorkspace() {
                   <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{status} ({col.length})</div>
                   <div className="mt-2 space-y-2">
                     {col.map((p)=>(
-                      <div key={p.id} onClick={()=>setSelectedProject(p.id)} className={`rounded-xl border p-3 cursor-pointer ${selectedProject===p.id?"border-amber-500 bg-amber-500/5":"border-border/40 bg-background hover:bg-muted"}`}>
+                      <div key={p.id} onClick={()=>setSelectedProject(p.id)} className={`rounded-xl border p-3 cursor-pointer ${selectedProject===p.id?"border-red-500 bg-red-500/5":"border-border/40 bg-background hover:bg-muted"}`}>
                         <div className="text-xs font-bold truncate">{p.title}</div><div className="text-[11px] text-muted-foreground">{p.genre||"—"}</div>
                         <div className="mt-2 flex gap-1">
                           <button onClick={(e)=>{e.stopPropagation(); moveStatus(p.id, -1);}} className="rounded-lg border px-2 py-1 text-[10px]">◀</button>
@@ -197,11 +197,11 @@ export default function ArtistWorkspace() {
             <div className="space-y-4">
               <div className="rounded-2xl border border-border/40 bg-card p-4">
                 <div className="flex items-center justify-between"><h4 className="text-sm font-black">Letras — obra {activeProjects.find(p=>p.id===selectedProject)?.title}</h4><span className="text-xs text-muted-foreground">{filteredLyrics.length} versiones</span></div>
-                <textarea value={lyricDraft} onChange={(e)=>setLyricDraft(e.target.value)} placeholder="Escribe tu letra aquí..." rows={6} className="mt-3 w-full rounded-xl border border-border/40 bg-background p-3 text-sm outline-none focus:border-amber-500" />
+                <textarea value={lyricDraft} onChange={(e)=>setLyricDraft(e.target.value)} placeholder="Escribe tu letra aquí..." rows={6} className="mt-3 w-full rounded-xl border border-border/40 bg-background p-3 text-sm outline-none focus:border-red-500" />
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <Rimador text={lyricDraft} onInsert={(w)=>setLyricDraft((prev)=> prev ? prev + " " + w : w)} />
                   <div className="space-y-2">
-                    <button onClick={saveLyric} className="w-full rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-white">Guardar letra versionada</button>
+                    <button onClick={saveLyric} className="w-full rounded-xl bg-red-500 px-4 py-2.5 text-xs font-bold text-white">Guardar letra versionada</button>
                     <p className="text-[10px] text-muted-foreground">Cada guardado crea v + diff. Borrado va a papelera 30d. Editor con auto-guardado (localStorage).</p>
                     <div className="space-y-1 max-h-40 overflow-auto">
                       {filteredLyrics.map((ly)=>(

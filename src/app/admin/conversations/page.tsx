@@ -21,7 +21,7 @@ type AuditEntry = {
 const ACTION_META: Record<string, { label: string; icon: string; color: string }> = {
   EMAIL_DISPATCHED: { label: "Email enviado", icon: "Mail", color: "bg-sky-500/10 text-sky-600 border-sky-500/20" },
   WHATSAPP_DISPATCHED: { label: "WhatsApp enviado", icon: "MessageCircle", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
-  PHONE_CALL_COMPLETED: { label: "Llamada completada", icon: "PhoneCall", color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+  PHONE_CALL_COMPLETED: { label: "Llamada completada", icon: "PhoneCall", color: "bg-red-500/10 text-red-600 border-red-500/20" },
   USER_CREATED: { label: "Usuario creado", icon: "UserPlus", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
   USER_UPDATED: { label: "Usuario actualizado", icon: "UserCog", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
   USER_DELETED: { label: "Usuario eliminado", icon: "UserX", color: "bg-red-500/10 text-red-600 border-red-500/20" },
@@ -29,7 +29,7 @@ const ACTION_META: Record<string, { label: string; icon: string; color: string }
   CONTACT_CREATED: { label: "Contacto creado", icon: "Users", color: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" },
   CONTACT_UPDATED: { label: "Contacto editado", icon: "Pencil", color: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" },
   SETTINGS_UPDATED: { label: "Ajustes modificados", icon: "Settings", color: "bg-stone-500/10 text-stone-600 border-stone-500/20" },
-  MODE_TOGGLED: { label: "Sector activado", icon: "Layers", color: "bg-orange-500/10 text-orange-600 border-orange-500/20" },
+  MODE_TOGGLED: { label: "Sector activado", icon: "Layers", color: "bg-red-500/10 text-red-600 border-red-500/20" },
   SYSTEM_ALERT: { label: "Alerta crítica", icon: "Siren", color: "bg-red-500/10 text-red-600 border-red-500/20" },
 };
 
@@ -256,7 +256,7 @@ export default function ConversationsPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-border/40 bg-card p-4 shadow-xs">
-          <div className="flex items-center justify-between"><span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total trazas</span><Icons.Activity className="h-4 w-4 text-amber-500" /></div>
+          <div className="flex items-center justify-between"><span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total trazas</span><Icons.Activity className="h-4 w-4 text-red-500" /></div>
           <div className="mt-2 text-2xl font-black text-foreground">{stats.total}</div>
           <div className="text-xs text-muted-foreground">Eventos registrados</div>
         </div>
@@ -282,7 +282,7 @@ export default function ConversationsPage() {
           <Icons.Inbox className="h-3.5 w-3.5" /> Bandeja de Entrada
           <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === "inbox" ? "bg-white/20" : "bg-muted"}`}>{logs.length}</span>
         </button>
-        <button onClick={() => setActiveTab("audit")} className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold transition ${activeTab === "audit" ? "bg-amber-500 text-white border-amber-500" : "border-border bg-card text-muted-foreground hover:bg-muted"}`}>
+        <button onClick={() => setActiveTab("audit")} className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold transition ${activeTab === "audit" ? "bg-red-500 text-white border-red-500" : "border-border bg-card text-muted-foreground hover:bg-muted"}`}>
           <Icons.ShieldAlert className="h-3.5 w-3.5" /> Alertas de Auditoría
           <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === "audit" ? "bg-white/20" : "bg-muted"}`}>{stats.critical}</span>
         </button>
@@ -291,11 +291,11 @@ export default function ConversationsPage() {
       <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr] bg-muted/20 border border-border/40 p-4 rounded-xl">
         <SmartSearchInput value={searchQuery} onChange={setSearchQuery} suggestions={logs.flatMap((l) => [l.action, l.details, l.table ?? "", getActionMeta(l.action).label])} placeholder="Buscar por acción, detalle, tabla... (ej. EMAIL, WHATSAPP, USER_DELETED)" className="w-full" />
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setCategory((c) => (c === "ALL" ? "MESSAGING" : c === "MESSAGING" ? "USERS" : c === "USERS" ? "SYSTEM" : "ALL"))} className={`flex-1 inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold px-2 transition-all ${category !== "ALL" ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500" : "border-border/50 bg-background text-foreground hover:bg-muted"}`}>
+          <button onClick={() => setCategory((c) => (c === "ALL" ? "MESSAGING" : c === "MESSAGING" ? "USERS" : c === "USERS" ? "SYSTEM" : "ALL"))} className={`flex-1 inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold px-2 transition-all ${category !== "ALL" ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-500" : "border-border/50 bg-background text-foreground hover:bg-muted"}`}>
             <Icons.Filter className="h-3.5 w-3.5" />
             <span>{category === "ALL" ? "Categoría: Todas" : category === "MESSAGING" ? "Mensajería" : category === "USERS" ? "Usuarios" : "Sistema"}</span>
           </button>
-          <button onClick={() => setStatusFilter((s) => (s === "ALL" ? "SUCCESS" : s === "SUCCESS" ? "FAILED" : "ALL"))} className={`flex-1 inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold px-2 transition-all ${statusFilter !== "ALL" ? "bg-amber-500/10 border-amber-500/30 text-amber-600" : "border-border/50 bg-background text-foreground hover:bg-muted"}`}>
+          <button onClick={() => setStatusFilter((s) => (s === "ALL" ? "SUCCESS" : s === "SUCCESS" ? "FAILED" : "ALL"))} className={`flex-1 inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold px-2 transition-all ${statusFilter !== "ALL" ? "bg-red-500/10 border-red-500/30 text-red-600" : "border-border/50 bg-background text-foreground hover:bg-muted"}`}>
             <Icons.CheckCircle2 className="h-3.5 w-3.5" />
             <span>{statusFilter === "ALL" ? "Estado: Todos" : statusFilter === "SUCCESS" ? "Solo éxito" : "Solo fallos"}</span>
           </button>

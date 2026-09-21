@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${outfit.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col">
         <SessionProvider>

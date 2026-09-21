@@ -56,7 +56,7 @@ export default function EditableLabel({ apiKey, defaultValue, className = "" }: 
       <form
         onSubmit={handleSave}
         onClick={(e) => e.stopPropagation()} // Prevent bubble
-        className="inline-flex items-center gap-1.5 bg-background border border-amber-500/50 p-1 rounded-lg shadow-md animate-in zoom-in-95 duration-100 max-w-full"
+        className="inline-flex items-center gap-1.5 bg-background border border-red-500/50 p-1 rounded-lg shadow-md animate-in zoom-in-95 duration-100 max-w-full"
       >
         <input
           type="text"
@@ -68,7 +68,7 @@ export default function EditableLabel({ apiKey, defaultValue, className = "" }: 
         />
         <button
           type="submit"
-          className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-500 text-white hover:bg-amber-600 cursor-pointer"
+          className="flex h-5 w-5 items-center justify-center rounded-md bg-red-500 text-white hover:bg-red-600 cursor-pointer"
           title="Guardar"
         >
           <Icons.Check className="h-3 w-3" />
@@ -90,14 +90,14 @@ export default function EditableLabel({ apiKey, defaultValue, className = "" }: 
       onClick={handleLabelClick}
       className={`relative inline-flex items-center gap-1 transition-all ${className} ${
         isCustomizerActive
-          ? "cursor-edit border-b border-dashed border-amber-500/60 hover:bg-amber-500/5 px-1 py-0.5 rounded-sm hover:scale-102 transition-transform duration-150 text-amber-600 dark:text-amber-500 font-semibold"
+          ? "cursor-edit border-b border-dashed border-red-500/60 hover:bg-red-500/5 px-1 py-0.5 rounded-sm hover:scale-102 transition-transform duration-150 text-red-600 dark:text-red-500 font-semibold"
           : ""
       }`}
       title={isCustomizerActive ? "Haz clic para editar esta etiqueta del ERP" : undefined}
     >
       <span>{displayValue}</span>
       {isCustomizerActive && (
-        <Icons.Edit3 className="h-3 w-3 text-amber-500 shrink-0 opacity-70 animate-pulse" />
+        <Icons.Edit3 className="h-3 w-3 text-red-500 shrink-0 opacity-70 animate-pulse" />
       )}
     </span>
   );

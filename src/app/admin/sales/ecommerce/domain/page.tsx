@@ -82,7 +82,7 @@ export default function CustomDomainPage() {
   if (loading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
-        <Icons.Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+        <Icons.Loader2 className="h-8 w-8 text-red-500 animate-spin" />
       </div>
     );
   }
@@ -155,7 +155,7 @@ export default function CustomDomainPage() {
                     ? "bg-emerald-500/10 text-emerald-500"
                     : shop.domainStatus === "FAILED"
                     ? "bg-red-500/10 text-red-500"
-                    : "bg-amber-500/10 text-amber-500"
+                    : "bg-red-500/10 text-red-500"
                 }`}
               >
                 {shop.domainStatus === "VERIFIED" ? (
@@ -179,7 +179,7 @@ export default function CustomDomainPage() {
               disabled={verifying}
               className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-card border border-border px-4 text-xs font-bold text-foreground hover:bg-muted disabled:opacity-50 transition-all cursor-pointer"
             >
-              {verifying ? <Icons.Loader2 className="h-4 w-4 animate-spin" /> : <Icons.RefreshCw className="h-4 w-4 text-amber-500" />}
+              {verifying ? <Icons.Loader2 className="h-4 w-4 animate-spin" /> : <Icons.RefreshCw className="h-4 w-4 text-red-500" />}
               <span>Comprobar Registros DNS Ahora</span>
             </button>
           </div>
@@ -218,7 +218,7 @@ export default function CustomDomainPage() {
           </table>
         </div>
 
-        <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-xs text-amber-600 dark:text-amber-400 space-y-1">
+        <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl text-xs text-red-600 dark:text-red-400 space-y-1">
           <div className="font-bold flex items-center gap-1.5">
             <Icons.Info className="h-4 w-4 shrink-0" />
             Nota sobre propagación DNS:

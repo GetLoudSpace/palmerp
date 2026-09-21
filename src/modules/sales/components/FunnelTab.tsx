@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
+import { getDefaultSlug } from "@/lib/clientStorage";
 import { isTenantDataCleared } from "@/lib/demoDataCleanup";
 
 interface Lead {
@@ -113,7 +114,7 @@ export default function FunnelTab() {
   const getSlug = () => {
     const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
     const parts = hostname.split(".");
-    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
   };
 
   const loadData = () => {
@@ -245,9 +246,9 @@ export default function FunnelTab() {
           <p className="text-[9px] text-muted-foreground">Suma bruta de fases iniciales</p>
         </div>
 
-        <div className="border border-border/40 bg-card p-4.5 rounded-2xl shadow-xs space-y-1 bg-linear-to-r from-amber-500/5 to-orange-500/5">
-          <span className="text-[9px] font-extrabold uppercase text-amber-600 dark:text-amber-500 tracking-wider block">Previsión Ponderada</span>
-          <div className="text-lg font-extrabold text-foreground font-mono text-amber-600 dark:text-amber-500">
+        <div className="border border-border/40 bg-card p-4.5 rounded-2xl shadow-xs space-y-1 bg-linear-to-r from-red-500/5 to-red-500/5">
+          <span className="text-[9px] font-extrabold uppercase text-red-600 dark:text-red-500 tracking-wider block">Previsión Ponderada</span>
+          <div className="text-lg font-extrabold text-foreground font-mono text-red-600 dark:text-red-500">
             {Math.round(weightedForecast).toLocaleString("es-ES")} €
           </div>
           <p className="text-[9px] text-muted-foreground">Valor esperado de cierre + Ganados</p>
@@ -305,12 +306,12 @@ export default function FunnelTab() {
 
             {/* Stage 3: Proposal */}
             <div className="w-[70%] flex flex-col items-center">
-              <div className="w-full h-11 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-center justify-between px-4 transition-all hover:bg-amber-500/15">
-                <span className="text-xs font-bold text-amber-600 dark:text-amber-500">3. Propuesta</span>
+              <div className="w-full h-11 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-between px-4 transition-all hover:bg-red-500/15">
+                <span className="text-xs font-bold text-red-600 dark:text-red-500">3. Propuesta</span>
                 <span className="text-xs font-mono font-bold text-foreground">{stageStats.PROPOSAL.count} leads • {stageStats.PROPOSAL.value.toLocaleString("es-ES")} €</span>
               </div>
               <div className="h-6 flex items-center gap-1 text-[9px] font-bold text-muted-foreground/80">
-                <Icons.ArrowDown className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
+                <Icons.ArrowDown className="h-3.5 w-3.5 text-red-400 animate-pulse" />
                 <span>{convNegotiation}% conversión paso</span>
               </div>
             </div>
@@ -357,7 +358,7 @@ export default function FunnelTab() {
                   max="100"
                   value={probabilities.INITIAL}
                   onChange={(e) => setProbabilities({ ...probabilities, INITIAL: Number(e.target.value) })}
-                  className="w-full accent-amber-500 cursor-pointer"
+                  className="w-full accent-red-500 cursor-pointer"
                 />
               </div>
 
@@ -372,7 +373,7 @@ export default function FunnelTab() {
                   max="100"
                   value={probabilities.QUALIFIED}
                   onChange={(e) => setProbabilities({ ...probabilities, QUALIFIED: Number(e.target.value) })}
-                  className="w-full accent-amber-500 cursor-pointer"
+                  className="w-full accent-red-500 cursor-pointer"
                 />
               </div>
 
@@ -387,7 +388,7 @@ export default function FunnelTab() {
                   max="100"
                   value={probabilities.PROPOSAL}
                   onChange={(e) => setProbabilities({ ...probabilities, PROPOSAL: Number(e.target.value) })}
-                  className="w-full accent-amber-500 cursor-pointer"
+                  className="w-full accent-red-500 cursor-pointer"
                 />
               </div>
 
@@ -402,7 +403,7 @@ export default function FunnelTab() {
                   max="100"
                   value={probabilities.NEGOTIATION}
                   onChange={(e) => setProbabilities({ ...probabilities, NEGOTIATION: Number(e.target.value) })}
-                  className="w-full accent-amber-500 cursor-pointer"
+                  className="w-full accent-red-500 cursor-pointer"
                 />
               </div>
             </div>

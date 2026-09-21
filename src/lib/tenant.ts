@@ -30,6 +30,43 @@ export async function getTenantSlugFromHeaders(): Promise<string | null> {
   return slug && slug.trim().length > 0 ? slug.trim().toLowerCase() : null;
 }
 
+// ==========================================
+// INSTANCIA INDEPENDIENTE (single-tenant lock)
+// ==========================================
+// Tradicionalmente este ERP servía N tenants desde un dominio/VPS (single-DB +
+// aislamiento lógico por tenantId). La arquitectura actual es UNA instancia
+// independiente por cliente: este despliegue solo debe ver SU tenant.
+//
+// Fija PINNED_TENANT_SLUG=<slug> en el entorno del despliegue y:
+//  - Toda resolución de tenant devuelve el pin (se ignora subdominio/JWT ajeno).
+//  - El login rechaza credenciales de otro tenant (ver src/lib/auth.ts).
+//  - /superadmin, /api/superadmin/* y POST /api/register quedan bloqueados
+//    (salvo ALLOW_SUPERADMIN=true) en el middleware.
+// Sin PINNED_TENANT_SLUG se mantiene el comportamiento multi-tenant legacy.
+
+/** Slug fijado por entorno (servidor). Null = modo multi-tenant legacy. */
+export function getPinnedTenantSlug(): string | null {
+  const pin = process.env.PINNED_TENANT_SLUG;
+  return pin && pin.trim() ? pin.trim().toLowerCase() : null;
+}
+
+/** ¿Consola superadmin/fleet permitida en este despliegue? Por defecto NO si hay pin. */
+export function isSuperadminAllowed(): boolean {
+  if (process.env.ALLOW_SUPERADMIN === "true") return true;
+  if (process.env.ALLOW_SUPERADMIN === "false") return false;
+  return getPinnedTenantSlug() === null; // legacy multi-tenant: sí; instancia pineada: no
+}
+
+/**
+ * Aplica el pin a un slug candidato: si hay pin, SIEMPRE gana el pin.
+ * Usar en cada punto donde se resuelva tenant (headers, JWT, body).
+ */
+export function enforcePinnedTenant(candidate: string | null | undefined): string | null {
+  const pin = getPinnedTenantSlug();
+  if (pin) return pin;
+  return candidate && candidate.trim() ? candidate.trim().toLowerCase() : null;
+}
+
 /** Extrae tenantId de headers si middleware ya resolvió tenant (x-tenant-id). */
 export async function getTenantIdFromHeaders(): Promise<string | null> {
   const h = await headers();

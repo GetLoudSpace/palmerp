@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
+import { getDefaultSlug } from "@/lib/clientStorage";
 import { isTenantDataCleared } from "@/lib/demoDataCleanup";
 
 interface Opportunity {
@@ -65,7 +66,7 @@ export default function OpportunitiesTab() {
   const getSlug = () => {
     const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
     const parts = hostname.split(".");
-    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
   };
 
   useEffect(() => {
@@ -180,7 +181,7 @@ export default function OpportunitiesTab() {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg bg-metallic-orange text-white text-xs font-bold px-3 shadow-md shadow-orange-500/20 hover:shadow-lg transition-all cursor-pointer"
+          className="inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg bg-metallic-red text-white text-xs font-bold px-3 shadow-md shadow-red-500/20 hover:shadow-lg transition-all cursor-pointer"
         >
           <Icons.Plus className="h-4 w-4" />
           <span>Nueva Oportunidad</span>
@@ -229,7 +230,7 @@ export default function OpportunitiesTab() {
                         <div
                           className={`h-full rounded-full ${
                             op.probability >= 75 ? "bg-emerald-500" :
-                            op.probability >= 40 ? "bg-amber-500" : "bg-red-500"
+                            op.probability >= 40 ? "bg-red-500" : "bg-red-500"
                           }`}
                           style={{ width: `${op.probability}%` }}
                         />
@@ -311,7 +312,7 @@ export default function OpportunitiesTab() {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="Ej. Contrato Anual Licencias"
-                    className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                    className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                     required
                   />
                 </div>
@@ -321,7 +322,7 @@ export default function OpportunitiesTab() {
                   <select
                     value={formData.contactName}
                     onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                    className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                    className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                     required
                   >
                     <option value="">Selecciona un cliente...</option>
@@ -339,7 +340,7 @@ export default function OpportunitiesTab() {
                       value={formData.value}
                       onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
                       placeholder="Ej. 15000"
-                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                       min={0}
                     />
                   </div>
@@ -350,7 +351,7 @@ export default function OpportunitiesTab() {
                       type="date"
                       value={formData.closeDate}
                       onChange={(e) => setFormData({ ...formData, closeDate: e.target.value })}
-                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                       required
                     />
                   </div>
@@ -364,7 +365,7 @@ export default function OpportunitiesTab() {
                       value={formData.probability}
                       onChange={(e) => setFormData({ ...formData, probability: Number(e.target.value) })}
                       placeholder="Ej. 70"
-                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                       min={0}
                       max={100}
                     />
@@ -375,7 +376,7 @@ export default function OpportunitiesTab() {
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                     >
                       <option value="ACTIVE">Abierta / Activa</option>
                       <option value="WON">Ganada (Éxito)</option>
@@ -395,7 +396,7 @@ export default function OpportunitiesTab() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-metallic-orange text-white text-xs font-bold rounded-lg shadow-md shadow-orange-500/20 hover:shadow-lg cursor-pointer"
+                  className="px-4 py-2 bg-metallic-red text-white text-xs font-bold rounded-lg shadow-md shadow-red-500/20 hover:shadow-lg cursor-pointer"
                 >
                   Crear Oportunidad
                 </button>

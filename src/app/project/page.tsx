@@ -6,7 +6,7 @@ import { UserProfile, PsychologicalProfile, Task, TaskPriority } from "@/types/c
 
 const priorityConfig: Record<TaskPriority, { color: string; bg: string; border: string; label: string }> = {
   critical: { color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/30", label: "Crítica" },
-  high: { color: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/30", label: "Alta" },
+  high: { color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/30", label: "Alta" },
   medium: { color: "text-yellow-500", bg: "bg-yellow-500/10", border: "border-yellow-500/30", label: "Media" },
   low: { color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/30", label: "Baja" },
 };
@@ -88,12 +88,12 @@ export default function ProjectTasksPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-white/5 bg-[#0c0a09]/90 px-6 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-600 to-amber-500 shadow-md shadow-amber-500/20">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-red-600 to-red-500 shadow-md shadow-red-500/20">
             <Icons.User className="h-5 w-5 text-white" />
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-tight text-white">
-              Mi <span className="text-amber-500">Desarrollo</span>
+              Mi <span className="text-red-500">Desarrollo</span>
             </h1>
             <p className="text-[9px] text-neutral-500 uppercase tracking-widest font-semibold">
               {profile?.name || "Usuario"} · {profile?.role || ""}
@@ -106,7 +106,7 @@ export default function ProjectTasksPage() {
             href="/"
             className="inline-flex h-8.5 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 text-[11px] font-bold text-neutral-300 transition-all hover:bg-white/10"
           >
-            <Icons.ArrowLeft className="h-4 w-4 text-amber-500" />
+            <Icons.ArrowLeft className="h-4 w-4 text-red-500" />
             <span>Daily Scrum</span>
           </a>
         </div>
@@ -118,7 +118,7 @@ export default function ProjectTasksPage() {
           <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Dailies</span>
-              <Icons.MessageSquare className="h-4 w-4 text-amber-500/60" />
+              <Icons.MessageSquare className="h-4 w-4 text-red-500/60" />
             </div>
             <span className="text-2xl font-bold text-white">{profile?.dailyScrumCount || 0}</span>
           </div>
@@ -126,7 +126,7 @@ export default function ProjectTasksPage() {
           <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Precisión IA</span>
-              <Icons.Target className="h-4 w-4 text-amber-500/60" />
+              <Icons.Target className="h-4 w-4 text-red-500/60" />
             </div>
             <span className="text-2xl font-bold text-white">{accuracyScore !== null ? `${accuracyScore}%` : "—"}</span>
           </div>
@@ -134,7 +134,7 @@ export default function ProjectTasksPage() {
           <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Ánimo medio</span>
-              <Icons.Smile className="h-4 w-4 text-amber-500/60" />
+              <Icons.Smile className="h-4 w-4 text-red-500/60" />
             </div>
             <span className="text-2xl font-bold text-white">{avgMood !== null ? `${avgMood}/10` : "—"}</span>
           </div>
@@ -142,7 +142,7 @@ export default function ProjectTasksPage() {
           <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Energía media</span>
-              <Icons.Zap className="h-4 w-4 text-amber-500/60" />
+              <Icons.Zap className="h-4 w-4 text-red-500/60" />
             </div>
             <span className="text-2xl font-bold text-white">{avgEnergy !== null ? `${avgEnergy}/10` : "—"}</span>
           </div>
@@ -163,7 +163,7 @@ export default function ProjectTasksPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   activeTab === tab.id
-                    ? "bg-amber-500 text-white"
+                    ? "bg-red-500 text-white"
                     : "text-neutral-400 hover:text-neutral-200"
                 }`}
               >
@@ -229,13 +229,13 @@ export default function ProjectTasksPage() {
         {activeTab === "profile" && psychProfile && (
           <div className="grid gap-6 md:grid-cols-2 animate-in fade-in duration-200">
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
                 <Icons.Briefcase className="h-4 w-4" />
                 Estilo de Trabajo
               </h3>
               <div className="flex flex-wrap gap-2">
                 {psychProfile.workStyle.map((ws) => (
-                  <span key={ws} className="text-xs px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <span key={ws} className="text-xs px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">
                     {ws}
                   </span>
                 ))}
@@ -243,7 +243,7 @@ export default function ProjectTasksPage() {
             </div>
 
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
                 <Icons.Zap className="h-4 w-4" />
                 Patrón de Energía
               </h3>
@@ -251,7 +251,7 @@ export default function ProjectTasksPage() {
             </div>
 
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
                 <Icons.Heart className="h-4 w-4" />
                 Motivadores
               </h3>
@@ -265,7 +265,7 @@ export default function ProjectTasksPage() {
             </div>
 
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
                 <Icons.BookOpen className="h-4 w-4" />
                 Estilo de Aprendizaje
               </h3>
@@ -273,7 +273,7 @@ export default function ProjectTasksPage() {
             </div>
 
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
                 <Icons.Star className="h-4 w-4" />
                 Fortalezas
               </h3>
@@ -288,14 +288,14 @@ export default function ProjectTasksPage() {
             </div>
 
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
                 <Icons.TrendingUp className="h-4 w-4" />
                 Áreas de Crecimiento
               </h3>
               <div className="space-y-1.5">
                 {psychProfile.growthAreas.map((g, i) => (
                   <p key={i} className="text-xs text-neutral-300 flex items-center gap-2">
-                    <Icons.ArrowUpRight className="h-3 w-3 text-amber-500" />
+                    <Icons.ArrowUpRight className="h-3 w-3 text-red-500" />
                     {g}
                   </p>
                 ))}
@@ -304,7 +304,7 @@ export default function ProjectTasksPage() {
 
             {psychProfile.notes && (
               <div className="md:col-span-2 bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-4">
-                <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
                   <Icons.Eye className="h-4 w-4" />
                   Tu Visión
                 </h3>
@@ -325,7 +325,7 @@ export default function ProjectTasksPage() {
             ) : (
               <>
                 <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-4">
-                  <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest">
+                  <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest">
                     Últimos 7 registros
                   </h3>
                   <div className="space-y-3">
@@ -336,9 +336,9 @@ export default function ProjectTasksPage() {
                         </span>
                         <div className="flex-1 flex items-center gap-3">
                           <div className="flex items-center gap-1.5">
-                            <Icons.Smile className="h-3.5 w-3.5 text-amber-500/60" />
+                            <Icons.Smile className="h-3.5 w-3.5 text-red-500/60" />
                             <div className="w-24 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                              <div className="h-full rounded-full bg-amber-500" style={{ width: `${(r.mood || 5) * 10}%` }} />
+                              <div className="h-full rounded-full bg-red-500" style={{ width: `${(r.mood || 5) * 10}%` }} />
                             </div>
                             <span className="text-neutral-400 w-8">{r.mood || 5}</span>
                           </div>
@@ -357,11 +357,11 @@ export default function ProjectTasksPage() {
 
                 {recentReflections.some((r) => r.note) && (
                   <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-3">
-                    <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest">
+                    <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest">
                       Notas de bienestar
                     </h3>
                     {recentReflections.filter((r) => r.note).map((r, i) => (
-                      <div key={i} className="text-xs text-neutral-400 leading-relaxed border-l-2 border-amber-500/30 pl-3">
+                      <div key={i} className="text-xs text-neutral-400 leading-relaxed border-l-2 border-red-500/30 pl-3">
                         <span className="text-neutral-600">{new Date(r.date).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}</span>
                         <p className="mt-1">{r.note}</p>
                       </div>
@@ -382,7 +382,7 @@ export default function ProjectTasksPage() {
                 <p className="text-xs text-neutral-500 mt-1 mb-4">La IA analizará tu perfil, bienestar y validaciones para generar insights personalizados</p>
                 <button
                   onClick={fetchInsights}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 text-white text-xs font-semibold hover:bg-amber-400 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-400 transition-colors"
                 >
                   <Icons.Sparkles className="h-4 w-4" />
                   Generar Insights
@@ -392,7 +392,7 @@ export default function ProjectTasksPage() {
 
             {loadingInsights && (
               <div className="text-center py-16">
-                <div className="h-10 w-10 mx-auto mb-3 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+                <div className="h-10 w-10 mx-auto mb-3 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
                 <h3 className="text-sm font-medium text-neutral-400">Analizando tus datos...</h3>
                 <p className="text-xs text-neutral-500 mt-1">La IA está buscando patrones en tu actividad</p>
               </div>
@@ -400,8 +400,8 @@ export default function ProjectTasksPage() {
 
             {insights && (
               <>
-                <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20 rounded-xl p-5 space-y-3">
-                  <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 rounded-xl p-5 space-y-3">
+                  <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
                     <Icons.Sparkles className="h-4 w-4" />
                     Resumen Ejecutivo
                   </h3>
@@ -425,14 +425,14 @@ export default function ProjectTasksPage() {
                   </div>
 
                   <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 space-y-3">
-                    <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
                       <Icons.Target className="h-4 w-4" />
                       Oportunidades
                     </h3>
                     <ul className="space-y-2">
                       {insights.opportunities?.map((o: string, i: number) => (
                         <li key={i} className="text-xs text-neutral-300 flex items-start gap-2">
-                          <Icons.ArrowRight className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
+                          <Icons.ArrowRight className="h-3.5 w-3.5 text-red-500 mt-0.5 shrink-0" />
                           {o}
                         </li>
                       ))}
@@ -477,7 +477,7 @@ export default function ProjectTasksPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-violet-500/10 to-amber-500/10 border border-violet-500/20 rounded-xl p-5 space-y-3">
+                <div className="bg-gradient-to-r from-violet-500/10 to-red-500/10 border border-violet-500/20 rounded-xl p-5 space-y-3">
                   <h3 className="text-xs font-bold text-violet-400 uppercase tracking-widest flex items-center gap-2">
                     <Icons.Lightbulb className="h-4 w-4" />
                     Consejo para Hoy

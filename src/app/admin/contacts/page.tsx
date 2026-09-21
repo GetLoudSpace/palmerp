@@ -22,6 +22,7 @@ interface Contact {
   billingCity?: string;
   billingCountry?: string;
   notes?: string;
+  birthDate?: string;
   createdAt: string;
 }
 
@@ -199,7 +200,36 @@ export default function ContactsPage() {
     billingCity: "",
     billingCountry: "España",
     notes: "",
+    birthDate: "",
   });
+  // --- Edu roles (alumno / tutor) leídos de la agenda educativa local ---
+  const [eduRoles, setEduRoles] = useState<Record<string, { isStudent: boolean; tutorOf: string[] }>>({});
+  useEffect(() => {
+    try {
+      const slug = getTenantSlugClient();
+      const raw = localStorage.getItem(`palmera_edu_students_${slug}`) || localStorage.getItem(getTenantStorageKey("edu_students"));
+      if (!raw) return;
+      const arr: any[] = JSON.parse(raw);
+      const map: Record<string, { isStudent: boolean; tutorOf: string[] }> = {};
+      const mark = (key: string, patch: Partial<{ isStudent: boolean; tutorOf: string[] }>) => {
+        if (!key) return;
+        map[key] = map[key] || { isStudent: false, tutorOf: [] };
+        if (patch.isStudent) map[key].isStudent = true;
+        if (patch.tutorOf) map[key].tutorOf.push(...patch.tutorOf);
+      };
+      (Array.isArray(arr) ? arr : []).forEach((s: any) => {
+        const sName = String(s.contactName || s.name || "");
+        const sId = s.contactId ? String(s.contactId) : "";
+        const tName = s.tutorName ? String(s.tutorName) : "";
+        const tId = s.tutorId ? String(s.tutorId) : "";
+        if (sId) mark(`id:${sId}`, { isStudent: true });
+        if (sName) mark(`name:${sName.toLowerCase()}`, { isStudent: true });
+        if (tId) mark(`id:${tId}`, { tutorOf: [sName] });
+        if (tName) mark(`name:${tName.toLowerCase()}`, { tutorOf: [sName] });
+      });
+      setEduRoles(map);
+    } catch {}
+  }, [contacts.length]);
 
   // --- Call Active Timer Effect ---
   useEffect(() => {
@@ -223,21 +253,7 @@ export default function ContactsPage() {
   // --- Load and Save from LocalStorage ---
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const hostname = window.location.hostname;
-      const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
-      let slug = "gastroshows";
-      
-      if (isLocalhost) {
-        const parts = hostname.split(".");
-        if (parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www") {
-          slug = parts[0];
-        }
-      } else {
-        const parts = hostname.split(".");
-        if (parts.length > 2 && parts[0] !== "www") {
-          slug = parts[0];
-        }
-      }
+      const slug = getTenantSlugClient();
 
       const storageKey = `palmera_contacts_${slug}`;
       if (isTenantDataCleared(slug)) {
@@ -263,21 +279,7 @@ export default function ContactsPage() {
   const saveContacts = (updated: Contact[]) => {
     setContacts(updated);
     if (typeof window !== "undefined") {
-      const hostname = window.location.hostname;
-      const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
-      let slug = "gastroshows";
-      
-      if (isLocalhost) {
-        const parts = hostname.split(".");
-        if (parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www") {
-          slug = parts[0];
-        }
-      } else {
-        const parts = hostname.split(".");
-        if (parts.length > 2 && parts[0] !== "www") {
-          slug = parts[0];
-        }
-      }
+      const slug = getTenantSlugClient();
       localStorage.setItem(`palmera_contacts_${slug}`, JSON.stringify(updated));
     }
   };
@@ -308,6 +310,7 @@ export default function ContactsPage() {
       billingCity: "",
       billingCountry: "España",
       notes: "",
+      birthDate: "",
     });
     setIsModalOpen(true);
   };
@@ -327,6 +330,7 @@ export default function ContactsPage() {
       billingCity: contact.billingCity || "",
       billingCountry: contact.billingCountry || "España",
       notes: contact.notes || "",
+      birthDate: contact.birthDate || "",
     });
     setIsModalOpen(true);
   };
@@ -362,6 +366,7 @@ export default function ContactsPage() {
               billingCity: formData.billingCity,
               billingCountry: formData.billingCountry,
               notes: formData.notes,
+              birthDate: formData.birthDate || undefined,
             }
           : c
       );
@@ -382,6 +387,7 @@ export default function ContactsPage() {
         billingCity: formData.billingCity,
         billingCountry: formData.billingCountry,
         notes: formData.notes,
+        birthDate: formData.birthDate || undefined,
         createdAt: new Date().toISOString(),
       };
       saveContacts([...contacts, newContact]);
@@ -601,6 +607,22 @@ export default function ContactsPage() {
             </div>
             <div>
               <span className="text-xs font-bold text-foreground block">{contact.name}</span>
+              {(() => {
+                const role = eduRoles[`id:${contact.id}`] || eduRoles[`name:${contact.name.toLowerCase()}`];
+                if (!role || (!role.isStudent && role.tutorOf.length === 0)) return null;
+                return (
+                  <span className="mt-1 flex flex-wrap gap-1">
+                    {role.isStudent && (
+                      <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-px text-[9px] font-bold text-emerald-700">🎸 Alumno</span>
+                    )}
+                    {role.tutorOf.length > 0 && (
+                      <span className="rounded-full bg-sky-500/10 border border-sky-500/30 px-1.5 py-px text-[9px] font-bold text-sky-700" title={`Tutor de: ${role.tutorOf.join(", ")}`}>
+                        👨‍👩‍👧 Tutor{role.tutorOf.length > 1 ? ` ×${role.tutorOf.length}` : ""}
+                      </span>
+                    )}
+                  </span>
+                );
+              })()}
               {contact.contactType === "INDIVIDUAL" && contact.companyName && (
                 <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
                   <Icons.Briefcase className="h-3 w-3" />
@@ -613,16 +635,16 @@ export default function ContactsPage() {
         <td className="px-6 py-4 text-xs font-medium text-muted-foreground">
           {contact.email ? (
             <div className="flex items-center gap-2">
-              <a href={`mailto:${contact.email}`} className="hover:text-amber-500 transition-colors font-medium">
+              <a href={`mailto:${contact.email}`} className="hover:text-red-500 transition-colors font-medium">
                 {contact.email}
               </a>
               {/* Envelope Email dispatcher icon requested in custom mock red squares */}
               <button
                 onClick={() => openEmailModal(contact)}
-                className="text-muted-foreground hover:text-amber-500 rounded-md p-1 hover:bg-muted/50 transition-all cursor-pointer scale-100 hover:scale-110 active:scale-95 duration-150"
+                className="text-muted-foreground hover:text-red-500 rounded-md p-1 hover:bg-muted/50 transition-all cursor-pointer scale-100 hover:scale-110 active:scale-95 duration-150"
                 title={`Enviar e-mail personalizado con plantilla a ${contact.name}`}
               >
-                <Icons.Mail className="h-3.5 w-3.5 text-amber-500/60 hover:text-amber-500" />
+                <Icons.Mail className="h-3.5 w-3.5 text-red-500/60 hover:text-red-500" />
               </button>
             </div>
           ) : (
@@ -637,10 +659,10 @@ export default function ContactsPage() {
                 {/* Phone Call Dispatcher */}
                 <button
                   onClick={() => openPhoneDispatcher(contact, "CALL")}
-                  className="text-muted-foreground hover:text-amber-500 rounded-md p-1 hover:bg-muted/50 transition-all cursor-pointer scale-100 hover:scale-115 active:scale-90 duration-150"
+                  className="text-muted-foreground hover:text-red-500 rounded-md p-1 hover:bg-muted/50 transition-all cursor-pointer scale-100 hover:scale-115 active:scale-90 duration-150"
                   title={`Llamar a ${contact.name}`}
                 >
-                  <Icons.PhoneCall className="h-3.5 w-3.5 text-amber-500/60 hover:text-amber-500" />
+                  <Icons.PhoneCall className="h-3.5 w-3.5 text-red-500/60 hover:text-red-500" />
                 </button>
                 {/* WhatsApp Dispatcher */}
                 <button
@@ -749,7 +771,7 @@ export default function ContactsPage() {
             onClick={() => setFilterType(filterType === "ALL" ? "COMPANY" : filterType === "COMPANY" ? "INDIVIDUAL" : "ALL")}
             className={`flex-1 inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold px-2 transition-all ${
               filterType !== "ALL"
-                ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500"
+                ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-500"
                 : "border-border/50 bg-background text-foreground hover:bg-muted"
             }`}
           >
@@ -767,7 +789,7 @@ export default function ContactsPage() {
             onClick={() => setFilterWithCif(!filterWithCif)}
             className={`flex-1 inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold px-2 transition-all ${
               filterWithCif
-                ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500"
+                ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-500"
                 : "border-border/50 bg-background text-foreground hover:bg-muted"
             }`}
           >
@@ -780,7 +802,7 @@ export default function ContactsPage() {
             onClick={() => setGroupByField(groupByField === "NONE" ? "contactType" : groupByField === "contactType" ? "billingCity" : "NONE")}
             className={`inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold px-2.5 transition-all ${
               groupByField !== "NONE"
-                ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500"
+                ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-500"
                 : "border-border/50 bg-background text-foreground hover:bg-muted"
             }`}
             title="Agrupar listado"
@@ -807,7 +829,7 @@ export default function ContactsPage() {
                   <div className="flex items-center gap-1.5">
                     <EditableLabel apiKey="contacts.col.name" defaultValue="Nombre" />
                     {sortField === "name" && (
-                      sortOrder === "asc" ? <Icons.ArrowUp className="h-3.5 w-3.5 text-amber-500" /> : <Icons.ArrowDown className="h-3.5 w-3.5 text-amber-500" />
+                      sortOrder === "asc" ? <Icons.ArrowUp className="h-3.5 w-3.5 text-red-500" /> : <Icons.ArrowDown className="h-3.5 w-3.5 text-red-500" />
                     )}
                   </div>
                 </th>
@@ -819,7 +841,7 @@ export default function ContactsPage() {
                   <div className="flex items-center gap-1.5">
                     <EditableLabel apiKey="contacts.col.email" defaultValue="Email" />
                     {sortField === "email" && (
-                      sortOrder === "asc" ? <Icons.ArrowUp className="h-3.5 w-3.5 text-amber-500" /> : <Icons.ArrowDown className="h-3.5 w-3.5 text-amber-500" />
+                      sortOrder === "asc" ? <Icons.ArrowUp className="h-3.5 w-3.5 text-red-500" /> : <Icons.ArrowDown className="h-3.5 w-3.5 text-red-500" />
                     )}
                   </div>
                 </th>
@@ -835,7 +857,7 @@ export default function ContactsPage() {
                   <div className="flex items-center gap-1.5">
                     <EditableLabel apiKey="contacts.col.type" defaultValue="Tipo" />
                     {sortField === "contactType" && (
-                      sortOrder === "asc" ? <Icons.ArrowUp className="h-3.5 w-3.5 text-amber-500" /> : <Icons.ArrowDown className="h-3.5 w-3.5 text-amber-500" />
+                      sortOrder === "asc" ? <Icons.ArrowUp className="h-3.5 w-3.5 text-red-500" /> : <Icons.ArrowDown className="h-3.5 w-3.5 text-red-500" />
                     )}
                   </div>
                 </th>
@@ -847,7 +869,7 @@ export default function ContactsPage() {
                   <div className="flex items-center gap-1.5">
                     <EditableLabel apiKey="contacts.col.cif" defaultValue="CIF / NIF" />
                     {sortField === "cif" && (
-                      sortOrder === "asc" ? <Icons.ArrowUp className="h-3.5 w-3.5 text-amber-500" /> : <Icons.ArrowDown className="h-3.5 w-3.5 text-amber-500" />
+                      sortOrder === "asc" ? <Icons.ArrowUp className="h-3.5 w-3.5 text-red-500" /> : <Icons.ArrowDown className="h-3.5 w-3.5 text-red-500" />
                     )}
                   </div>
                 </th>
@@ -859,7 +881,7 @@ export default function ContactsPage() {
                 <th className="px-6 py-3.5 text-right w-24">
                   <button
                     onClick={openCreateModal}
-                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-metallic-orange shadow-md shadow-orange-500/20 transition-all hover:scale-105 duration-200 cursor-pointer"
+                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-metallic-red shadow-md shadow-red-500/20 transition-all hover:scale-105 duration-200 cursor-pointer"
                     title="Añadir nuevo contacto (+)"
                   >
                     <Icons.Plus className="h-4.5 w-4.5" />
@@ -882,7 +904,7 @@ export default function ContactsPage() {
                   <React.Fragment key={groupName}>
                     {/* Header of Group */}
                     <tr className="bg-muted/15 border-b border-border/30">
-                      <td colSpan={7} className="px-4 py-2 text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest bg-amber-500/5">
+                      <td colSpan={7} className="px-4 py-2 text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest bg-red-500/5">
                         <div className="flex items-center gap-2">
                           <Icons.FolderOpen className="h-3.5 w-3.5" />
                           <span>{groupName} ({groups[groupName].length})</span>
@@ -924,7 +946,7 @@ export default function ContactsPage() {
                   <select
                     value={formData.contactType}
                     onChange={(e) => setFormData({ ...formData, contactType: e.target.value as "INDIVIDUAL" | "COMPANY" })}
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   >
                     <option value="INDIVIDUAL">Particular (Persona)</option>
                     <option value="COMPANY">Empresa (Sociedad)</option>
@@ -938,7 +960,7 @@ export default function ContactsPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Ej. Gastroshows SL o Juan Pérez"
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   />
                 </div>
               </div>
@@ -952,7 +974,7 @@ export default function ContactsPage() {
                     value={formData.customGreeting}
                     onChange={(e) => setFormData({ ...formData, customGreeting: e.target.value })}
                     placeholder="Ej. Hey o Querida Silvia"
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -962,7 +984,7 @@ export default function ContactsPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="correo@ejemplo.com"
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -972,7 +994,7 @@ export default function ContactsPage() {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+34 600..."
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -982,7 +1004,16 @@ export default function ContactsPage() {
                     value={formData.cif}
                     onChange={(e) => setFormData({ ...formData, cif: e.target.value })}
                     placeholder="B12345678"
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Nacimiento</label>
+                  <input
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   />
                 </div>
               </div>
@@ -996,14 +1027,14 @@ export default function ContactsPage() {
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                     placeholder="Ej. Gastroshows Barcelona SL"
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   />
                 </div>
               )}
 
               {/* Billing Address */}
               <div className="space-y-2 border-t border-border/30 pt-3">
-                <span className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest block mb-2">
+                <span className="text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest block mb-2">
                   Dirección de Facturación
                 </span>
                 <div className="grid gap-3 sm:grid-cols-4">
@@ -1014,7 +1045,7 @@ export default function ContactsPage() {
                       value={formData.billingStreet}
                       onChange={(e) => setFormData({ ...formData, billingStreet: e.target.value })}
                       placeholder="Calle Principal 10"
-                      className="w-full rounded-lg border border-border/50 bg-background py-1.5 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                      className="w-full rounded-lg border border-border/50 bg-background py-1.5 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -1024,7 +1055,7 @@ export default function ContactsPage() {
                       value={formData.billingZip}
                       onChange={(e) => setFormData({ ...formData, billingZip: e.target.value })}
                       placeholder="08001"
-                      className="w-full rounded-lg border border-border/50 bg-background py-1.5 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                      className="w-full rounded-lg border border-border/50 bg-background py-1.5 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -1034,7 +1065,7 @@ export default function ContactsPage() {
                       value={formData.billingCity}
                       onChange={(e) => setFormData({ ...formData, billingCity: e.target.value })}
                       placeholder="Barcelona"
-                      className="w-full rounded-lg border border-border/50 bg-background py-1.5 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                      className="w-full rounded-lg border border-border/50 bg-background py-1.5 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                     />
                   </div>
                 </div>
@@ -1048,7 +1079,7 @@ export default function ContactsPage() {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Detalles sobre este contacto..."
                   rows={2}
-                  className="w-full rounded-lg border border-border/50 bg-background py-1.5 px-3 text-xs text-foreground outline-hidden focus:border-amber-500 resize-none"
+                  className="w-full rounded-lg border border-border/50 bg-background py-1.5 px-3 text-xs text-foreground outline-hidden focus:border-red-500 resize-none"
                 />
               </div>
 
@@ -1063,7 +1094,7 @@ export default function ContactsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-5 text-xs font-bold text-white shadow-md shadow-amber-500/25 hover:bg-amber-600 transition-all"
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-red-500 px-5 text-xs font-bold text-white shadow-md shadow-red-500/25 hover:bg-red-600 transition-all"
                 >
                   <Icons.Save className="h-4 w-4" />
                   <span>Guardar Contacto</span>
@@ -1081,7 +1112,7 @@ export default function ContactsPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-border/40 pb-4 mb-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-500/10 border border-red-500/20 text-red-500">
                   <Icons.Send className="h-4.5 w-4.5" />
                 </div>
                 <div>
@@ -1124,7 +1155,7 @@ export default function ContactsPage() {
                     onClick={() => applyEmailTemplate("casual")}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
                       activeTemplate === "casual"
-                        ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500"
+                        ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-500"
                         : "border-border/50 bg-background text-foreground hover:bg-muted"
                     }`}
                   >
@@ -1136,7 +1167,7 @@ export default function ContactsPage() {
                     onClick={() => applyEmailTemplate("operations")}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
                       activeTemplate === "operations"
-                        ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500"
+                        ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-500"
                         : "border-border/50 bg-background text-foreground hover:bg-muted"
                     }`}
                   >
@@ -1148,7 +1179,7 @@ export default function ContactsPage() {
                     onClick={() => applyEmailTemplate("custom")}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
                       activeTemplate === "custom"
-                        ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500"
+                        ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-500"
                         : "border-border/50 bg-background text-foreground hover:bg-muted"
                     }`}
                   >
@@ -1167,7 +1198,7 @@ export default function ContactsPage() {
                   value={emailSubject}
                   onChange={(e) => setEmailSubject(e.target.value)}
                   placeholder="Asunto del correo"
-                  className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                  className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                 />
               </div>
 
@@ -1175,7 +1206,7 @@ export default function ContactsPage() {
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Mensaje</label>
-                  <span className="text-[9px] bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20 px-1.5 py-0.5 rounded font-mono">
+                  <span className="text-[9px] bg-red-500/10 text-red-600 dark:text-red-500 border border-red-500/20 px-1.5 py-0.5 rounded font-mono">
                     GREETING: "{emailContact.customGreeting || "Hola " + emailContact.name.split(" ")[0]}"
                   </span>
                 </div>
@@ -1185,7 +1216,7 @@ export default function ContactsPage() {
                   onChange={(e) => setEmailBody(e.target.value)}
                   placeholder="Redacta el contenido..."
                   rows={6}
-                  className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500 resize-none font-mono text-xs"
+                  className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 resize-none font-mono text-xs"
                 />
               </div>
 
@@ -1202,7 +1233,7 @@ export default function ContactsPage() {
                 <button
                   type="submit"
                   disabled={isSendingEmail}
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-amber-500 px-5 text-xs font-bold text-white shadow-md shadow-amber-500/25 hover:bg-amber-600 transition-all disabled:opacity-80 disabled:cursor-not-allowed"
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-red-500 px-5 text-xs font-bold text-white shadow-md shadow-red-500/25 hover:bg-red-600 transition-all disabled:opacity-80 disabled:cursor-not-allowed"
                 >
                   {isSendingEmail ? (
                     <>
@@ -1231,7 +1262,7 @@ export default function ContactsPage() {
               <div className="flex items-center gap-2.5">
                 <div className={`flex h-9 w-9 items-center justify-center rounded-lg border ${
                   phoneActionType === "CALL"
-                    ? "bg-amber-500/10 border-amber-500/20 text-amber-500"
+                    ? "bg-red-500/10 border-red-500/20 text-red-500"
                     : "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
                 }`}>
                   {phoneActionType === "CALL" ? (
@@ -1270,7 +1301,7 @@ export default function ContactsPage() {
                 }}
                 className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all ${
                   phoneActionType === "CALL"
-                    ? "bg-card text-amber-500 shadow-xs border border-border/30"
+                    ? "bg-card text-red-500 shadow-xs border border-border/30"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -1300,8 +1331,8 @@ export default function ContactsPage() {
               <div className="space-y-6 py-4 flex flex-col items-center justify-center text-center">
                 <div className="relative flex items-center justify-center">
                   {/* Outer Pulsing Glow */}
-                  <div className="absolute h-24 w-24 rounded-full bg-amber-500/10 border border-amber-500/20 animate-ping duration-1000" />
-                  <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-b from-amber-500/20 to-amber-500/10 border border-amber-500/30 text-amber-500">
+                  <div className="absolute h-24 w-24 rounded-full bg-red-500/10 border border-red-500/20 animate-ping duration-1000" />
+                  <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-b from-red-500/20 to-red-500/10 border border-red-500/30 text-red-500">
                     <Icons.PhoneCall className="h-10 w-10 animate-bounce" />
                   </div>
                 </div>
@@ -1317,7 +1348,7 @@ export default function ContactsPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs font-bold tracking-widest text-amber-600 dark:text-amber-500 uppercase block animate-pulse">
+                  <span className="text-xs font-bold tracking-widest text-red-600 dark:text-red-500 uppercase block animate-pulse">
                     {isCallingActive ? "Marcando..." : "Llamando..."}
                   </span>
                   {isCallingActive && (
@@ -1335,7 +1366,7 @@ export default function ContactsPage() {
                     className="inline-flex h-10 px-4 items-center justify-center gap-1.5 rounded-xl border border-border bg-card text-xs font-bold text-foreground hover:bg-muted cursor-pointer transition-all duration-150 active:scale-95"
                     title="Lanzar llamada nativa con tu aplicación telefónica"
                   >
-                    <Icons.Smartphone className="h-4 w-4 text-amber-500" />
+                    <Icons.Smartphone className="h-4 w-4 text-red-500" />
                     <span>Llamada Externa</span>
                   </button>
 

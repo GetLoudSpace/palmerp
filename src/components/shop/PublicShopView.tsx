@@ -170,11 +170,11 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
 
           {/* Código 4 dígitos minimalista */}
           {successOrder.pickupCode && (
-            <div className="bg-amber-500/10 border-2 border-amber-500/30 p-5 rounded-2xl space-y-2">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600">Código de recogida</div>
-              <div className="text-4xl font-black tracking-[0.3em] text-amber-600 font-mono">{successOrder.pickupCode}</div>
+            <div className="bg-red-500/10 border-2 border-red-500/30 p-5 rounded-2xl space-y-2">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-red-600">Código de recogida</div>
+              <div className="text-4xl font-black tracking-[0.3em] text-red-600 font-mono">{successOrder.pickupCode}</div>
               <div className="text-xs text-gray-600">Muestra este código o tu nombre en el obrador</div>
-              <button onClick={() => navigator.clipboard?.writeText(successOrder.pickupCode)} className="text-xs font-bold text-amber-600 hover:underline">Copiar código</button>
+              <button onClick={() => navigator.clipboard?.writeText(successOrder.pickupCode)} className="text-xs font-bold text-red-600 hover:underline">Copiar código</button>
             </div>
           )}
 
@@ -226,7 +226,7 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight">{shop.name}</h1>
           {shop.description && <p className="text-sm sm:text-base text-white/80 max-w-xl mx-auto">{shop.description}</p>}
           <button onClick={() => document.getElementById("palmera-order-section")?.scrollIntoView({ behavior: "smooth" })} className="inline-flex items-center gap-2 bg-white text-gray-900 px-6 py-3 rounded-full font-black text-sm shadow-lg hover:scale-105 transition-transform">
-            <Icons.ShoppingBag className="h-5 w-5 text-amber-600" /> Pedir pan
+            <Icons.ShoppingBag className="h-5 w-5 text-red-600" /> Pedir pan
           </button>
         </div>
       </header>
@@ -240,7 +240,7 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
             <button onClick={handlePhoneLookup} disabled={phoneLoading} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 disabled:opacity-50">{phoneLoading ? "..." : "Ver pedidos"}</button>
             {phoneContact && <span className="hidden sm:inline text-emerald-600 font-bold">Hola, {phoneContact.name} • {phoneOrders.length} pedidos</span>}
           </div>
-          <button onClick={() => setShowCart(true)} className="relative inline-flex items-center gap-2 bg-amber-500 text-white px-4 py-2 rounded-full font-black text-xs shadow hover:bg-amber-600">
+          <button onClick={() => setShowCart(true)} className="relative inline-flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full font-black text-xs shadow hover:bg-red-600">
             <Icons.ShoppingCart className="h-4 w-4" /> {totalItems} • {totalPrice.toFixed(2)}€
             {totalItems>0 && <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">{totalItems}</span>}
           </button>
@@ -277,15 +277,15 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
             {/* Franjas configurables */}
             {windowsForPoint.length > 0 && (
               <div>
-                <div className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5"><Icons.Clock className="h-4 w-4 text-amber-500" /> Elige horario de recogida</div>
+                <div className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5"><Icons.Clock className="h-4 w-4 text-red-500" /> Elige horario de recogida</div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {windowsForPoint.map((w) => (
-                    <label key={w.id} onClick={() => setSelectedWindowId(w.id)} className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${selectedWindowId === w.id ? "border-amber-500 bg-amber-500/5" : "border-gray-200 dark:border-gray-700"}`}>
+                    <label key={w.id} onClick={() => setSelectedWindowId(w.id)} className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${selectedWindowId === w.id ? "border-red-500 bg-red-500/5" : "border-gray-200 dark:border-gray-700"}`}>
                       <div>
                         <div className="text-xs font-bold">{w.label}</div>
                         <div className="text-[11px] text-gray-500">{w.start} - {w.end}</div>
                       </div>
-                      <span className="text-[10px] font-bold bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded">Cap {w.capacity}</span>
+                      <span className="text-[10px] font-bold bg-red-500/10 text-red-600 px-2 py-0.5 rounded">Cap {w.capacity}</span>
                     </label>
                   ))}
                 </div>
@@ -461,7 +461,7 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
               Pago directo en el punto de recogida. No se requiere tarjeta online.
             </p>
             <div className="flex gap-2">
-              <button type="submit" disabled={submitting} className="flex-1 py-3 rounded-xl font-black text-xs bg-amber-500 text-white hover:bg-amber-600 flex items-center justify-center gap-2">
+              <button type="submit" disabled={submitting} className="flex-1 py-3 rounded-xl font-black text-xs bg-red-500 text-white hover:bg-red-600 flex items-center justify-center gap-2">
                 <Icons.Package className="h-4 w-4" /> Recoger en tienda • {totalPrice.toFixed(2)}€
               </button>
               <button type="button" onClick={async (e)=>{ e.preventDefault(); const shopRes = await fetch(`/api/shop/${shop.slug}/client?phone=${encodeURIComponent(customerPhone||phoneLogin)}`).then(r=>r.json()).catch(()=>null); handlePlaceOrder(e as any); }} className="flex-1 py-3 rounded-xl font-black text-xs bg-emerald-600 text-white hover:bg-emerald-700 flex items-center justify-center gap-2">
@@ -477,7 +477,7 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={()=>setShowCart(false)}>
           <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl" onClick={e=>e.stopPropagation()}>
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-black flex items-center gap-2"><Icons.ShoppingCart className="h-5 w-5 text-amber-500" /> Tu carrito ({totalItems})</h3>
+              <h3 className="font-black flex items-center gap-2"><Icons.ShoppingCart className="h-5 w-5 text-red-500" /> Tu carrito ({totalItems})</h3>
               <button onClick={()=>setShowCart(false)} className="p-2 rounded-full hover:bg-gray-100"><Icons.X className="h-5 w-5" /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -492,7 +492,7 @@ export default function PublicShopView({ shop }: { shop: ShopData }) {
               <div className="flex justify-between font-black">Total <span>{totalPrice.toFixed(2)}€</span></div>
               {phoneOrders.length>0 && <div className="text-xs text-gray-600">Historial: {phoneOrders.length} pedidos previos con este teléfono</div>}
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={(e)=>{ setShowCart(false); handlePlaceOrder(e as any); }} className="py-3 rounded-xl bg-amber-500 text-white font-bold text-xs flex items-center justify-center gap-1"><Icons.Package className="h-4 w-4" /> Recoger</button>
+                <button onClick={(e)=>{ setShowCart(false); handlePlaceOrder(e as any); }} className="py-3 rounded-xl bg-red-500 text-white font-bold text-xs flex items-center justify-center gap-1"><Icons.Package className="h-4 w-4" /> Recoger</button>
                 <button onClick={(e)=>{ setShowCart(false); handlePlaceOrder(e as any); }} className="py-3 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1"><Icons.CreditCard className="h-4 w-4" /> Pagar Redsys</button>
               </div>
             </div>

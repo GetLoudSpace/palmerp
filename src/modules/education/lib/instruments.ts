@@ -26,7 +26,7 @@ export function getInstrumentDef(key: string): InstrumentDef {
 export function instrumentColorClasses(key: string): string {
   const def = getInstrumentDef(key);
   const map: Record<string, string> = {
-    amber: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
+    amber: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
     sky: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20",
     zinc: "bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/20",
     red: "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20",

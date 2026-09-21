@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
+import { getDefaultSlug } from "@/lib/clientStorage";
 
 // Tab Components
 import ProspectingTab from "./ProspectingTab";
@@ -28,7 +29,7 @@ export default function SalesDashboard() {
   const getSlug = () => {
     const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
     const parts = hostname.split(".");
-    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
   };
 
   const loadDashboardStats = () => {
@@ -105,7 +106,7 @@ export default function SalesDashboard() {
           <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-xl font-extrabold text-foreground tracking-tight md:text-2xl">Módulo de Ventas & CRM</h2>
             {shopSlug && (
-              <a href={`/shop/${shopSlug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 text-white px-3 py-1.5 text-xs font-black shadow hover:bg-amber-600">
+              <a href={`/shop/${shopSlug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-red-500 text-white px-3 py-1.5 text-xs font-black shadow hover:bg-red-600">
                 <Icons.ShoppingBag className="h-3.5 w-3.5" /> Pedir pan (vista cliente)
               </a>
             )}
@@ -221,10 +222,10 @@ export default function SalesDashboard() {
                 <p className="text-[9px] text-muted-foreground mt-0.5">Negociaciones activas</p>
               </div>
 
-              <div className="border border-border/40 bg-card p-5 rounded-2xl shadow-xs space-y-1 bg-linear-to-r from-amber-500/5 to-orange-500/5">
-                <div className="flex items-center justify-between text-amber-600 dark:text-amber-500 mb-1">
+              <div className="border border-border/40 bg-card p-5 rounded-2xl shadow-xs space-y-1 bg-linear-to-r from-red-500/5 to-red-500/5">
+                <div className="flex items-center justify-between text-red-600 dark:text-red-500 mb-1">
                   <span className="text-[10px] font-bold uppercase tracking-wider">Valor Estimado Cartera</span>
-                  <Icons.DollarSign className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+                  <Icons.DollarSign className="h-4 w-4 text-red-600 dark:text-red-500" />
                 </div>
                 <div className="text-xl font-extrabold text-foreground font-mono">
                   {stats.pipelineValue.toLocaleString("es-ES")} €
@@ -241,7 +242,7 @@ export default function SalesDashboard() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <button
                     onClick={() => setActiveTab("prospecting")}
-                    className="p-4 rounded-xl border border-border/40 bg-muted/20 hover:border-amber-500/20 text-left space-y-1 group transition-all cursor-pointer"
+                    className="p-4 rounded-xl border border-border/40 bg-muted/20 hover:border-red-500/20 text-left space-y-1 group transition-all cursor-pointer"
                   >
                     <div className="h-8 w-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
                       <Icons.KanbanSquare className="h-4 w-4" />
@@ -252,7 +253,7 @@ export default function SalesDashboard() {
 
                   <button
                     onClick={() => setActiveTab("opportunities")}
-                    className="p-4 rounded-xl border border-border/40 bg-muted/20 hover:border-amber-500/20 text-left space-y-1 group transition-all cursor-pointer"
+                    className="p-4 rounded-xl border border-border/40 bg-muted/20 hover:border-red-500/20 text-left space-y-1 group transition-all cursor-pointer"
                   >
                     <div className="h-8 w-8 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
                       <Icons.Target className="h-4 w-4" />
@@ -263,9 +264,9 @@ export default function SalesDashboard() {
 
                   <button
                     onClick={() => setActiveTab("contacts")}
-                    className="p-4 rounded-xl border border-border/40 bg-muted/20 hover:border-amber-500/20 text-left space-y-1 group transition-all cursor-pointer"
+                    className="p-4 rounded-xl border border-border/40 bg-muted/20 hover:border-red-500/20 text-left space-y-1 group transition-all cursor-pointer"
                   >
-                    <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                    <div className="h-8 w-8 rounded-lg bg-red-500/10 text-red-600 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
                       <Icons.Users className="h-4 w-4" />
                     </div>
                     <h4 className="text-xs font-bold text-foreground">Historial de Llamadas/Emails</h4>
@@ -274,7 +275,7 @@ export default function SalesDashboard() {
 
                   <button
                     onClick={() => setActiveTab("analytics")}
-                    className="p-4 rounded-xl border border-border/40 bg-muted/20 hover:border-amber-500/20 text-left space-y-1 group transition-all cursor-pointer"
+                    className="p-4 rounded-xl border border-border/40 bg-muted/20 hover:border-red-500/20 text-left space-y-1 group transition-all cursor-pointer"
                   >
                     <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
                       <Icons.BarChart2 className="h-4 w-4" />
@@ -290,11 +291,11 @@ export default function SalesDashboard() {
                 <h3 className="text-xs font-extrabold text-foreground border-b border-border/30 pb-2 uppercase tracking-wider">Última Operación</h3>
                 <div className="space-y-3.5">
                   <div className="flex gap-2.5 items-start">
-                    <div className="h-7 w-7 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 shrink-0">
+                    <div className="h-7 w-7 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-600 shrink-0">
                       <Icons.Bell className="h-3.5 w-3.5" />
                     </div>
                     <div className="space-y-0.5">
-                      <span className="text-[9px] uppercase font-bold text-amber-500">Log de Ventas</span>
+                      <span className="text-[9px] uppercase font-bold text-red-500">Log de Ventas</span>
                       <p className="text-xs text-foreground/80 font-medium leading-tight">{stats.recentLog}</p>
                     </div>
                   </div>

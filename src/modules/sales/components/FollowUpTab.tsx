@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
+import { getDefaultSlug } from "@/lib/clientStorage";
 import SmartSearchInput from "@/components/SmartSearchInput";
 
 interface FollowUp {
@@ -21,7 +22,7 @@ export default function FollowUpTab() {
   const getSlug = () => {
     const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
     const parts = hostname.split(".");
-    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
   };
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export default function FollowUpTab() {
               onClick={() => setFilterType(t)}
               className={`px-3 py-1.5 text-[9px] font-bold rounded-lg border transition-all cursor-pointer ${
                 filterType === t
-                  ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500"
+                  ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-500"
                   : "border-border/50 bg-background text-muted-foreground hover:bg-muted"
               }`}
             >
@@ -83,28 +84,28 @@ export default function FollowUpTab() {
             {/* Timeline dot */}
             <div className={`absolute -left-[20px] top-1.5 h-3.5 w-3.5 rounded-full border-2 bg-background flex items-center justify-center transition-transform group-hover:scale-110 duration-150 ${
               fu.type === "CALL" ? "border-blue-500" :
-              fu.type === "EMAIL" ? "border-amber-500" :
+              fu.type === "EMAIL" ? "border-red-500" :
               fu.type === "MEETING" ? "border-purple-500" :
               "border-stone-500"
             }`}>
               <div className={`h-1.5 w-1.5 rounded-full ${
                 fu.type === "CALL" ? "bg-blue-500" :
-                fu.type === "EMAIL" ? "bg-amber-500" :
+                fu.type === "EMAIL" ? "bg-red-500" :
                 fu.type === "MEETING" ? "bg-purple-500" :
                 "bg-stone-500"
               }`} />
             </div>
 
             {/* Timeline content card */}
-            <div className="bg-card border border-border/40 hover:border-amber-500/20 p-4 rounded-2xl shadow-xs space-y-2 transition-all duration-200">
+            <div className="bg-card border border-border/40 hover:border-red-500/20 p-4 rounded-2xl shadow-xs space-y-2 transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-foreground hover:text-amber-500 transition-colors cursor-pointer mr-2">
+                  <span className="text-xs font-bold text-foreground hover:text-red-500 transition-colors cursor-pointer mr-2">
                     {fu.contactName}
                   </span>
                   <span className={`text-[8px] font-extrabold uppercase border px-2 py-0.2 rounded-full ${
                     fu.type === "CALL" ? "bg-blue-500/10 text-blue-600 border-blue-500/20" :
-                    fu.type === "EMAIL" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
+                    fu.type === "EMAIL" ? "bg-red-500/10 text-red-600 border-red-500/20" :
                     fu.type === "MEETING" ? "bg-purple-500/10 text-purple-600 border-purple-500/20" :
                     "bg-stone-500/10 text-stone-600 border-stone-500/20"
                   }`}>

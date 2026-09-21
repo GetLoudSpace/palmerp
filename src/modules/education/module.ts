@@ -7,7 +7,8 @@ export const educationModule: PalmModeConfig = {
   icon: "GraduationCap",
   category: "Operaciones",
   menuItems: [
-    { label: "Panel Profesor", path: "/admin/education" },
+    { label: "Profesor", path: "/admin/education" },
+    { label: "Agenda", path: "/admin/education/agenda" },
     { label: "Alumnos", path: "/admin/education/students" },
     { label: "Clases & Seguimiento", path: "/admin/education/lessons" },
     { label: "Biblioteca", path: "/admin/education/library" },

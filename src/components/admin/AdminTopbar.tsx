@@ -90,7 +90,7 @@ export default function AdminTopbar({ onMenuClick, isMenuOpen }: AdminTopbarProp
           title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
         >
           {isDark ? (
-            <Icons.Sun className="h-4.5 w-4.5 text-amber-500 animate-pulse" />
+            <Icons.Sun className="h-4.5 w-4.5 text-red-500 animate-pulse" />
           ) : (
             <Icons.Moon className="h-4.5 w-4.5" />
           )}
@@ -105,14 +105,14 @@ export default function AdminTopbar({ onMenuClick, isMenuOpen }: AdminTopbarProp
         {/* Notifications */}
         <button className="relative rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground">
           <Icons.Bell className="h-4.5 w-4.5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-background" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-background" />
         </button>
 
         <div className="h-5 w-px bg-border/50 mx-1" />
 
         {/* Quick Profile Pill */}
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-tr from-amber-500/20 to-amber-600/10 text-amber-600 dark:text-amber-500 font-bold border border-amber-500/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-tr from-red-500/20 to-red-600/10 text-red-600 dark:text-red-500 font-bold border border-red-500/20">
             A
           </div>
         </div>

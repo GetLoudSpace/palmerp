@@ -171,7 +171,7 @@ export default function DailyScrumChat({ onTasksExtracted, onNavigateToProject }
 
   const priorityConfig = {
     critical: { color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/30", label: "Crítica" },
-    high: { color: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/30", label: "Alta" },
+    high: { color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/30", label: "Alta" },
     medium: { color: "text-yellow-500", bg: "bg-yellow-500/10", border: "border-yellow-500/30", label: "Media" },
     low: { color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/30", label: "Baja" },
   };
@@ -181,12 +181,12 @@ export default function DailyScrumChat({ onTasksExtracted, onNavigateToProject }
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0c0a09]/80 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-600 to-amber-500 shadow-md shadow-amber-500/20">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-red-600 to-red-500 shadow-md shadow-red-500/20">
             <Icons.Palmtree className="h-5 w-5 text-white" />
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-tight text-white">
-              Palm <span className="text-amber-500">Daily</span>
+              Palm <span className="text-red-500">Daily</span>
             </h1>
             <p className="text-[9px] text-neutral-400 uppercase tracking-widest font-semibold">
               {isComplete ? "Completado" : `Pregunta ${currentQuestion + 1}/3`}
@@ -199,7 +199,7 @@ export default function DailyScrumChat({ onTasksExtracted, onNavigateToProject }
             <>
               <button
                 onClick={() => window.location.href = "/project"}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-amber-500 px-3 text-xs font-semibold text-white hover:bg-amber-600 transition-colors"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-red-500 px-3 text-xs font-semibold text-white hover:bg-red-600 transition-colors"
               >
                 <Icons.LayoutGrid className="h-3.5 w-3.5" />
                 <span>Ver Proyecto</span>
@@ -226,14 +226,14 @@ export default function DailyScrumChat({ onTasksExtracted, onNavigateToProject }
             <div
               className={`max-w-2xl rounded-2xl px-5 py-3.5 ${
                 msg.role === "user"
-                  ? "bg-amber-500 text-white"
+                  ? "bg-red-500 text-white"
                   : "bg-white/5 border border-white/10 text-neutral-200"
               }`}
             >
               <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
               <p
                 className={`text-[10px] mt-2 ${
-                  msg.role === "user" ? "text-amber-100/70" : "text-neutral-500"
+                  msg.role === "user" ? "text-red-100/70" : "text-neutral-500"
                 }`}
               >
                 {msg.timestamp.toLocaleTimeString("es-ES", {
@@ -249,7 +249,7 @@ export default function DailyScrumChat({ onTasksExtracted, onNavigateToProject }
           <div className="flex justify-start">
             <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5">
               <div className="flex items-center gap-2">
-                <Icons.Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
+                <Icons.Loader2 className="h-4 w-4 text-red-500 animate-spin" />
                 <span className="text-xs text-neutral-400">Procesando...</span>
               </div>
             </div>
@@ -271,7 +271,7 @@ export default function DailyScrumChat({ onTasksExtracted, onNavigateToProject }
       {isComplete && extractedTasks.length > 0 && (
         <div className="border-t border-white/5 bg-white/[0.02] px-4 py-4 max-h-64 overflow-y-auto">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+            <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest flex items-center gap-2">
               <Icons.CheckSquare className="h-4 w-4" />
               <span>Tareas Extraídas ({extractedTasks.length})</span>
             </h3>
@@ -283,7 +283,7 @@ export default function DailyScrumChat({ onTasksExtracted, onNavigateToProject }
               return (
                 <div
                   key={task.id}
-                  className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3 hover:border-amber-500/20 transition-colors"
+                  className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3 hover:border-red-500/20 transition-colors"
                 >
                   <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${pConfig.bg} ${pConfig.border} border`}>
                     <div className={`h-2 w-2 rounded-full ${pConfig.color.replace("text", "bg")}`} />
@@ -323,7 +323,7 @@ export default function DailyScrumChat({ onTasksExtracted, onNavigateToProject }
       {/* Input */}
       <div className="border-t border-white/5 bg-[#0c0a09]/80 backdrop-blur-md px-4 py-4">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 focus-within:border-amber-500/50 transition-colors">
+          <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 focus-within:border-red-500/50 transition-colors">
             <textarea
               ref={inputRef}
               value={input}
@@ -341,7 +341,7 @@ export default function DailyScrumChat({ onTasksExtracted, onNavigateToProject }
             <button
               onClick={handleSend}
               disabled={!input.trim() || isLoading || isComplete}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-30 disabled:hover:bg-amber-500 transition-colors"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white hover:bg-red-600 disabled:opacity-30 disabled:hover:bg-red-500 transition-colors"
             >
               {isLoading ? (
                 <Icons.Loader2 className="h-4 w-4 animate-spin" />

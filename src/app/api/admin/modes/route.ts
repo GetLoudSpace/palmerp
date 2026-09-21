@@ -4,6 +4,9 @@ import { getTenantSlugFromHeaders } from "@/lib/tenant";
 import { getToken } from "next-auth/jwt";
 
 async function resolveSlug(req?: NextRequest) {
+  // Instancia pineada: siempre su tenant, se ignora header/JWT ajeno.
+  const pinned = (process.env.PINNED_TENANT_SLUG || "").trim().toLowerCase();
+  if (pinned) return pinned;
   const headerSlug = await getTenantSlugFromHeaders();
   if (headerSlug) return headerSlug;
   try {
@@ -16,7 +19,10 @@ async function resolveSlug(req?: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const slug = await resolveSlug(req);
-    if (!slug) return NextResponse.json({ success: true, modes: [] });
+    // Sin tenant resuelto NO devolver success:true+vacío: el sidebar lo interpreta
+    // como "cero modos" y SOBRESCRIBE el localStorage bueno dejándolo como fresh install.
+    // success:false → el cliente conserva su estado local hasta loguearse en el tenant correcto.
+    if (!slug) return NextResponse.json({ success: false, error: "No tenant resolved (missing session/subdomain)" }, { status: 401 });
     const tenant = await db.tenant.findUnique({ where: { slug } });
     if (!tenant) return NextResponse.json({ success: false, error: "Tenant not found" }, { status: 404 });
     const setting = await db.setting.findUnique({

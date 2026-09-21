@@ -11,10 +11,10 @@ export default function AdminUnavailablePage() {
   return (
     <div className="flex min-h-[65vh] items-center justify-center py-12">
       <section className="w-full max-w-xl rounded-[2rem] border border-border/50 bg-card/75 p-8 text-center shadow-xl backdrop-blur-md md:p-12">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500/10 text-red-600 dark:text-red-400">
           <Icons.Construction className="h-8 w-8" />
         </div>
-        <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">Área en preparación</p>
+        <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-red-600 dark:text-red-400">Área en preparación</p>
         <h1 className="mt-3 text-2xl font-black tracking-tight text-foreground">Esta herramienta todavía está tomando forma</h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
           La opción <span className="font-semibold text-foreground">{destination || "seleccionada"}</span> está registrada en Palmera, pero aún no tiene una pantalla operativa. Tu navegación y el menú permanecen intactos.

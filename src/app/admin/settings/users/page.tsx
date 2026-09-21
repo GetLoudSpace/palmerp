@@ -235,7 +235,7 @@ export default function UsersSettingsPage() {
 
       // If password was updated (i.e. not default mask)
       if (formData.password !== "••••••••" && formData.password.trim() !== "") {
-        const accessLink = `${window.location.protocol}//gastroshows.localhost:3000/login?onboarding=true&email=${encodeURIComponent(formData.email)}`;
+        const accessLink = `${window.location.protocol}//${window.location.host}/login?onboarding=true&email=${encodeURIComponent(formData.email)}`;
         setEmailDetails({
           to: formData.email,
           name: formData.name,
@@ -263,7 +263,7 @@ export default function UsersSettingsPage() {
       trackAuditLog("USER_CREATED", `Nuevo usuario ${formData.username} (${formData.email}) creado con nivel ${formData.role}.`);
 
       // Trigger Onboarding Simulated Email
-      const accessLink = `${window.location.protocol}//gastroshows.localhost:3000/login?onboarding=true&email=${encodeURIComponent(formData.email)}`;
+      const accessLink = `${window.location.protocol}//${window.location.host}/login?onboarding=true&email=${encodeURIComponent(formData.email)}`;
       setEmailDetails({
         to: formData.email,
         name: formData.name,
@@ -338,7 +338,7 @@ export default function UsersSettingsPage() {
             }}
             className={`flex-1 inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg border text-xs font-semibold px-2 transition-all ${
               filterRole !== "ALL"
-                ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500"
+                ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-500"
                 : "border-border/50 bg-background text-foreground hover:bg-muted"
             }`}
           >
@@ -374,7 +374,7 @@ export default function UsersSettingsPage() {
                 <th className="px-6 py-3.5 text-right w-24">
                   <button
                     onClick={openCreateModal}
-                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-metallic-orange shadow-md shadow-orange-500/20 transition-all hover:scale-105 duration-200 cursor-pointer"
+                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-metallic-red shadow-md shadow-red-500/20 transition-all hover:scale-105 duration-200 cursor-pointer"
                     title="Añadir nuevo usuario (+)"
                   >
                     <Icons.Plus className="h-4.5 w-4.5" />
@@ -403,7 +403,7 @@ export default function UsersSettingsPage() {
                           user.role === "DEV"
                             ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
                             : user.role === "ADMIN"
-                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                            ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
                             : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
                         }`}>
                           {user.name.charAt(0).toUpperCase()}
@@ -417,7 +417,7 @@ export default function UsersSettingsPage() {
 
                     {/* Email column */}
                     <td className="px-6 py-4 text-xs font-medium text-muted-foreground">
-                      <a href={`mailto:${user.email}`} className="hover:text-amber-500 transition-colors">
+                      <a href={`mailto:${user.email}`} className="hover:text-red-500 transition-colors">
                         {user.email}
                       </a>
                     </td>
@@ -428,7 +428,7 @@ export default function UsersSettingsPage() {
                         user.role === "DEV"
                           ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
                           : user.role === "ADMIN"
-                          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                          ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
                           : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
                       }`}>
                         {user.role === "DEV" ? (
@@ -536,7 +536,7 @@ export default function UsersSettingsPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Ej. Roberto Martínez"
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -547,7 +547,7 @@ export default function UsersSettingsPage() {
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/\s+/g, "").toLowerCase() })}
                     placeholder="Ej. roberto_admin"
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500 font-mono"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 font-mono"
                   />
                 </div>
               </div>
@@ -562,7 +562,7 @@ export default function UsersSettingsPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="correo@palmera.io"
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -571,7 +571,7 @@ export default function UsersSettingsPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, password: generateSecurePassword() })}
-                      className="text-[10px] text-amber-500 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-[10px] text-red-500 font-bold hover:underline cursor-pointer flex items-center gap-1"
                     >
                       <Icons.KeyRound className="h-3 w-3" />
                       <span>Autogenerar segura</span>
@@ -583,7 +583,7 @@ export default function UsersSettingsPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Escriba la clave o autogenere"
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500 font-mono"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 font-mono"
                   />
                 </div>
               </div>
@@ -595,7 +595,7 @@ export default function UsersSettingsPage() {
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as "DEV" | "ADMIN" | "USUARIO" })}
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500 font-semibold"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 font-semibold"
                   >
                     <option value="DEV">🛠️ DEV — Desarrollador de Software</option>
                     <option value="ADMIN">👑 ADMIN — Administrador del ERP</option>
@@ -609,7 +609,7 @@ export default function UsersSettingsPage() {
                       type="checkbox"
                       checked={formData.isActive}
                       onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      className="rounded-sm border-border text-amber-500 focus:ring-amber-500 h-4.5 w-4.5"
+                      className="rounded-sm border-border text-red-500 focus:ring-red-500 h-4.5 w-4.5"
                     />
                     <span className="text-xs font-bold text-foreground">Cuenta Activa</span>
                   </label>
@@ -621,7 +621,7 @@ export default function UsersSettingsPage() {
                 formData.role === "DEV"
                   ? "bg-rose-500/5 border-rose-500/20 text-rose-800 dark:text-rose-400"
                   : formData.role === "ADMIN"
-                  ? "bg-amber-500/5 border-amber-500/20 text-amber-800 dark:text-amber-400"
+                  ? "bg-red-500/5 border-red-500/20 text-red-800 dark:text-red-400"
                   : "bg-blue-500/5 border-blue-500/20 text-blue-800 dark:text-blue-400"
               }`}>
                 <div className="flex gap-2.5 items-start">
@@ -653,7 +653,7 @@ export default function UsersSettingsPage() {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Anotar detalles sobre el perfil o puesto..."
                   rows={2}
-                  className="w-full rounded-lg border border-border/50 bg-background py-1.5 px-3 text-xs text-foreground outline-hidden focus:border-amber-500 resize-none"
+                  className="w-full rounded-lg border border-border/50 bg-background py-1.5 px-3 text-xs text-foreground outline-hidden focus:border-red-500 resize-none"
                 />
               </div>
 
@@ -668,7 +668,7 @@ export default function UsersSettingsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-metallic-orange px-5 text-xs font-bold shadow-md shadow-orange-500/25 transition-all cursor-pointer"
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-metallic-red px-5 text-xs font-bold shadow-md shadow-red-500/25 transition-all cursor-pointer"
                 >
                   <Icons.Save className="h-4 w-4" />
                   <span>Guardar Usuario</span>
@@ -715,7 +715,7 @@ export default function UsersSettingsPage() {
                 <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-border/30 space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Nivel de Acceso Concedido:</span>
-                    <span className="font-bold text-amber-500 font-mono text-[9px]">{emailDetails.role}</span>
+                    <span className="font-bold text-red-500 font-mono text-[9px]">{emailDetails.role}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Contraseña Segura Autogenerada:</span>
@@ -741,7 +741,7 @@ export default function UsersSettingsPage() {
 
                 <div className="text-[10px] text-muted-foreground border-t border-border/20 pt-3 font-mono break-all leading-normal">
                   URL de enlace directo: <br/>
-                  <span className="text-amber-500/70">{emailDetails.accessLink}</span>
+                  <span className="text-red-500/70">{emailDetails.accessLink}</span>
                 </div>
               </div>
             </div>

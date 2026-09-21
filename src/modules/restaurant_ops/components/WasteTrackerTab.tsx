@@ -217,7 +217,7 @@ export default function WasteTrackerTab() {
                     required
                     value={costAmount}
                     onChange={(e) => setCostAmount(Number(e.target.value))}
-                    className="w-full bg-background border border-border/50 rounded-xl p-2.5 text-foreground font-extrabold text-amber-500"
+                    className="w-full bg-background border border-border/50 rounded-xl p-2.5 text-foreground font-extrabold text-red-500"
                   />
                 </div>
               </div>

@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import * as Icons from "lucide-react";
-import { getTenantStorageKey } from "@/lib/clientStorage";
+import { getTenantStorageKey, getDefaultSlug } from "@/lib/clientStorage";
 import type { DashboardWidgetConfig, ChartType, WidgetSpan, Period } from "@/lib/dashboard/types";
 import { LineChart, BarChart, AreaChart, DonutChart } from "./charts/ChartPrimitives";
 
@@ -32,7 +32,7 @@ function useMockData(source: string, period: Period | undefined) {
           const parts = h.split(".");
           if (parts.length > 2 && parts[0] !== "www") return parts[0].toLowerCase();
         }
-        return "gastroshows";
+        return getDefaultSlug();
       })();
       const raw = localStorage.getItem(`palmera_contacts_${slug}`);
       if (raw) {
@@ -67,7 +67,7 @@ function useMockData(source: string, period: Period | undefined) {
           const parts = h.split(".");
           if (parts.length > 2 && parts[0] !== "www") return parts[0].toLowerCase();
         }
-        return "gastroshows";
+        return getDefaultSlug();
       })();
       const auditKey = `palmera_audit_logs_${slug2}`;
       const legacyKey = "palmera_audit_logs";
@@ -136,7 +136,7 @@ export default function WidgetCard({
   const renderKpi = () => {
     let value: string = "—";
     let change: string | null = null;
-    let colorClass = "from-amber-500/10 to-orange-500/10 text-amber-600 border-amber-500/20";
+    let colorClass = "from-red-500/10 to-red-500/10 text-red-600 border-red-500/20";
     let data: number[] | null = null;
 
     switch (widget.source) {
@@ -154,7 +154,7 @@ export default function WidgetCard({
         value = "€ 1.240";
         change = "-8% vs mes anterior";
         data = mockSeries(7, 12);
-        colorClass = "from-rose-500/10 to-orange-500/10 text-rose-600 border-rose-500/20";
+        colorClass = "from-rose-500/10 to-red-500/10 text-rose-600 border-rose-500/20";
         break;
       case "purchasing.orders.pending":
         value = "6";
@@ -190,7 +190,7 @@ export default function WidgetCard({
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{widget.title}</p>
             <h3 className="text-2xl font-extrabold tracking-tight text-foreground">{value}</h3>
-            {change && <p className="text-xs font-medium text-amber-600 dark:text-amber-500">{change}</p>}
+            {change && <p className="text-xs font-medium text-red-600 dark:text-red-500">{change}</p>}
           </div>
           <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-tr border ${colorClass}`}>
             <DynamicIcon name={widget.icon || "Activity"} className="h-5 w-5" />
@@ -293,7 +293,7 @@ export default function WidgetCard({
       <div className="divide-y divide-border/40 max-h-52 overflow-y-auto pr-1">
         {audit.map((l) => (
           <div key={l.id} className="py-2.5 flex gap-3">
-            <div className="h-6 w-6 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="h-6 w-6 rounded-full bg-red-500/10 text-red-600 flex items-center justify-center shrink-0 mt-0.5">
               <Icons.Activity className="h-3 w-3" />
             </div>
             <div className="flex-1 min-w-0">
@@ -316,7 +316,7 @@ export default function WidgetCard({
           <h4 className="text-xs font-bold text-foreground">{widget.title}</h4>
           <div className="space-y-3">
             {[
-              { label: "Uso de Memoria (Heap)", value: "142 MB / 512 MB", pct: 27, color: "bg-amber-500" },
+              { label: "Uso de Memoria (Heap)", value: "142 MB / 512 MB", pct: 27, color: "bg-red-500" },
               { label: "Latencia de Base de Datos", value: "12ms (Prisma 7 Pool)", pct: 8, color: "bg-emerald-500" },
               { label: "Compilación TypeScript", value: "Exitoso (tsc check)", pct: 100, color: "bg-blue-500" },
             ].map((r) => (
@@ -376,21 +376,21 @@ export default function WidgetCard({
   };
 
   const renderHero = () => (
-    <div className="relative overflow-hidden rounded-xl border border-amber-500/15 bg-gradient-to-tr from-amber-500/15 via-amber-500/5 to-transparent p-5 md:p-6">
+    <div className="relative overflow-hidden rounded-xl border border-red-500/15 bg-gradient-to-tr from-red-500/15 via-red-500/5 to-transparent p-5 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-bold text-amber-600">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-2.5 py-0.5 text-[11px] font-bold text-red-600">
             <Icons.Sparkles className="h-3 w-3" /> Núcleo Listo
           </span>
           <h2 className="text-xl font-bold tracking-tight text-foreground md:text-2xl">
-            ¡Bienvenido a <span className="text-amber-500">Palmera</span>!
+            ¡Bienvenido a <span className="text-red-500">Palmera</span>!
           </h2>
           <p className="max-w-xl text-xs text-muted-foreground leading-relaxed">
             Panel editable: elige qué métricas ver, cambia visualizaciones (línea/barra/donut) y filtra por sector. Los datos se adaptan a los módulos que tengas activos.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <a href="/admin/settings/modules" className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-amber-500 px-3 text-xs font-bold text-white shadow">
+          <a href="/admin/settings/modules" className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-red-500 px-3 text-xs font-bold text-white shadow">
             <Icons.LayoutGrid className="h-3.5 w-3.5" /> Ver Sectores
           </a>
           <a href="/superadmin" className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-stone-800 px-3 text-xs font-bold text-white">
@@ -405,14 +405,14 @@ export default function WidgetCard({
     if (!moduleActive) {
       return (
         <div className="py-8 text-center space-y-3">
-          <div className="mx-auto h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600">
+          <div className="mx-auto h-10 w-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-600">
             <DynamicIcon name={widget.icon || "Package"} className="h-5 w-5" />
           </div>
           <div>
             <p className="text-xs font-bold text-foreground">{widget.title}</p>
-            <p className="text-[11px] text-muted-foreground mt-1">Requiere sector <span className="font-bold text-amber-600">{widget.moduleId}</span> inactivo.</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Requiere sector <span className="font-bold text-red-600">{widget.moduleId}</span> inactivo.</p>
           </div>
-          <a href="/admin/settings/modules" className="inline-flex h-7 px-3 items-center rounded-lg bg-amber-500 text-white text-xs font-bold">
+          <a href="/admin/settings/modules" className="inline-flex h-7 px-3 items-center rounded-lg bg-red-500 text-white text-xs font-bold">
             Activar sector
           </a>
         </div>
@@ -436,7 +436,7 @@ export default function WidgetCard({
 
   if (widget.kind === "hero") {
     return (
-      <div className={`${spanClass} ${isEditing ? "ring-2 ring-amber-500/20 rounded-xl" : ""}`}>
+      <div className={`${spanClass} ${isEditing ? "ring-2 ring-red-500/20 rounded-xl" : ""}`}>
         {isEditing && (
           <div className="mb-1 flex items-center justify-end gap-1">
             <button onClick={() => onMove("up")} disabled={isFirst} className="h-6 w-6 rounded border bg-card flex items-center justify-center disabled:opacity-40">
@@ -456,7 +456,7 @@ export default function WidgetCard({
   }
 
   return (
-    <div className={`${spanClass} rounded-2xl border bg-card p-4 md:p-5 shadow-xs flex flex-col ${isEditing ? "border-amber-500/30 ring-2 ring-amber-500/10" : "border-border/40"} ${!moduleActive ? "opacity-90" : ""}`}>
+    <div className={`${spanClass} rounded-2xl border bg-card p-4 md:p-5 shadow-xs flex flex-col ${isEditing ? "border-red-500/30 ring-2 ring-red-500/10" : "border-border/40"} ${!moduleActive ? "opacity-90" : ""}`}>
       {isEditing && (
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-3 border-b border-border/30">
           <div className="flex items-center gap-1">
@@ -471,7 +471,7 @@ export default function WidgetCard({
               <button
                 key={s}
                 onClick={() => onUpdate({ span: s as WidgetSpan })}
-                className={`h-6 px-2 rounded text-[10px] font-bold border ${widget.span === s ? "bg-amber-500 text-white border-amber-500" : "bg-card border-border hover:bg-muted"}`}
+                className={`h-6 px-2 rounded text-[10px] font-bold border ${widget.span === s ? "bg-red-500 text-white border-red-500" : "bg-card border-border hover:bg-muted"}`}
               >
                 {s === 1 ? "S" : s === 2 ? "M" : "L"}
               </button>
@@ -485,7 +485,7 @@ export default function WidgetCard({
                   <button
                     key={ct}
                     onClick={() => onUpdate({ chartType: ct })}
-                    className={`h-6 px-2 rounded text-[10px] font-bold capitalize border ${widget.chartType === ct ? "bg-amber-500 text-white border-amber-500" : "bg-card border-border hover:bg-muted"}`}
+                    className={`h-6 px-2 rounded text-[10px] font-bold capitalize border ${widget.chartType === ct ? "bg-red-500 text-white border-red-500" : "bg-card border-border hover:bg-muted"}`}
                   >
                     {ct}
                   </button>

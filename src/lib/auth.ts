@@ -17,6 +17,12 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials, req) {
         if (!credentials) return null;
 
+        // --- Instancia independiente: solo su tenant (ver src/lib/tenant.ts) ---
+        const pinned = (process.env.PINNED_TENANT_SLUG || "").trim().toLowerCase();
+        if (pinned && (credentials.tenantSlug || "").trim().toLowerCase() !== pinned) {
+          return null;
+        }
+
         // --- Superadmin Bypass Logic (token efímero de 60s) ---
         if (credentials.bypassToken && credentials.userId && credentials.tenantSlug) {
           try {
@@ -177,3 +183,19 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
+// RBAC helper functions
+export function hasRole(user: { role: string }, role: string): boolean {
+  return user.role === role;
+}
+
+export function requireRole(role: string) {
+  return async (req: any, ctx: any) => {
+    // TODO: retrieve session using NextAuth getServerSession
+    const session: any = null; // placeholder
+    if (!session?.user || !hasRole(session.user, role)) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
+    }
+    return ctx.next();
+  };
+}

@@ -125,7 +125,7 @@ export default function AISettingsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/30 pb-4">
         <div>
           <div className="text-xl font-extrabold tracking-tight text-foreground md:text-2xl flex items-center gap-2">
-            <Icons.Brain className="h-6 w-6 text-amber-500" />
+            <Icons.Brain className="h-6 w-6 text-red-500" />
             Configuración de IA
           </div>
           <div className="text-xs text-muted-foreground block mt-1">
@@ -139,7 +139,7 @@ export default function AISettingsPage() {
         {/* Left 2 Cols: Main settings */}
         <div className="md:col-span-2 space-y-6 bg-card border border-border/40 p-6 rounded-2xl">
           {/* Provider Selection */}
-          <span className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest block mb-4 border-b border-border/20 pb-2">
+          <span className="text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest block mb-4 border-b border-border/20 pb-2">
             Proveedor de IA
           </span>
 
@@ -150,12 +150,12 @@ export default function AISettingsPage() {
               onClick={() => setConfig({ ...config, provider: "openrouter", model: "" })}
               className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                 config.provider === "openrouter"
-                  ? "border-amber-500 bg-amber-500/5"
+                  ? "border-red-500 bg-red-500/5"
                   : "border-border/40 bg-background hover:border-border"
               }`}
             >
               <div className="flex items-center gap-2">
-                <Icons.Cloud className={`h-5 w-5 ${config.provider === "openrouter" ? "text-amber-500" : "text-muted-foreground"}`} />
+                <Icons.Cloud className={`h-5 w-5 ${config.provider === "openrouter" ? "text-red-500" : "text-muted-foreground"}`} />
                 <span className="text-sm font-bold text-foreground">OpenRouter</span>
               </div>
               <p className="text-[10px] text-muted-foreground">
@@ -169,12 +169,12 @@ export default function AISettingsPage() {
               onClick={() => setConfig({ ...config, provider: "anthropic", model: "claude-3-5-sonnet-20241022" })}
               className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                 config.provider === "anthropic"
-                  ? "border-amber-500 bg-amber-500/5"
+                  ? "border-red-500 bg-red-500/5"
                   : "border-border/40 bg-background hover:border-border"
               }`}
             >
               <div className="flex items-center gap-2">
-                <Icons.Sparkles className={`h-5 w-5 ${config.provider === "anthropic" ? "text-amber-500" : "text-muted-foreground"}`} />
+                <Icons.Sparkles className={`h-5 w-5 ${config.provider === "anthropic" ? "text-red-500" : "text-muted-foreground"}`} />
                 <span className="text-sm font-bold text-foreground">Anthropic</span>
               </div>
               <p className="text-[10px] text-muted-foreground">
@@ -188,12 +188,12 @@ export default function AISettingsPage() {
               onClick={() => setConfig({ ...config, provider: "openai", model: "gpt-4o" })}
               className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                 config.provider === "openai"
-                  ? "border-amber-500 bg-amber-500/5"
+                  ? "border-red-500 bg-red-500/5"
                   : "border-border/40 bg-background hover:border-border"
               }`}
             >
               <div className="flex items-center gap-2">
-                <Icons.Bot className={`h-5 w-5 ${config.provider === "openai" ? "text-amber-500" : "text-muted-foreground"}`} />
+                <Icons.Bot className={`h-5 w-5 ${config.provider === "openai" ? "text-red-500" : "text-muted-foreground"}`} />
                 <span className="text-sm font-bold text-foreground">OpenAI</span>
               </div>
               <p className="text-[10px] text-muted-foreground">
@@ -207,12 +207,12 @@ export default function AISettingsPage() {
               onClick={() => setConfig({ ...config, provider: "nvidia", model: "meta/llama-3.1-70b-instruct" })}
               className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                 config.provider === "nvidia"
-                  ? "border-amber-500 bg-amber-500/5"
+                  ? "border-red-500 bg-red-500/5"
                   : "border-border/40 bg-background hover:border-border"
               }`}
             >
               <div className="flex items-center gap-2">
-                <Icons.Cpu className={`h-5 w-5 ${config.provider === "nvidia" ? "text-amber-500" : "text-muted-foreground"}`} />
+                <Icons.Cpu className={`h-5 w-5 ${config.provider === "nvidia" ? "text-red-500" : "text-muted-foreground"}`} />
                 <span className="text-sm font-bold text-foreground">Nvidia NIM</span>
               </div>
               <p className="text-[10px] text-muted-foreground">
@@ -226,12 +226,12 @@ export default function AISettingsPage() {
               onClick={() => setConfig({ ...config, provider: "ollama", model: "" })}
               className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                 config.provider === "ollama"
-                  ? "border-amber-500 bg-amber-500/5"
+                  ? "border-red-500 bg-red-500/5"
                   : "border-border/40 bg-background hover:border-border"
               }`}
             >
               <div className="flex items-center gap-2">
-                <Icons.Laptop className={`h-5 w-5 ${config.provider === "ollama" ? "text-amber-500" : "text-muted-foreground"}`} />
+                <Icons.Laptop className={`h-5 w-5 ${config.provider === "ollama" ? "text-red-500" : "text-muted-foreground"}`} />
                 <span className="text-sm font-bold text-foreground">Ollama</span>
               </div>
               <p className="text-[10px] text-muted-foreground">
@@ -251,7 +251,7 @@ export default function AISettingsPage() {
                     value={config.apiKey}
                     onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
                     placeholder={`sk-${config.provider}-...`}
-                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 pr-10 text-xs text-foreground outline-hidden focus:border-amber-500 font-mono"
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 pr-10 text-xs text-foreground outline-hidden focus:border-red-500 font-mono"
                   />
                   <button
                     type="button"
@@ -274,14 +274,14 @@ export default function AISettingsPage() {
                   value={config.baseUrl}
                   onChange={(e) => setConfig({ ...config, baseUrl: e.target.value })}
                   placeholder="http://localhost:11434"
-                  className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500 font-mono"
+                  className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 font-mono"
                 />
               </div>
             </div>
           )}
 
           {/* Model Selection */}
-          <span className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest block pt-4 mb-4 border-b border-border/20 pb-2">
+          <span className="text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest block pt-4 mb-4 border-b border-border/20 pb-2">
             Modelo de IA
           </span>
 
@@ -291,7 +291,7 @@ export default function AISettingsPage() {
                 type="button"
                 onClick={fetchModels}
                 disabled={fetchingModels || (config.provider === "openrouter" && !config.apiKey)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-amber-500 px-3 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-red-500 px-3 text-xs font-bold text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {fetchingModels ? (
                   <Icons.Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -350,7 +350,7 @@ export default function AISettingsPage() {
                     onClick={() => setConfig({ ...config, model: model.id })}
                     className={`w-full text-left p-3 rounded-lg transition-all ${
                       config.model === model.id
-                        ? "bg-amber-500/10 border border-amber-500/30"
+                        ? "bg-red-500/10 border border-red-500/30"
                         : "hover:bg-muted/50 border border-transparent"
                     }`}
                   >
@@ -385,7 +385,7 @@ export default function AISettingsPage() {
                 value={config.model}
                 onChange={(e) => setConfig({ ...config, model: e.target.value })}
                 placeholder={config.provider === "openrouter" ? "google/gemma-3-4b-it:free" : "llama3"}
-                className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500 font-mono"
+                className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 font-mono"
               />
             </div>
           </div>
@@ -403,7 +403,7 @@ export default function AISettingsPage() {
             <button
               type="button"
               onClick={handleTestAndSave}
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-metallic-orange px-5 text-xs font-bold shadow-md shadow-orange-500/25 transition-all hover:bg-amber-600"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-metallic-red px-5 text-xs font-bold shadow-md shadow-red-500/25 transition-all hover:bg-red-600"
             >
               <Icons.CheckCircle className="h-4 w-4" />
               <span>Probar y Guardar</span>
@@ -414,7 +414,7 @@ export default function AISettingsPage() {
         {/* Right Col: Info */}
         <div className="space-y-6">
           <div className="bg-card border border-border/40 p-6 rounded-2xl">
-            <span className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest block mb-4 border-b border-border/20 pb-2">
+            <span className="text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest block mb-4 border-b border-border/20 pb-2">
               Proveedores Disponibles
             </span>
 

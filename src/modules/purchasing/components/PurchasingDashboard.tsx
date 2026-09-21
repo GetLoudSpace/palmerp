@@ -120,10 +120,10 @@ const INITIAL_PURCHASING_ITEMS: PurchasingItem[] = SHARED_PRODUCT_CATALOG;
 
 const CATEGORY_LABELS: Record<string, { label: string; icon: string; color: string }> = {
   FOOD_FRESH: { label: "Materia Prima Fresca", icon: "Utensils", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  FOOD_DRY: { label: "Secos & Bodega", icon: "Package", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  FOOD_DRY: { label: "Secos & Bodega", icon: "Package", color: "bg-red-50 text-red-700 border-red-200" },
   CLEANING: { label: "Limpieza & Higiene", icon: "Sparkles", color: "bg-cyan-50 text-cyan-700 border-cyan-200" },
   TABLEWARE: { label: "Enseres & Menaje", icon: "Coffee", color: "bg-purple-50 text-purple-700 border-purple-200" },
-  PACKAGING: { label: "Embalaje & Takeaway", icon: "Box", color: "bg-orange-50 text-orange-700 border-orange-200" },
+  PACKAGING: { label: "Embalaje & Takeaway", icon: "Box", color: "bg-red-50 text-red-700 border-red-200" },
 };
 
 export default function PurchasingDashboard() {
@@ -177,7 +177,7 @@ export default function PurchasingDashboard() {
     <div className="space-y-6">
       {/* Toast popup */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-[100] bg-linear-to-r from-amber-500 to-orange-500 text-white font-bold text-xs py-3.5 px-6 rounded-2xl shadow-xl border border-white/20 flex items-center gap-2.5 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-6 right-6 z-[100] bg-linear-to-r from-red-500 to-red-500 text-white font-bold text-xs py-3.5 px-6 rounded-2xl shadow-xl border border-white/20 flex items-center gap-2.5 animate-in slide-in-from-bottom-5 duration-300">
           <Icons.CheckCircle className="h-4.5 w-4.5" />
           <span>{toastMessage}</span>
         </div>
@@ -189,7 +189,7 @@ export default function PurchasingDashboard() {
             <Icons.AlertTriangle className="h-4 w-4" />
             <span>{criticalCount} Pedidos Urgentes</span>
           </div>
-          <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-600 px-3.5 py-1.5 rounded-xl text-xs font-bold">
+          <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-600 px-3.5 py-1.5 rounded-xl text-xs font-bold">
             <Icons.Clock className="h-4 w-4" />
             <span>{warningCount} Reposición Próxima</span>
           </div>
@@ -212,7 +212,7 @@ export default function PurchasingDashboard() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 py-2.5 px-4.5 text-xs font-bold transition-all rounded-xl cursor-pointer ${
                 isActive
-                  ? "bg-metallic-orange text-white shadow-xs"
+                  ? "bg-metallic-red text-white shadow-xs"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >
@@ -233,7 +233,7 @@ export default function PurchasingDashboard() {
               <button
                 onClick={() => setSelectedCategory("ALL")}
                 className={`px-3 py-1 rounded-xl text-[11px] font-bold transition-all ${
-                  selectedCategory === "ALL" ? "bg-amber-500 text-white" : "bg-muted/60 text-muted-foreground hover:text-foreground"
+                  selectedCategory === "ALL" ? "bg-red-500 text-white" : "bg-muted/60 text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Todas
@@ -243,7 +243,7 @@ export default function PurchasingDashboard() {
                   key={key}
                   onClick={() => setSelectedCategory(key)}
                   className={`px-3 py-1 rounded-xl text-[11px] font-bold transition-all ${
-                    selectedCategory === key ? "bg-amber-500 text-white" : "bg-muted/60 text-muted-foreground hover:text-foreground"
+                    selectedCategory === key ? "bg-red-500 text-white" : "bg-muted/60 text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {info.label}
@@ -256,7 +256,7 @@ export default function PurchasingDashboard() {
               <select
                 value={selectedSupplier}
                 onChange={(e) => setSelectedSupplier(e.target.value)}
-                className="bg-background border border-border/50 rounded-xl px-3 py-1.5 text-xs text-foreground outline-hidden focus:border-amber-500 font-semibold"
+                className="bg-background border border-border/50 rounded-xl px-3 py-1.5 text-xs text-foreground outline-hidden focus:border-red-500 font-semibold"
               >
                 <option value="ALL">Todos los proveedores</option>
                 {suppliers.map((s) => (
@@ -277,7 +277,7 @@ export default function PurchasingDashboard() {
                     item.status === "CRITICAL"
                       ? "border-rose-500/40 bg-linear-to-b from-card to-rose-500/5"
                       : item.status === "WARNING"
-                      ? "border-amber-500/40 bg-linear-to-b from-card to-amber-500/5"
+                      ? "border-red-500/40 bg-linear-to-b from-card to-red-500/5"
                       : "border-border/40"
                   }`}
                 >
@@ -291,7 +291,7 @@ export default function PurchasingDashboard() {
                         item.status === "CRITICAL"
                           ? "bg-rose-500 text-white"
                           : item.status === "WARNING"
-                          ? "bg-amber-500 text-white"
+                          ? "bg-red-500 text-white"
                           : "bg-emerald-500 text-white"
                       }`}>
                         {item.status === "CRITICAL" ? "Pedir Hoy" : item.status === "WARNING" ? "Próximo" : "Suficiente"}
@@ -301,7 +301,7 @@ export default function PurchasingDashboard() {
                     <div>
                       <h3 className="text-sm font-bold text-foreground tracking-tight">{item.name}</h3>
                       <p className="text-[11px] text-muted-foreground font-medium mt-0.5 flex items-center gap-1">
-                        <Icons.Store className="h-3 w-3 text-amber-500" />
+                        <Icons.Store className="h-3 w-3 text-red-500" />
                         <span>{item.supplier}</span>
                       </p>
                     </div>
@@ -313,7 +313,7 @@ export default function PurchasingDashboard() {
                       </div>
                       <div>
                         <span className="text-[10px] text-muted-foreground uppercase font-bold block">Días Restantes</span>
-                        <span className={`font-extrabold text-sm ${item.daysRemaining <= item.leadTimeDays ? "text-rose-500" : "text-amber-500"}`}>
+                        <span className={`font-extrabold text-sm ${item.daysRemaining <= item.leadTimeDays ? "text-rose-500" : "text-red-500"}`}>
                           ~{item.daysRemaining.toFixed(1)} días
                         </span>
                       </div>
@@ -331,7 +331,7 @@ export default function PurchasingDashboard() {
                   <div className="border-t border-border/40 pt-3 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-muted-foreground uppercase font-bold block">Pedido Sugerido</span>
-                      <span className="text-xs font-extrabold text-amber-500">
+                      <span className="text-xs font-extrabold text-red-500">
                         {item.suggestedOrderQty} {item.unit} (~{(item.suggestedOrderQty * item.unitPrice).toFixed(2)}€)
                       </span>
                     </div>
@@ -356,7 +356,7 @@ export default function PurchasingDashboard() {
         <div className="space-y-6 animate-in fade-in duration-200">
           <div className="bg-card/75 backdrop-blur-md p-5 rounded-3xl border border-border/40 space-y-4">
             <h3 className="text-xs font-black tracking-wider text-foreground uppercase flex items-center gap-2">
-              <Icons.Truck className="h-4 w-4 text-amber-500" />
+              <Icons.Truck className="h-4 w-4 text-red-500" />
               <span>Agrupación de Pedidos por Proveedor</span>
             </h3>
 
@@ -373,7 +373,7 @@ export default function PurchasingDashboard() {
                         <h4 className="text-sm font-bold text-foreground">{supplierName}</h4>
                         <span className="text-[11px] text-muted-foreground">{firstPhone}</span>
                       </div>
-                      <span className="text-xs font-black text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-lg">
+                      <span className="text-xs font-black text-red-500 bg-red-500/10 px-2.5 py-1 rounded-lg">
                         Total: ~{totalCost.toFixed(2)}€
                       </span>
                     </div>
@@ -384,7 +384,7 @@ export default function PurchasingDashboard() {
                         {supplierItems.map((i) => (
                           <div key={i.id} className="flex justify-between items-center text-xs bg-muted/20 p-2 rounded-lg">
                             <span className="font-semibold text-foreground">{i.name}</span>
-                            <span className="font-bold text-amber-600">{i.suggestedOrderQty} {i.unit}</span>
+                            <span className="font-bold text-red-600">{i.suggestedOrderQty} {i.unit}</span>
                           </div>
                         ))}
                       </div>
@@ -412,7 +412,7 @@ export default function PurchasingDashboard() {
         <div className="space-y-4 animate-in fade-in duration-200">
           <div className="bg-card/75 backdrop-blur-md p-5 rounded-3xl border border-border/40 space-y-4">
             <h3 className="text-xs font-black tracking-wider text-foreground uppercase flex items-center gap-2">
-              <Icons.FileCheck className="h-4 w-4 text-amber-500" />
+              <Icons.FileCheck className="h-4 w-4 text-red-500" />
               <span>Auditoría de Albaranes vs Precios de Contrato</span>
             </h3>
             <p className="text-xs text-muted-foreground">
@@ -475,12 +475,12 @@ export default function PurchasingDashboard() {
         <div className="bg-card/75 backdrop-blur-md p-5 rounded-3xl border border-border/40 space-y-4 animate-in fade-in duration-200">
           <div className="flex justify-between items-center">
             <h3 className="text-xs font-black tracking-wider text-foreground uppercase flex items-center gap-2">
-              <Icons.PackageSearch className="h-4 w-4 text-amber-500" />
+              <Icons.PackageSearch className="h-4 w-4 text-red-500" />
               <span>Catálogo Integrado de Productos & Parámetros de Compra</span>
             </h3>
             <button
               onClick={() => showToast("Formulario para añadir nuevo producto abierto.")}
-              className="inline-flex h-8.5 items-center justify-center gap-1.5 px-3 rounded-xl bg-metallic-orange font-bold text-white text-xs cursor-pointer"
+              className="inline-flex h-8.5 items-center justify-center gap-1.5 px-3 rounded-xl bg-metallic-red font-bold text-white text-xs cursor-pointer"
             >
               <Icons.Plus className="h-4 w-4" />
               <span>Añadir Producto</span>
@@ -494,7 +494,7 @@ export default function PurchasingDashboard() {
                   <h4 className="font-bold text-foreground">{item.name}</h4>
                   <p className="text-[11px] text-muted-foreground">{item.supplier} • Lead Time: {item.leadTimeDays} días</p>
                 </div>
-                <span className="font-mono font-bold text-amber-500">{item.unitPrice.toFixed(2)}€ / {item.unit}</span>
+                <span className="font-mono font-bold text-red-500">{item.unitPrice.toFixed(2)}€ / {item.unit}</span>
               </div>
             ))}
           </div>

@@ -18,12 +18,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="min-h-screen bg-transparent text-foreground transition-colors duration-300">
       {/* 1. Global Customizer Visual Overlay Vignette (Pointer Events None so you can click through!) */}
       {isCustomizerActive && (
-        <div className="fixed inset-0 pointer-events-none z-40 border-[6px] border-amber-500/35 ring-[12px] ring-amber-500/5 shadow-[inset_0_0_120px_rgba(245,158,11,0.12)] transition-all duration-500 ease-in-out" />
+        <div className="fixed inset-0 pointer-events-none z-40 border-[6px] border-red-500/35 ring-[12px] ring-red-500/5 shadow-[inset_0_0_120px_rgba(245,158,11,0.12)] transition-all duration-500 ease-in-out" />
       )}
 
       {/* 2. Customizer Active Notice Banner */}
       {isCustomizerActive && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-linear-to-r from-amber-600 to-amber-500 text-white font-bold text-xs py-2 px-4 rounded-xl shadow-lg border border-amber-400 backdrop-blur-xs flex items-center gap-2 animate-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-linear-to-r from-red-600 to-red-500 text-white font-bold text-xs py-2 px-4 rounded-xl shadow-lg border border-red-400 backdrop-blur-xs flex items-center gap-2 animate-in slide-in-from-top-4 duration-300">
           <Icons.Sparkles className="h-4 w-4 text-white animate-spin-slow" />
           <span>Modo Editor Activo: Haz clic en las etiquetas con contornos dorados para renombrar.</span>
         </div>
@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           onClick={toggleCustomizer}
           className={`flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
             isCustomizerActive
-              ? "bg-amber-500 text-white shadow-amber-500/30 ring-4 ring-amber-500/20"
+              ? "bg-red-500 text-white shadow-red-500/30 ring-4 ring-red-500/20"
               : "bg-card text-foreground hover:bg-muted border border-border/80 shadow-black/10"
           }`}
           title={isCustomizerActive ? "Salir de Modo Editor" : "Personalizar Textos de Interfaz (Odoo Mode)"}
@@ -43,7 +43,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {isCustomizerActive ? (
             <Icons.Check className="h-5.5 w-5.5 text-white animate-bounce" />
           ) : (
-            <Icons.Wrench className="h-5.5 w-5.5 text-amber-500" />
+            <Icons.Wrench className="h-5.5 w-5.5 text-red-500" />
           )}
         </button>
       </div>

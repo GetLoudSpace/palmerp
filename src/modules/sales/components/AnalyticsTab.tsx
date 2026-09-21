@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
+import { getDefaultSlug } from "@/lib/clientStorage";
 
 interface Opportunity {
   id: string;
@@ -30,7 +31,7 @@ export default function AnalyticsTab() {
   const getSlug = () => {
     const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
     const parts = hostname.split(".");
-    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
   };
 
   const loadData = () => {
@@ -131,8 +132,8 @@ export default function AnalyticsTab() {
         </div>
 
         {/* Weighted Forecast Card */}
-        <div className="border border-border/40 bg-card p-4.5 rounded-2xl shadow-xs space-y-1 bg-linear-to-r from-amber-500/5 to-orange-500/5">
-          <span className="text-[9px] font-extrabold uppercase text-amber-600 dark:text-amber-500 tracking-wider block">Previsión Ponderada</span>
+        <div className="border border-border/40 bg-card p-4.5 rounded-2xl shadow-xs space-y-1 bg-linear-to-r from-red-500/5 to-red-500/5">
+          <span className="text-[9px] font-extrabold uppercase text-red-600 dark:text-red-500 tracking-wider block">Previsión Ponderada</span>
           <span className="text-xl font-extrabold text-foreground font-mono">
             {Math.round(weightedForecast).toLocaleString("es-ES")} €
           </span>
@@ -175,7 +176,7 @@ export default function AnalyticsTab() {
                 <span className="font-mono">{propLeadsVal.toLocaleString("es-ES")} €</span>
               </div>
               <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min(100, (propLeadsVal / (pipelineValue || 1)) * 100)}%` }} />
+                <div className="h-full bg-red-500 rounded-full" style={{ width: `${Math.min(100, (propLeadsVal / (pipelineValue || 1)) * 100)}%` }} />
               </div>
             </div>
 
@@ -196,7 +197,7 @@ export default function AnalyticsTab() {
         <div className="border border-border/40 bg-card p-5 rounded-2xl space-y-4 bg-linear-to-b from-card to-muted/10">
           <div className="border-b border-border/30 pb-2 flex items-center justify-between">
             <h4 className="text-xs font-bold text-foreground">Simulador de Ingresos y Metas Comerciales</h4>
-            <Icons.BarChart2 className="h-4 w-4 text-amber-500 animate-pulse" />
+            <Icons.BarChart2 className="h-4 w-4 text-red-500 animate-pulse" />
           </div>
 
           <div className="space-y-4">
@@ -204,7 +205,7 @@ export default function AnalyticsTab() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-bold text-foreground">
                 <span>Leads Captados Mensuales</span>
-                <span className="font-mono text-amber-600 dark:text-amber-500">{simLeadsCount} leads</span>
+                <span className="font-mono text-red-600 dark:text-red-500">{simLeadsCount} leads</span>
               </div>
               <input
                 type="range"
@@ -213,7 +214,7 @@ export default function AnalyticsTab() {
                 step="10"
                 value={simLeadsCount}
                 onChange={(e) => setSimLeadsCount(Number(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-red-500 cursor-pointer"
               />
             </div>
 
@@ -221,7 +222,7 @@ export default function AnalyticsTab() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-bold text-foreground">
                 <span>Tasa de Conversión (%)</span>
-                <span className="font-mono text-amber-600 dark:text-amber-500">{simConversionRate}%</span>
+                <span className="font-mono text-red-600 dark:text-red-500">{simConversionRate}%</span>
               </div>
               <input
                 type="range"
@@ -230,7 +231,7 @@ export default function AnalyticsTab() {
                 step="1"
                 value={simConversionRate}
                 onChange={(e) => setSimConversionRate(Number(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-red-500 cursor-pointer"
               />
             </div>
 
@@ -238,7 +239,7 @@ export default function AnalyticsTab() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-bold text-foreground">
                 <span>Valor Medio de Contrato (€)</span>
-                <span className="font-mono text-amber-600 dark:text-amber-500">
+                <span className="font-mono text-red-600 dark:text-red-500">
                   {simAverageDealValue.toLocaleString("es-ES")} €
                 </span>
               </div>
@@ -249,7 +250,7 @@ export default function AnalyticsTab() {
                 step="500"
                 value={simAverageDealValue}
                 onChange={(e) => setSimAverageDealValue(Number(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-red-500 cursor-pointer"
               />
             </div>
 
@@ -261,7 +262,7 @@ export default function AnalyticsTab() {
               </div>
               <div className="flex justify-between items-center border-t border-border/30 pt-2 text-xs font-extrabold">
                 <span className="text-foreground">Facturación Estimada:</span>
-                <span className="text-amber-600 dark:text-amber-400 font-mono">
+                <span className="text-red-600 dark:text-red-400 font-mono">
                   {simulatedRevenue.toLocaleString("es-ES")} € / mes
                 </span>
               </div>

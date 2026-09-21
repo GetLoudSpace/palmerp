@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import * as Icons from "lucide-react";
+import { getDefaultSlug } from "@/lib/clientStorage";
 
 interface ScoutedLead {
   companyName: string;
@@ -82,7 +83,7 @@ export default function ScouterTab() {
   const getSlug = () => {
     const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
     const parts = hostname.split(".");
-    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
   };
 
   const handleImportLead = (lead: ScoutedLead) => {
@@ -169,7 +170,7 @@ export default function ScouterTab() {
       {/* Intro Header */}
       <div className="border border-border/40 bg-card p-5 rounded-2xl space-y-2">
         <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
-          <Icons.Cpu className="h-4.5 w-4.5 text-amber-500" />
+          <Icons.Cpu className="h-4.5 w-4.5 text-red-500" />
           <span>Auto-Scouter de Eventos Corporativos IA</span>
         </h3>
         <p className="text-xs text-muted-foreground leading-relaxed">
@@ -186,7 +187,7 @@ export default function ScouterTab() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
               >
                 <option value="TECH">Tecnología y Startups</option>
                 <option value="LEGAL">Finanzas, Seguros & Legal</option>
@@ -206,7 +207,7 @@ export default function ScouterTab() {
               <select
                 value={activityType}
                 onChange={(e) => setActivityType(e.target.value)}
-                className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
               >
                 <option value="MASTERCHEF">Taller de Cocina Masterchef</option>
                 <option value="DEGUSTATION">Menú Degustación Catalán (€130/persona)</option>
@@ -222,13 +223,13 @@ export default function ScouterTab() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Barcelona, Girona..."
-              className="w-full text-xs p-2.5 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+              className="w-full text-xs p-2.5 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
             />
           </div>
 
           <button
             onClick={handleStartScout}
-            className="w-full inline-flex h-10 items-center justify-center rounded-xl bg-metallic-orange text-white text-xs font-bold shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30 transition-all cursor-pointer"
+            className="w-full inline-flex h-10 items-center justify-center rounded-xl bg-metallic-red text-white text-xs font-bold shadow-md shadow-red-500/20 hover:shadow-lg hover:shadow-red-500/30 transition-all cursor-pointer"
           >
             <Icons.Play className="h-4.5 w-4.5 mr-1.5" />
             <span>Iniciar Escaneo Inteligente</span>
@@ -240,8 +241,8 @@ export default function ScouterTab() {
       {isScanning && (
         <div className="border border-border/40 bg-card p-10 rounded-3xl text-center space-y-6 flex flex-col items-center justify-center max-w-xl mx-auto my-10 shadow-lg">
           <div className="relative h-16 w-16 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-4 border-amber-500/10 border-t-amber-500 animate-spin"></div>
-            <Icons.Search className="h-6 w-6 text-amber-500 animate-pulse" />
+            <div className="absolute inset-0 rounded-full border-4 border-red-500/10 border-t-red-500 animate-spin"></div>
+            <Icons.Search className="h-6 w-6 text-red-500 animate-pulse" />
           </div>
 
           <div className="space-y-2">
@@ -253,14 +254,14 @@ export default function ScouterTab() {
 
           {/* Stepper logs */}
           <div className="w-full max-w-xs bg-muted/40 border border-border/30 rounded-xl p-3 text-left">
-            <span className="text-[8px] font-extrabold uppercase text-amber-500 tracking-wider block mb-1.5">Registro de Acciones</span>
+            <span className="text-[8px] font-extrabold uppercase text-red-500 tracking-wider block mb-1.5">Registro de Acciones</span>
             <div className="space-y-1">
               {scanSteps.map((step, idx) => (
                 <div key={idx} className="flex items-center gap-1.5 text-[9px]">
                   {scanStep > idx ? (
                     <Icons.CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
                   ) : scanStep === idx ? (
-                    <Icons.Loader2 className="h-3 w-3 text-amber-500 animate-spin shrink-0" />
+                    <Icons.Loader2 className="h-3 w-3 text-red-500 animate-spin shrink-0" />
                   ) : (
                     <Icons.Circle className="h-3 w-3 text-muted-foreground/30 shrink-0" />
                   )}
@@ -281,7 +282,7 @@ export default function ScouterTab() {
             <h3 className="text-xs font-bold text-foreground">Clientes Potenciales Detectados ({leads.length})</h3>
             <button
               onClick={() => setLeads([])}
-              className="text-[10px] font-bold text-amber-600 hover:text-amber-700 bg-amber-500/10 px-3 py-1 rounded-md"
+              className="text-[10px] font-bold text-red-600 hover:text-red-700 bg-red-500/10 px-3 py-1 rounded-md"
             >
               Nuevo Escaneo
             </button>
@@ -291,7 +292,7 @@ export default function ScouterTab() {
             {leads.map((l) => (
               <div
                 key={l.companyName}
-                className="border border-border/40 bg-card rounded-2xl p-5 space-y-4 hover:border-amber-500/30 transition-all flex flex-col justify-between"
+                className="border border-border/40 bg-card rounded-2xl p-5 space-y-4 hover:border-red-500/30 transition-all flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex justify-between items-start">
@@ -312,7 +313,7 @@ export default function ScouterTab() {
                   <div className="grid grid-cols-3 gap-2 bg-muted/20 border border-border/20 p-2.5 rounded-xl text-[10px]">
                     <div>
                       <span className="text-muted-foreground block text-[8px] uppercase font-bold">Afinidad</span>
-                      <span className="font-extrabold text-foreground text-amber-500">{l.affinityScore}%</span>
+                      <span className="font-extrabold text-foreground text-red-500">{l.affinityScore}%</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground block text-[8px] uppercase font-bold">Tamaño</span>
@@ -346,7 +347,7 @@ export default function ScouterTab() {
 
                   {/* Pitch paragraph */}
                   <div className="bg-muted/10 p-3 rounded-xl border border-border/20 space-y-1">
-                    <span className="text-[8px] font-extrabold uppercase text-amber-500 block">Ángulo de Venta (IA)</span>
+                    <span className="text-[8px] font-extrabold uppercase text-red-500 block">Ángulo de Venta (IA)</span>
                     <p className="text-[10px] text-foreground/80 leading-normal font-medium">{l.pitch}</p>
                   </div>
 
@@ -368,7 +369,7 @@ export default function ScouterTab() {
                   ) : (
                     <button
                       onClick={() => handleImportLead(l)}
-                      className="w-full inline-flex h-9 items-center justify-center rounded-lg bg-metallic-orange text-white text-xs font-bold shadow-xs hover:shadow-md cursor-pointer"
+                      className="w-full inline-flex h-9 items-center justify-center rounded-lg bg-metallic-red text-white text-xs font-bold shadow-xs hover:shadow-md cursor-pointer"
                     >
                       <Icons.Plus className="h-4 w-4 mr-1" />
                       <span>Importar a Ventas & CRM</span>

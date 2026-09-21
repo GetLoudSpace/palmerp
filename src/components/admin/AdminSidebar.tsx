@@ -204,13 +204,13 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-border/40">
           <Link href="/admin" className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-metallic-orange shadow-md shadow-orange-500/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-metallic-red shadow-md shadow-red-500/20">
               <Icons.Palmtree className="h-5 w-5 text-white" />
             </div>
             <div>
               <div className="text-lg font-bold tracking-tight bg-linear-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text">
                 <EditableLabel apiKey="sidebar.brand" defaultValue="Palm" />{" "}
-                <span className="text-amber-500 font-semibold">
+                <span className="text-red-500 font-semibold">
                   <EditableLabel apiKey="sidebar.accent" defaultValue="ERP" />
                 </span>
               </div>
@@ -263,7 +263,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                           }}
                           className={`flex w-full items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer select-none outline-hidden ${
                             isModuleActive
-                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-500"
+                              ? "bg-red-500/10 text-red-700 dark:text-red-500"
                               : "text-foreground/80 hover:bg-muted hover:text-foreground"
                           }`}
                         >
@@ -271,7 +271,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                             <DynamicIcon
                                name={mod.icon}
                                className={`h-5 w-5 ${
-                                 isModuleActive ? "text-amber-700 dark:text-amber-500" : "text-muted-foreground group-hover:text-foreground"
+                                 isModuleActive ? "text-red-700 dark:text-red-500" : "text-muted-foreground group-hover:text-foreground"
                                }`}
                             />
                             <span>
@@ -299,7 +299,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                                   onClick={onClose}
                                   className={`block py-1.5 px-3 text-xs font-medium rounded-md transition-all duration-150 ${
                                     isSubActive
-                                      ? "text-amber-500 bg-amber-500/5 font-semibold"
+                                      ? "text-red-500 bg-red-500/5 font-semibold"
                                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                   }`}
                                 >

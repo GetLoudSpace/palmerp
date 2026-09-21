@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
+import { getDefaultSlug } from "@/lib/clientStorage";
 import { isTenantDataCleared } from "@/lib/demoDataCleanup";
 
 interface Lead {
@@ -56,7 +57,7 @@ const INITIAL_DEMO_LEADS: Lead[] = [
 const STAGES = [
   { id: "INITIAL", label: "Contacto Inicial", color: "border-blue-500/30 bg-blue-500/5 text-blue-600 dark:text-blue-400" },
   { id: "QUALIFIED", label: "Cualificado", color: "border-purple-500/30 bg-purple-500/5 text-purple-600 dark:text-purple-400" },
-  { id: "PROPOSAL", label: "Propuesta", color: "border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400" },
+  { id: "PROPOSAL", label: "Propuesta", color: "border-red-500/30 bg-red-500/5 text-red-600 dark:text-red-400" },
   { id: "NEGOTIATION", label: "Negociación", color: "border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400" },
 ] as const;
 
@@ -74,7 +75,7 @@ export default function ProspectingTab() {
   const getSlug = () => {
     const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
     const parts = hostname.split(".");
-    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
   };
 
   useEffect(() => {
@@ -177,7 +178,7 @@ export default function ProspectingTab() {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg bg-metallic-orange text-white text-xs font-bold px-3 shadow-md shadow-orange-500/20 hover:shadow-lg transition-all cursor-pointer"
+          className="inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg bg-metallic-red text-white text-xs font-bold px-3 shadow-md shadow-red-500/20 hover:shadow-lg transition-all cursor-pointer"
         >
           <Icons.Plus className="h-4 w-4" />
           <span>Nuevo Prospecto</span>
@@ -208,7 +209,7 @@ export default function ProspectingTab() {
               {/* Cards list */}
               <div className="flex-1 space-y-3 max-h-[450px] overflow-y-auto pr-1">
                 {colLeads.map((lead) => (
-                  <div key={lead.id} className="bg-card border border-border/40 hover:border-amber-500/30 p-3.5 rounded-xl shadow-xs space-y-3 transition-all duration-200 group">
+                  <div key={lead.id} className="bg-card border border-border/40 hover:border-red-500/30 p-3.5 rounded-xl shadow-xs space-y-3 transition-all duration-200 group">
                     <div className="space-y-1">
                       <h4 className="text-xs font-bold text-foreground leading-snug truncate">{lead.name}</h4>
                       <p className="text-[10px] text-muted-foreground truncate">{lead.company}</p>
@@ -216,7 +217,7 @@ export default function ProspectingTab() {
                     </div>
 
                     <div className="flex items-center justify-between border-t border-border/30 pt-2.5">
-                      <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-500">
+                      <span className="text-[10px] font-mono font-bold text-red-600 dark:text-red-500">
                         {lead.value.toLocaleString("es-ES")} €
                       </span>
                       
@@ -287,7 +288,7 @@ export default function ProspectingTab() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Ej. Sofía Martínez"
-                    className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                    className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                     required
                   />
                 </div>
@@ -299,7 +300,7 @@ export default function ProspectingTab() {
                     value={formData.company}
                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                     placeholder="Ej. Restauración Central"
-                    className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                    className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                     required
                   />
                 </div>
@@ -311,7 +312,7 @@ export default function ProspectingTab() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="Ej. sofia@centralrest.es"
-                    className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                    className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                   />
                 </div>
 
@@ -323,7 +324,7 @@ export default function ProspectingTab() {
                       value={formData.value}
                       onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
                       placeholder="Ej. 5000"
-                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                       min={0}
                     />
                   </div>
@@ -333,7 +334,7 @@ export default function ProspectingTab() {
                     <select
                       value={formData.stage}
                       onChange={(e) => setFormData({ ...formData, stage: e.target.value as any })}
-                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                      className="w-full text-xs p-2 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                     >
                       <option value="INITIAL">Contacto Inicial</option>
                       <option value="QUALIFIED">Cualificado</option>
@@ -354,7 +355,7 @@ export default function ProspectingTab() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-metallic-orange text-white text-xs font-bold rounded-lg shadow-md shadow-orange-500/20 hover:shadow-lg cursor-pointer"
+                  className="px-4 py-2 bg-metallic-red text-white text-xs font-bold rounded-lg shadow-md shadow-red-500/20 hover:shadow-lg cursor-pointer"
                 >
                   Crear Prospecto
                 </button>

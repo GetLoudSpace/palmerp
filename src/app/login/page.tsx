@@ -25,29 +25,36 @@ function LoginForm() {
     }
   }, [searchParams]);
 
+  // Instancia independiente: slug fijado por entorno (ignora hostname).
+  const pinnedSlug = (process.env.NEXT_PUBLIC_PINNED_TENANT_SLUG || "").trim().toLowerCase();
+
   // Determine tenant from subdomain/hostname
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const hostname = window.location.hostname;
-      const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
-
-      let slug = "";
-      if (isLocalhost) {
-        const parts = hostname.split(".");
-        if (parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www") {
-          slug = parts[0];
-        } else {
-          slug = "gastroshows"; // Local development fallback
-        }
+      if (pinnedSlug) {
+        setTenantSlug(pinnedSlug);
       } else {
-        const parts = hostname.split(".");
-        if (parts.length > 2 && parts[0] !== "www") {
-          slug = parts[0];
+        const hostname = window.location.hostname;
+        const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
+
+        let slug = "";
+        if (isLocalhost) {
+          const parts = hostname.split(".");
+          if (parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www") {
+            slug = parts[0];
+          } else {
+            slug = "gastroshows"; // Local development fallback
+          }
         } else {
-          slug = "gastroshows";
+          const parts = hostname.split(".");
+          if (parts.length > 2 && parts[0] !== "www") {
+            slug = parts[0];
+          } else {
+            slug = "gastroshows";
+          }
         }
+        setTenantSlug(slug);
       }
-      setTenantSlug(slug);
 
       // Superadmin Bypass Check
       const params = new URLSearchParams(window.location.search);
@@ -58,7 +65,7 @@ function LoginForm() {
         signIn("credentials", {
           bypassToken,
           userId,
-          tenantSlug,
+          tenantSlug: pinnedSlug || tenantSlug,
           redirect: true,
           callbackUrl: "/admin",
         });
@@ -103,19 +110,19 @@ function LoginForm() {
   return (
     <div className="w-full max-w-md p-8 bg-card/65 backdrop-blur-md rounded-3xl border border-border/40 shadow-2xl space-y-6 relative overflow-hidden">
       {/* Decorative pulse orange light */}
-      <div className="absolute -top-10 -left-10 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl" />
-      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl" />
+      <div className="absolute -top-10 -left-10 w-32 h-32 bg-red-500/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-red-500/10 rounded-full blur-3xl" />
 
       {/* Header section */}
       <div className="text-center space-y-2 relative">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-metallic-orange text-white shadow-lg shadow-orange-500/20 mb-2">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-metallic-red text-white shadow-lg shadow-red-500/20 mb-2">
           <Icons.Palmtree className="h-6 w-6" />
         </div>
         <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text text-transparent">
           Iniciar Sesión
         </h1>
         <p className="text-xs text-muted-foreground">
-          Accede a tu cuenta de Palmera en <span className="font-bold text-amber-500 uppercase tracking-wider">{tenantSlug}</span>
+          Accede a tu cuenta de Palmera en <span className="font-bold text-red-500 uppercase tracking-wider">{tenantSlug}</span>
         </p>
       </div>
 
@@ -142,7 +149,7 @@ function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="admin@gastroshows.es"
             disabled={loading}
-            className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all"
+            className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all"
           />
         </div>
 
@@ -159,7 +166,7 @@ function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             disabled={loading}
-            className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all font-mono"
+            className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all font-mono"
           />
         </div>
 
@@ -168,7 +175,7 @@ function LoginForm() {
           <label className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground">
             <input
               type="checkbox"
-              className="rounded-sm border-border text-amber-500 focus:ring-amber-500 h-3.5 w-3.5"
+              className="rounded-sm border-border text-red-500 focus:ring-red-500 h-3.5 w-3.5"
             />
             <span>Recordarme</span>
           </label>
@@ -178,7 +185,7 @@ function LoginForm() {
               e.preventDefault();
               alert("Por favor, póngase en contacto con el administrador del sistema para restablecer su contraseña.");
             }}
-            className="text-amber-500 hover:text-amber-600 font-semibold"
+            className="text-red-500 hover:text-red-600 font-semibold"
           >
             ¿Olvidaste tu contraseña?
           </a>
@@ -188,7 +195,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-metallic-orange font-bold text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all active:scale-98 cursor-pointer disabled:opacity-50 disabled:pointer-events-none mt-2 text-xs"
+          className="w-full inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-metallic-red font-bold text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all active:scale-98 cursor-pointer disabled:opacity-50 disabled:pointer-events-none mt-2 text-xs"
         >
           {loading ? (
             <Icons.Loader2 className="h-4.5 w-4.5 animate-spin" />
@@ -201,13 +208,15 @@ function LoginForm() {
         </button>
       </form>
 
-      {/* Footer register link */}
-      <div className="text-center text-[11px] text-muted-foreground pt-4 border-t border-border/30">
-        ¿Tu empresa es nueva en Palmera?{" "}
-        <a href="/register" className="text-amber-500 hover:text-amber-600 font-bold">
-          Crea tu espacio de trabajo
-        </a>
-      </div>
+      {/* Footer register link (oculto en instancia pineada: no se crean workspaces aquí) */}
+      {!pinnedSlug && (
+        <div className="text-center text-[11px] text-muted-foreground pt-4 border-t border-border/30">
+          ¿Tu empresa es nueva en Palmera?{" "}
+          <a href="/register" className="text-red-500 hover:text-red-600 font-bold">
+            Crea tu espacio de trabajo
+          </a>
+        </div>
+      )}
     </div>
   );
 }
@@ -217,7 +226,7 @@ export default function LoginPage() {
     <div className="flex-1 min-h-screen flex items-center justify-center p-4 relative">
       <Suspense fallback={
         <div className="flex h-32 w-32 items-center justify-center">
-          <Icons.Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+          <Icons.Loader2 className="h-8 w-8 text-red-500 animate-spin" />
         </div>
       }>
         <LoginForm />

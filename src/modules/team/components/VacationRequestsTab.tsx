@@ -116,7 +116,7 @@ export default function VacationRequestsTab() {
       <div className="flex justify-between items-center bg-card/40 p-4 rounded-2xl border border-border/30">
         <div>
           <h3 className="text-xs font-black tracking-wider text-foreground uppercase flex items-center gap-2">
-            <Icons.CalendarDays className="h-4 w-4 text-amber-500" />
+            <Icons.CalendarDays className="h-4 w-4 text-red-500" />
             <span>Gestión de Vacaciones & Permisos de Personal</span>
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -126,7 +126,7 @@ export default function VacationRequestsTab() {
 
         <button
           onClick={() => setShowModal(true)}
-          className="inline-flex h-9 items-center justify-center gap-1.5 px-4 rounded-xl bg-metallic-orange text-white font-bold text-xs cursor-pointer shadow-xs"
+          className="inline-flex h-9 items-center justify-center gap-1.5 px-4 rounded-xl bg-metallic-red text-white font-bold text-xs cursor-pointer shadow-xs"
         >
           <Icons.Plus className="h-4 w-4" />
           <span>Solicitar Vacaciones</span>
@@ -147,7 +147,7 @@ export default function VacationRequestsTab() {
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="text-sm font-bold text-foreground">{req.employeeName}</h4>
-                <span className="text-[10px] font-extrabold text-amber-500 uppercase">{req.role}</span>
+                <span className="text-[10px] font-extrabold text-red-500 uppercase">{req.role}</span>
               </div>
 
               <span
@@ -156,7 +156,7 @@ export default function VacationRequestsTab() {
                     ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
                     : req.status === "REJECTED"
                     ? "bg-rose-500/10 text-rose-600 border border-rose-500/20"
-                    : "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                    : "bg-red-500/10 text-red-600 border border-red-500/20"
                 }`}
               >
                 {req.status === "APPROVED" ? "Aprobada" : req.status === "REJECTED" ? "Rechazada" : "Pendiente"}
@@ -178,7 +178,7 @@ export default function VacationRequestsTab() {
               </div>
               <div>
                 <span className="text-[10px] text-muted-foreground uppercase font-bold block">Días Totales</span>
-                <span className="font-black text-amber-500 text-sm">{req.daysCount} días</span>
+                <span className="font-black text-red-500 text-sm">{req.daysCount} días</span>
               </div>
             </div>
 
@@ -280,7 +280,7 @@ export default function VacationRequestsTab() {
 
               <button
                 type="submit"
-                className="w-full h-10 rounded-xl bg-metallic-orange font-bold text-white text-xs cursor-pointer shadow-lg mt-2"
+                className="w-full h-10 rounded-xl bg-metallic-red font-bold text-white text-xs cursor-pointer shadow-lg mt-2"
               >
                 Enviar Solicitud
               </button>

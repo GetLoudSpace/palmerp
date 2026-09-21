@@ -25,7 +25,7 @@ export default function RestaurantOpsDashboard() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 py-2.5 px-4.5 text-xs font-bold transition-all rounded-xl cursor-pointer ${
                 isActive
-                  ? "bg-metallic-orange text-white shadow-xs"
+                  ? "bg-metallic-red text-white shadow-xs"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >

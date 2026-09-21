@@ -5,6 +5,19 @@ import { getToken } from "next-auth/jwt";
 const PLATFORM_SUBDOMAINS = new Set(["app", "platform", "superadmin", "www"]);
 const RESERVED_SUBDOMAINS = new Set(["api", "admin", "login", "register", "_next", "favicon"]);
 
+// Instancia independiente: PINNED_TENANT_SLUG fija el único tenant servido.
+// (Inline aquí porque el middleware es Edge y no puede importar lib con Prisma.)
+function getPinnedTenant(): string | null {
+  const pin = process.env.PINNED_TENANT_SLUG;
+  return pin && pin.trim() ? pin.trim().toLowerCase() : null;
+}
+
+function isSuperadminAllowed(): boolean {
+  if (process.env.ALLOW_SUPERADMIN === "true") return true;
+  if (process.env.ALLOW_SUPERADMIN === "false") return false;
+  return getPinnedTenant() === null;
+}
+
 function getHostnameParts(hostHeader: string): string[] {
   return hostHeader.split(":")[0]?.split(".").filter(Boolean) ?? [];
 }
@@ -78,12 +91,38 @@ export async function middleware(req: NextRequest) {
   }
 
   const isAdminRoute = url.pathname.startsWith("/admin");
-  const isSuperadminRoute = url.pathname.startsWith("/superadmin");
+  const isSuperadminRoute =
+    url.pathname.startsWith("/superadmin") || url.pathname.startsWith("/api/superadmin");
   const isLoginRoute = url.pathname === "/login";
   const isRegisterRoute = url.pathname === "/register";
   const isTenantNotFoundRoute = url.pathname === "/tenant-not-found";
+  const isApiRoute = url.pathname.startsWith("/api/");
+  const isAuthApi = url.pathname.startsWith("/api/auth");
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+  // Instancia pineada: este despliegue SOLO sirve a su tenant. Se ignora
+  // cualquier subdominio/slug ajeno (belpane/gastroshows no existen aquí).
+  const pinned = getPinnedTenant();
+  if (pinned) {
+    tenantSlug = pinned;
+    isPlatformRoute = false;
+  }
+
+  // Consola fleet global: prohibida en instancia pineada (lista TODOS los
+  // clientes de la DB compartida → fuga entre instancias).
+  if (isSuperadminRoute && pinned && !isSuperadminAllowed()) {
+    if (isApiRoute) {
+      return NextResponse.json({ error: "Superadmin disabled on pinned instance" }, { status: 403 });
+    }
+    return NextResponse.redirect(new URL("/admin", req.url));
+  }
+
+  // Sesión de otro tenant reutilizada aquí (cookie importada de otro despliegue):
+  // denegar APIs aunque el JWT sea válido en origen.
+  if (pinned && isApiRoute && !isAuthApi && token && (token as any).tenantSlug !== pinned) {
+    return NextResponse.json({ error: "TenantMismatch" }, { status: 401 });
+  }
 
   // Headers internos para server components / API
   const requestHeaders = new Headers(req.headers);

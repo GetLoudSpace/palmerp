@@ -98,6 +98,9 @@ model Contact {
   billingState   String?
   billingCountry String?
   notes          String?
+  birthDate      DateTime?
+  preferredChannel String?  @default("WHATSAPP")
+  commsOptOut    Boolean    @default(false)
 
   // ==========================================
   // MODOS RELATIONS & DYNAMIC FIELDS
@@ -618,6 +621,17 @@ enum EduTier {
   ARTISTA
 }
 
+enum EduCommsMode {
+  TUTOR_ONLY
+  STUDENT_ONLY
+  BOTH
+}
+
+enum EduBillingMode {
+  TUTOR
+  PROPIO
+}
+
 enum EduGoalScope {
   COURSE
   TRIMESTER_1
@@ -691,6 +705,9 @@ model EduStudent {
   favSongs             String[]
   availablePracticeMinPerDay Int?
   tier                 EduTier  @default(ALUMNO)
+  commsMode            EduCommsMode @default(TUTOR_ONLY)
+  guardianRelation     String?
+  billingMode          EduBillingMode @default(TUTOR)
   isArtist             Boolean  @default(false)
   portalToken          String   @unique @default(uuid())
   isActive             Boolean  @default(true)
@@ -937,6 +954,8 @@ model EduOutboxMessage {
   lessonId    String?
   channel     String   @default("WHATSAPP_CLOUD")
   waMessageId String?
+  recipientContactId String?
+  recipientRole String?
   toPhone     String
   body        String   @db.Text
   link        String?
@@ -949,6 +968,7 @@ model EduOutboxMessage {
   @@index([tenantId, studentId, createdAt])
   @@index([waMessageId])
   @@index([batchToken])
+  @@index([recipientContactId])
 }
 
 model EduArtistProfile {

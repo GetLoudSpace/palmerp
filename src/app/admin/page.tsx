@@ -207,14 +207,14 @@ export default function AdminDashboard() {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setIsEditing((v) => !v)}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-bold transition-colors ${isEditing ? "bg-amber-500 text-white border-amber-500 shadow" : "bg-card border-border hover:bg-muted"}`}
+            className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-bold transition-colors ${isEditing ? "bg-red-500 text-white border-red-500 shadow" : "bg-card border-border hover:bg-muted"}`}
           >
             {isEditing ? <Icons.Check className="h-3.5 w-3.5" /> : <Icons.Pencil className="h-3.5 w-3.5" />}
             {isEditing ? "Terminar edición" : "Editar panel"}
           </button>
           {isEditing && (
             <>
-              <button onClick={() => setShowAdd(true)} className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-metallic-orange px-3 text-xs font-bold text-white shadow">
+              <button onClick={() => setShowAdd(true)} className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-metallic-red px-3 text-xs font-bold text-white shadow">
                 <Icons.Plus className="h-3.5 w-3.5" /> Añadir métrica
               </button>
               <button onClick={handleReset} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold hover:bg-muted">
@@ -231,10 +231,10 @@ export default function AdminDashboard() {
       </div>
 
       {isEditing && (
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-start gap-3">
-          <Icons.Info className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 flex items-start gap-3">
+          <Icons.Info className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
           <div className="text-xs leading-relaxed text-muted-foreground">
-            <span className="font-bold text-amber-700 dark:text-amber-500">Modo edición activo:</span> cambia el tamaño (S/M/L), el tipo de gráfico (línea/barra/área/donut), el periodo (7d/30d/90d), mueve widgets con ↑↓ y elimina los que no necesites. Los cambios se guardan automáticamente por tenant.
+            <span className="font-bold text-red-700 dark:text-red-500">Modo edición activo:</span> cambia el tamaño (S/M/L), el tipo de gráfico (línea/barra/área/donut), el periodo (7d/30d/90d), mueve widgets con ↑↓ y elimina los que no necesites. Los cambios se guardan automáticamente por tenant.
           </div>
         </div>
       )}
@@ -263,7 +263,7 @@ export default function AdminDashboard() {
           </div>
           <p className="text-sm font-semibold text-foreground">Tu escritorio está vacío</p>
           <p className="text-xs text-muted-foreground mt-1">Añade métricas para construir tu panel a medida.</p>
-          <button onClick={() => setShowAdd(true)} className="mt-4 inline-flex h-8 items-center gap-1.5 rounded-lg bg-amber-500 px-4 text-xs font-bold text-white">
+          <button onClick={() => setShowAdd(true)} className="mt-4 inline-flex h-8 items-center gap-1.5 rounded-lg bg-red-500 px-4 text-xs font-bold text-white">
             <Icons.Plus className="h-3.5 w-3.5" /> Añadir primera métrica
           </button>
         </div>

@@ -129,7 +129,7 @@ function RegisterForm() {
           </div>
           <div className="flex justify-between items-center text-xs">
             <span className="text-muted-foreground">Tu URL de Acceso:</span>
-            <a href={successData.url} className="font-mono text-amber-500 font-bold hover:underline">
+            <a href={successData.url} className="font-mono text-red-500 font-bold hover:underline">
               {successData.url}
             </a>
           </div>
@@ -137,7 +137,7 @@ function RegisterForm() {
 
         <a
           href={successData.url}
-          className="w-full inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-metallic-orange font-bold text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all active:scale-98 cursor-pointer text-xs"
+          className="w-full inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-metallic-red font-bold text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all active:scale-98 cursor-pointer text-xs"
         >
           <span>Ir al Login de mi Empresa</span>
           <Icons.ArrowRight className="h-4 w-4" />
@@ -149,12 +149,12 @@ function RegisterForm() {
   return (
     <div className="w-full max-w-lg p-8 bg-card/65 backdrop-blur-md rounded-3xl border border-border/40 shadow-2xl space-y-6 relative overflow-hidden my-8 animate-in zoom-in-95 duration-200">
       {/* Glowing lights */}
-      <div className="absolute -top-10 -left-10 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl" />
-      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl" />
+      <div className="absolute -top-10 -left-10 w-32 h-32 bg-red-500/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-red-500/10 rounded-full blur-3xl" />
 
       {/* Header */}
       <div className="text-center space-y-2 relative">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-metallic-orange text-white shadow-lg shadow-orange-500/20 mb-2">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-metallic-red text-white shadow-lg shadow-red-500/20 mb-2">
           <Icons.Palmtree className="h-6 w-6" />
         </div>
         <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text text-transparent">
@@ -162,7 +162,7 @@ function RegisterForm() {
         </h1>
         
         {inviteCode ? (
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 px-3 py-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 border border-red-500/25 px-3 py-1 text-[10px] font-bold text-red-600 dark:text-red-400">
             <Icons.KeyRound className="h-3 w-3 animate-pulse" />
             <span>Invitación Activa: {inviteCode}</span>
           </div>
@@ -185,7 +185,7 @@ function RegisterForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         
         <div className="border-b border-border/30 pb-3 mb-2">
-          <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest block">1. Datos de tu Empresa</span>
+          <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest block">1. Datos de tu Empresa</span>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -199,7 +199,7 @@ function RegisterForm() {
               onChange={(e) => setCompanyName(e.target.value)}
               placeholder="Gastroshows S.L."
               disabled={loading}
-              className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all"
+              className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all"
             />
           </div>
 
@@ -214,7 +214,7 @@ function RegisterForm() {
                 onChange={(e) => handleSubdomainChange(e.target.value)}
                 placeholder="gastroshows"
                 disabled={loading}
-                className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 pr-20 pl-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all font-mono"
+                className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 pr-20 pl-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all font-mono"
               />
               <span className="absolute right-3 text-[10px] font-semibold text-muted-foreground/70 pointer-events-none">
                 .palmerp.es
@@ -224,7 +224,7 @@ function RegisterForm() {
         </div>
 
         <div className="border-b border-border/30 pb-3 pt-2 mb-2">
-          <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest block">2. Administrador del Sistema</span>
+          <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest block">2. Administrador del Sistema</span>
         </div>
 
         {/* Admin Name */}
@@ -237,7 +237,7 @@ function RegisterForm() {
             onChange={(e) => setAdminName(e.target.value)}
             placeholder="Renato García"
             disabled={loading}
-            className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all"
+            className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all"
           />
         </div>
 
@@ -252,7 +252,7 @@ function RegisterForm() {
               onChange={(e) => setAdminEmail(e.target.value)}
               placeholder="admin@gastroshows.es"
               disabled={loading}
-              className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all"
+              className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all"
             />
           </div>
 
@@ -267,7 +267,7 @@ function RegisterForm() {
               placeholder="Mínimo 6 caracteres"
               disabled={loading}
               minLength={6}
-              className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all font-mono"
+              className="w-full rounded-xl border border-border/50 bg-background/50 py-2.5 px-3.5 text-xs text-foreground placeholder-muted-foreground/60 outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all font-mono"
             />
           </div>
         </div>
@@ -276,7 +276,7 @@ function RegisterForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-metallic-orange font-bold text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all active:scale-98 cursor-pointer disabled:opacity-50 disabled:pointer-events-none mt-4 text-xs"
+          className="w-full inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-metallic-red font-bold text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all active:scale-98 cursor-pointer disabled:opacity-50 disabled:pointer-events-none mt-4 text-xs"
         >
           {loading ? (
             <Icons.Loader2 className="h-4.5 w-4.5 animate-spin" />
@@ -292,7 +292,7 @@ function RegisterForm() {
       {/* Footer Login */}
       <div className="text-center text-[11px] text-muted-foreground pt-4 border-t border-border/30">
         ¿Tu empresa ya está registrada?{" "}
-        <a href="/login" className="text-amber-500 hover:text-amber-600 font-bold">
+        <a href="/login" className="text-red-500 hover:text-red-600 font-bold">
           Inicia Sesión
         </a>
       </div>
@@ -305,7 +305,7 @@ export default function RegisterPage() {
     <div className="flex-1 min-h-screen flex items-center justify-center p-4 relative">
       <Suspense fallback={
         <div className="flex h-32 w-32 items-center justify-center">
-          <Icons.Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+          <Icons.Loader2 className="h-8 w-8 text-red-500 animate-spin" />
         </div>
       }>
         <RegisterForm />

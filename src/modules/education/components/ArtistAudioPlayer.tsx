@@ -40,7 +40,7 @@ export default function ArtistAudioPlayer({ src, fileName, onDuration }: { src: 
           <div className="text-xs font-bold truncate">{fileName || "Audio"}</div>
           <div className="text-[10px] text-muted-foreground">{Math.floor(current/60)}:{String(Math.floor(current%60)).padStart(2,"0")} / {duration ? `${Math.floor(duration/60)}:${String(Math.floor(duration%60)).padStart(2,"0")}` : "--:--"}</div>
           <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-            <div className="h-full bg-amber-500" style={{ width: `${pct}%` }} />
+            <div className="h-full bg-red-500" style={{ width: `${pct}%` }} />
           </div>
         </div>
         <select value={speed} onChange={(e)=>setSpeed(parseFloat(e.target.value))} className="rounded-lg border border-border/40 bg-background px-2 py-1 text-xs">

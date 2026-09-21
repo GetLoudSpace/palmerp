@@ -24,7 +24,7 @@ export default function DailyShiftReportTab() {
       <div className="bg-card/65 backdrop-blur-md p-6 rounded-3xl border border-border/40 space-y-6 shadow-xl">
         <div className="flex items-center justify-between border-b border-border/40 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-500 border border-red-500/20">
               <Icons.ClipboardList className="h-5 w-5" />
             </div>
             <div>
@@ -32,7 +32,7 @@ export default function DailyShiftReportTab() {
               <p className="text-xs text-muted-foreground">Informe de turno: ventas, comensales, ticket medio e incidencias operativas.</p>
             </div>
           </div>
-          <span className="text-xs font-mono font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-xl">
+          <span className="text-xs font-mono font-bold text-red-500 bg-red-500/10 px-3 py-1 rounded-xl">
             Turno: Comida {new Date().toLocaleDateString()}
           </span>
         </div>
@@ -70,9 +70,9 @@ export default function DailyShiftReportTab() {
               />
             </div>
 
-            <div className="bg-amber-500/10 p-4 rounded-2xl border border-amber-500/30 space-y-1">
-              <span className="text-[10px] font-bold text-amber-600 uppercase block">Ticket Medio / Pax</span>
-              <div className="text-xl font-black text-amber-500">{ticketMedio.toFixed(2)}€</div>
+            <div className="bg-red-500/10 p-4 rounded-2xl border border-red-500/30 space-y-1">
+              <span className="text-[10px] font-bold text-red-600 uppercase block">Ticket Medio / Pax</span>
+              <div className="text-xl font-black text-red-500">{ticketMedio.toFixed(2)}€</div>
               <span className="text-[10px] text-muted-foreground block">Total: {totalSales.toFixed(2)}€</span>
             </div>
           </div>
@@ -95,7 +95,7 @@ export default function DailyShiftReportTab() {
             )}
             <button
               type="submit"
-              className="px-6 h-10 rounded-xl bg-metallic-orange font-bold text-white text-xs cursor-pointer shadow-lg"
+              className="px-6 h-10 rounded-xl bg-metallic-red font-bold text-white text-xs cursor-pointer shadow-lg"
             >
               Guardar Diario de Cierre
             </button>

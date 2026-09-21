@@ -65,7 +65,7 @@ export default function OrdersManagerPage() {
   if (loading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
-        <Icons.Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+        <Icons.Loader2 className="h-8 w-8 text-red-500 animate-spin" />
       </div>
     );
   }
@@ -76,7 +76,7 @@ export default function OrdersManagerPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/30 pb-4">
         <div>
           <h1 className="text-xl font-extrabold text-foreground md:text-2xl flex items-center gap-2">
-            <Icons.ListOrdered className="h-6 w-6 text-amber-500" />
+            <Icons.ListOrdered className="h-6 w-6 text-red-500" />
             Gestión de Pedidos
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
@@ -88,7 +88,7 @@ export default function OrdersManagerPage() {
           onClick={loadOrders}
           className="inline-flex h-9 items-center gap-2 rounded-xl border border-border bg-card px-4 text-xs font-bold text-foreground hover:bg-muted transition-all cursor-pointer"
         >
-          <Icons.RefreshCw className="h-4 w-4 text-amber-500" />
+          <Icons.RefreshCw className="h-4 w-4 text-red-500" />
           <span>Refrescar Pedidos</span>
         </button>
       </div>
@@ -97,7 +97,7 @@ export default function OrdersManagerPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm">
           <Icons.Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Buscar por nombre o código 4 dígitos..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500" />
+          <input type="text" placeholder="Buscar por nombre o código 4 dígitos..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-red-500" />
         </div>
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
           {["ALL", "PENDING", "CONFIRMED", "READY", "DELIVERED", "CANCELLED"].map((st) => (
@@ -106,7 +106,7 @@ export default function OrdersManagerPage() {
               onClick={() => setFilterStatus(st)}
               className={`px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer shrink-0 ${
                 filterStatus === st
-                  ? "bg-amber-500 text-white shadow-md"
+                  ? "bg-red-500 text-white shadow-md"
                   : "bg-card border border-border/40 text-muted-foreground hover:bg-muted"
               }`}
             >
@@ -138,7 +138,7 @@ export default function OrdersManagerPage() {
               key={order.id}
               className={`bg-card border rounded-2xl p-5 space-y-4 shadow-xs transition-all ${
                 order.status === "PENDING"
-                  ? "border-amber-500/50 ring-2 ring-amber-500/10"
+                  ? "border-red-500/50 ring-2 ring-red-500/10"
                   : "border-border/40"
               }`}
             >
@@ -146,7 +146,7 @@ export default function OrdersManagerPage() {
                 <div>
                   <span className="text-[10px] font-mono text-muted-foreground">
                     #{order.pickupCode || order.id.slice(-6).toUpperCase()} • {new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    {order.pickupCode && <span className="ml-1 px-1.5 py-0.5 rounded bg-amber-500 text-white font-black tracking-widest">CODE {order.pickupCode}</span>}
+                    {order.pickupCode && <span className="ml-1 px-1.5 py-0.5 rounded bg-red-500 text-white font-black tracking-widest">CODE {order.pickupCode}</span>}
                   </span>
                   <h3 className="font-extrabold text-sm text-foreground mt-0.5">{order.customerName}</h3>
                   {order.customerPhone && (
@@ -155,13 +155,13 @@ export default function OrdersManagerPage() {
                     </a>
                   )}
                 </div>
-                <span className="text-base font-black text-amber-500">{Number(order.totalAmount).toFixed(2)}€</span>
+                <span className="text-base font-black text-red-500">{Number(order.totalAmount).toFixed(2)}€</span>
               </div>
 
               {(order.pickupPoint || order.pickupWindow) && (
                 <div className="bg-muted/30 p-2.5 rounded-xl text-xs space-y-0.5 border border-border/20">
                   {order.pickupPoint && <div className="font-bold text-foreground flex items-center gap-1"><Icons.MapPin className="h-3.5 w-3.5 text-emerald-500" />{order.pickupPoint.name}</div>}
-                  {order.pickupWindow && <div className="text-[11px] font-bold text-amber-600">Franja: {order.pickupWindow.label} {order.pickupWindow.start}-{order.pickupWindow.end} (Cap {order.pickupWindow.capacity})</div>}
+                  {order.pickupWindow && <div className="text-[11px] font-bold text-red-600">Franja: {order.pickupWindow.label} {order.pickupWindow.start}-{order.pickupWindow.end} (Cap {order.pickupWindow.capacity})</div>}
                   {order.pickupDate && <div className="text-[10px] text-muted-foreground">Fecha recogida: {new Date(order.pickupDate).toLocaleDateString()}</div>}
                   {!order.pickupWindow && order.pickupPoint?.schedule && <div className="text-[10px] text-muted-foreground pl-4">🕒 {order.pickupPoint.schedule}</div>}
                 </div>
@@ -174,7 +174,7 @@ export default function OrdersManagerPage() {
                   {order.lines.map((line: any) => (
                     <div key={line.id} className="flex justify-between text-xs font-medium text-foreground">
                       <span>
-                        <strong className="text-amber-500">{line.quantity}x</strong> {line.product?.name || "Producto"}
+                        <strong className="text-red-500">{line.quantity}x</strong> {line.product?.name || "Producto"}
                       </span>
                       <span>{(Number(line.unitPrice) * line.quantity).toFixed(2)}€</span>
                     </div>
@@ -183,7 +183,7 @@ export default function OrdersManagerPage() {
               </div>
 
               {order.notes && (
-                <div className="text-[11px] bg-amber-500/10 text-amber-600 dark:text-amber-400 p-2 rounded-lg italic border border-amber-500/20">
+                <div className="text-[11px] bg-red-500/10 text-red-600 dark:text-red-400 p-2 rounded-lg italic border border-red-500/20">
                   "{order.notes}"
                 </div>
               )}

@@ -866,7 +866,7 @@ export default function SuperadminPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-stone-200/80 bg-white/90 px-6 backdrop-blur-md shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-tr from-[#f25c54] via-[#f27059] to-[#f7b267] shadow-md shadow-orange-500/20">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-tr from-[#f25c54] via-[#f27059] to-[#f7b267] shadow-md shadow-red-500/20">
             <Icons.Layers className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -890,7 +890,7 @@ export default function SuperadminPage() {
 
       {/* Toast Alert popup */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-[100] bg-linear-to-r from-[#f4845f] to-[#f25c54] text-white font-bold text-xs py-3.5 px-6 rounded-2xl shadow-xl shadow-orange-500/10 border border-white/20 flex items-center gap-2.5 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-6 right-6 z-[100] bg-linear-to-r from-[#f4845f] to-[#f25c54] text-white font-bold text-xs py-3.5 px-6 rounded-2xl shadow-xl shadow-red-500/10 border border-white/20 flex items-center gap-2.5 animate-in slide-in-from-bottom-5 duration-300">
           <Icons.CheckCircle className="h-4.5 w-4.5" />
           <span>{toastMessage}</span>
         </div>
@@ -977,7 +977,7 @@ export default function SuperadminPage() {
                     </div>
                     <div className="flex items-baseline gap-2">
                       <span className="text-3xl font-black text-stone-950">{auditLogs.length}</span>
-                      <span className="text-[10px] text-[#f25c54] font-bold bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
+                      <span className="text-[10px] text-[#f25c54] font-bold bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
                         En tiempo real
                       </span>
                     </div>
@@ -1070,7 +1070,7 @@ export default function SuperadminPage() {
                         setCreateError(null);
                         setShowCreateModal(true);
                       }}
-                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#f25c54] to-[#f79d65] px-4 text-xs font-black text-white shadow-md shadow-orange-500/10 hover:from-[#f27059] hover:to-[#f7b267] active:scale-[0.98] transition-all cursor-pointer"
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#f25c54] to-[#f79d65] px-4 text-xs font-black text-white shadow-md shadow-red-500/10 hover:from-[#f27059] hover:to-[#f7b267] active:scale-[0.98] transition-all cursor-pointer"
                     >
                       <Icons.Plus className="h-4 w-4" />
                       <span>Crear instancia</span>
@@ -1122,7 +1122,7 @@ export default function SuperadminPage() {
                           </div>
                           <div className="flex justify-between">
                             <span>Mantenimiento:</span>
-                            <span className={`font-bold ${isMaintenanceEnabled(tenant) ? "text-orange-600" : "text-emerald-600"}`}>
+                            <span className={`font-bold ${isMaintenanceEnabled(tenant) ? "text-red-600" : "text-emerald-600"}`}>
                               {isMaintenanceEnabled(tenant) ? "Activo" : "No"}
                             </span>
                           </div>
@@ -1204,7 +1204,7 @@ export default function SuperadminPage() {
                           className={`inline-flex h-8.5 items-center justify-center gap-1.5 rounded-lg border px-3 text-[10px] font-bold transition-all cursor-pointer ${
                             isMaintenanceEnabled(tenant)
                               ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                              : "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100"
+                              : "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
                           }`}
                         >
                           <Icons.Wrench className="h-3.5 w-3.5" />
@@ -1319,7 +1319,7 @@ export default function SuperadminPage() {
                       <button
                         type="submit"
                         disabled={inviteLoading}
-                        className="w-full inline-flex h-9.5 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#f25c54] to-[#f79d65] hover:from-[#f27059] hover:to-[#f7b267] font-bold text-white shadow-md shadow-orange-500/10 transition-all active:scale-98 cursor-pointer disabled:opacity-50 text-xs"
+                        className="w-full inline-flex h-9.5 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#f25c54] to-[#f79d65] hover:from-[#f27059] hover:to-[#f7b267] font-bold text-white shadow-md shadow-red-500/10 transition-all active:scale-98 cursor-pointer disabled:opacity-50 text-xs"
                       >
                         {inviteLoading ? (
                           <Icons.Loader2 className="h-4.5 w-4.5 animate-spin" />
@@ -1396,7 +1396,7 @@ export default function SuperadminPage() {
                                 <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
                                   inv.isUsed
                                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                    : "bg-orange-50 text-[#f27059] border-orange-200"
+                                    : "bg-red-50 text-[#f27059] border-red-200"
                                 }`}>
                                   {inv.isUsed ? "Utilizado" : "Pendiente"}
                                 </span>
@@ -1641,7 +1641,7 @@ export default function SuperadminPage() {
               <button
                 type="button"
                 onClick={handleSaveUsers}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#f25c54] to-[#f79d65] hover:from-[#f27059] hover:to-[#f7b267] font-bold text-white shadow-md shadow-orange-500/10 transition-all active:scale-98 cursor-pointer px-5 text-xs"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#f25c54] to-[#f79d65] hover:from-[#f27059] hover:to-[#f7b267] font-bold text-white shadow-md shadow-red-500/10 transition-all active:scale-98 cursor-pointer px-5 text-xs"
               >
                 <Icons.Save className="h-4 w-4" />
                 <span>Guardar Cambios</span>
@@ -1708,7 +1708,7 @@ export default function SuperadminPage() {
                       onClick={() => handleToggleMaintenance(selectedInstance)}
                       className={`inline-flex h-8.5 min-w-24 items-center justify-center rounded-lg border px-3 text-[10px] font-bold transition-all cursor-pointer ${
                         isMaintenanceEnabled(selectedInstance)
-                          ? "border-orange-200 bg-orange-50 text-orange-700"
+                          ? "border-red-200 bg-red-50 text-red-700"
                           : "border-emerald-200 bg-emerald-50 text-emerald-700"
                       }`}
                     >
@@ -1800,7 +1800,7 @@ export default function SuperadminPage() {
               <button
                 type="button"
                 onClick={handleSaveInstance}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#f25c54] to-[#f79d65] px-5 text-xs font-bold text-white shadow-md shadow-orange-500/10 hover:from-[#f27059] hover:to-[#f7b267]"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#f25c54] to-[#f79d65] px-5 text-xs font-bold text-white shadow-md shadow-red-500/10 hover:from-[#f27059] hover:to-[#f7b267]"
               >
                 <Icons.Save className="h-4 w-4" />
                 <span>Guardar instancia</span>
@@ -1994,7 +1994,7 @@ export default function SuperadminPage() {
                 </label>
               </div>
 
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-[11px] leading-relaxed text-amber-900">
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-[11px] leading-relaxed text-red-900">
                 <span className="font-black">SAAS en este VPS:</span> crea la base <span className="font-mono">palmera_{normalizeSlug(createData.slug) || "slug"}</span> en el mismo Postgres (`PALMERA_PLATFORM_DATABASE_URL`) y ejecuta `prisma db push` + seed. Preparado para multi-server futuro, pero ahora todo queda en el mismo dominio.
               </div>
 
@@ -2041,7 +2041,7 @@ export default function SuperadminPage() {
                 <button
                   type="submit"
                   disabled={createLoading}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#f25c54] to-[#f79d65] px-5 text-xs font-black text-white shadow-md shadow-orange-500/10 hover:from-[#f27059] hover:to-[#f7b267] disabled:opacity-50 cursor-pointer"
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-tr from-[#f25c54] to-[#f79d65] px-5 text-xs font-black text-white shadow-md shadow-red-500/10 hover:from-[#f27059] hover:to-[#f7b267] disabled:opacity-50 cursor-pointer"
                 >
                   {createLoading ? <Icons.Loader2 className="h-4 w-4 animate-spin" /> : <Icons.Plus className="h-4 w-4" />}
                   <span>{createLoading ? "Creando…" : "Crear en este VPS"}</span>
@@ -2118,7 +2118,7 @@ export default function SuperadminPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-950/40 backdrop-blur-md animate-in fade-in duration-300">
           <div className="w-full max-w-lg bg-white border border-[#f4845f]/40 rounded-3xl p-6 shadow-2xl relative space-y-4">
             
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 border border-orange-250 px-3 py-1 text-[10px] font-bold text-[#f27059]">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-250 px-3 py-1 text-[10px] font-bold text-[#f27059]">
               <Icons.Send className="h-3 w-3 animate-bounce" />
               <span>Simulación de Servidor de Correo (SMTP Outbox)</span>
             </div>

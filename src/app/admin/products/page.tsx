@@ -264,7 +264,7 @@ export default function CoreProductsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/30 pb-4">
         <div>
           <div className="text-xl font-extrabold tracking-tight text-foreground md:text-2xl flex items-center gap-2">
-            <Icons.PackageCheck className="h-6 w-6 text-amber-500" />
+            <Icons.PackageCheck className="h-6 w-6 text-red-500" />
             Catálogo Pilar de Productos & Recetas (Odoo 19)
           </div>
           <div className="text-xs text-muted-foreground block mt-1">
@@ -274,7 +274,7 @@ export default function CoreProductsPage() {
 
         <button
           onClick={() => handleOpenModal()}
-          className="inline-flex h-9 items-center gap-2 rounded-xl bg-metallic-orange text-white px-4 text-xs font-bold shadow-md hover:bg-amber-600 transition-all cursor-pointer"
+          className="inline-flex h-9 items-center gap-2 rounded-xl bg-metallic-red text-white px-4 text-xs font-bold shadow-md hover:bg-red-600 transition-all cursor-pointer"
         >
           <Icons.Plus className="h-4 w-4" />
           <span>Nuevo Producto Pilar</span>
@@ -295,7 +295,7 @@ export default function CoreProductsPage() {
               onClick={() => setFilterType(tab.id)}
               className={`px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer shrink-0 ${
                 filterType === tab.id
-                  ? "bg-amber-500 text-white shadow-md"
+                  ? "bg-red-500 text-white shadow-md"
                   : "bg-card border border-border/40 text-muted-foreground hover:bg-muted"
               }`}
             >
@@ -314,7 +314,7 @@ export default function CoreProductsPage() {
               setSearchTerm(e.target.value);
               loadProducts();
             }}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500"
+            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-red-500"
           />
         </div>
       </div>
@@ -322,7 +322,7 @@ export default function CoreProductsPage() {
       {/* Products Grid / Cards */}
       {loading ? (
         <div className="flex h-[300px] items-center justify-center">
-          <Icons.Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+          <Icons.Loader2 className="h-8 w-8 text-red-500 animate-spin" />
         </div>
       ) : products.length === 0 ? (
         <div className="bg-card border border-border/40 p-12 rounded-2xl text-center text-xs text-muted-foreground">
@@ -334,7 +334,7 @@ export default function CoreProductsPage() {
             <div
               key={p.id}
               onClick={() => handleOpenModal(p)}
-              className="bg-card border border-border/40 rounded-2xl p-5 space-y-4 hover:border-amber-500/40 transition-all cursor-pointer group shadow-xs"
+              className="bg-card border border-border/40 rounded-2xl p-5 space-y-4 hover:border-red-500/40 transition-all cursor-pointer group shadow-xs"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -343,7 +343,7 @@ export default function CoreProductsPage() {
                       {p.code}
                     </span>
                   )}
-                  <h3 className="font-extrabold text-sm text-foreground group-hover:text-amber-500 transition-colors mt-1">
+                  <h3 className="font-extrabold text-sm text-foreground group-hover:text-red-500 transition-colors mt-1">
                     {p.name}
                   </h3>
                 </div>
@@ -356,7 +356,7 @@ export default function CoreProductsPage() {
                       ? "bg-blue-500/10 text-blue-500 border border-blue-500/20"
                       : p.productType === "SERVICE"
                       ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                      : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                      : "bg-red-500/10 text-red-500 border border-red-500/20"
                   }`}
                 >
                   {p.productType === "MANUFACTURED_KIT"
@@ -405,7 +405,7 @@ export default function CoreProductsPage() {
             <div className="p-5 border-b border-border/30 bg-muted/20 flex items-center justify-between">
               <div>
                 <h2 className="text-base font-extrabold text-foreground flex items-center gap-2">
-                  <Icons.Package className="h-5 w-5 text-amber-500" />
+                  <Icons.Package className="h-5 w-5 text-red-500" />
                   {isCreatingNew ? "Crear Nuevo Producto Pilar" : `Editar: ${activeModalProduct?.name}`}
                 </h2>
                 <p className="text-xs text-muted-foreground">
@@ -431,7 +431,7 @@ export default function CoreProductsPage() {
                   onClick={() => setActiveTab("general")}
                   className={`py-3 px-4 text-xs font-extrabold border-b-2 transition-all cursor-pointer ${
                     activeTab === "general"
-                      ? "border-amber-500 text-amber-500"
+                      ? "border-red-500 text-red-500"
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -470,7 +470,7 @@ export default function CoreProductsPage() {
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="ej. Pan de Masa Madre"
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500"
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-red-500"
                       />
                     </div>
 
@@ -481,7 +481,7 @@ export default function CoreProductsPage() {
                         value={formData.code}
                         onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                         placeholder="ej. PAN-MM-01"
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500 font-mono"
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-red-500 font-mono"
                       />
                     </div>
                   </div>
@@ -493,7 +493,7 @@ export default function CoreProductsPage() {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Detalles del producto o elaboración..."
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-red-500"
                     />
                   </div>
 
@@ -503,7 +503,7 @@ export default function CoreProductsPage() {
                       <select
                         value={formData.productType}
                         onChange={(e) => setFormData({ ...formData, productType: e.target.value as any })}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500"
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-red-500"
                       >
                         <option value="STORABLE">STORABLE (Almacenable)</option>
                         <option value="CONSUMABLE">CONSUMABLE (Materia Prima)</option>
@@ -519,7 +519,7 @@ export default function CoreProductsPage() {
                         step="0.01"
                         value={formData.price}
                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500"
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-red-500"
                       />
                     </div>
 
@@ -528,7 +528,7 @@ export default function CoreProductsPage() {
                       <select
                         value={formData.uom}
                         onChange={(e) => setFormData({ ...formData, uom: e.target.value })}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500"
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-red-500"
                       >
                         <option value="ud">ud (Unidad)</option>
                         <option value="kg">kg (Kilogramos)</option>
@@ -544,11 +544,11 @@ export default function CoreProductsPage() {
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div>
                       <label className="text-xs font-bold text-muted-foreground block mb-1">Stock actual ({formData.uom})</label>
-                      <input type="number" step="0.001" value={formData.stockQty} onChange={(e) => setFormData({ ...formData, stockQty: e.target.value })} placeholder="ej. 50 para harina kg" className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500" />
+                      <input type="number" step="0.001" value={formData.stockQty} onChange={(e) => setFormData({ ...formData, stockQty: e.target.value })} placeholder="ej. 50 para harina kg" className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-red-500" />
                     </div>
                     <div>
                       <label className="text-xs font-bold text-muted-foreground block mb-1">Umbral aviso bajo stock</label>
-                      <input type="number" step="0.001" value={formData.lowStockThreshold} onChange={(e) => setFormData({ ...formData, lowStockThreshold: e.target.value })} placeholder="ej. 5" className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-amber-500" />
+                      <input type="number" step="0.001" value={formData.lowStockThreshold} onChange={(e) => setFormData({ ...formData, lowStockThreshold: e.target.value })} placeholder="ej. 5" className="w-full px-3 py-2 text-xs rounded-xl border border-border/50 bg-background outline-hidden focus:border-red-500" />
                     </div>
                     <div className="flex items-end text-[10px] text-muted-foreground">Dejar vacío = sin alerta. Al vender pan se descuenta automático del ingrediente.</div>
                   </div>
@@ -560,7 +560,7 @@ export default function CoreProductsPage() {
                         type="checkbox"
                         checked={formData.isSellable}
                         onChange={(e) => setFormData({ ...formData, isSellable: e.target.checked })}
-                        className="accent-amber-500"
+                        className="accent-red-500"
                       />
                       <span className="font-bold">Se puede Vender</span>
                     </label>
@@ -600,7 +600,7 @@ export default function CoreProductsPage() {
                     <button
                       type="submit"
                       disabled={saving}
-                      className="ml-auto bg-amber-500 text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-amber-600 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                      className="ml-auto bg-red-500 text-white font-bold text-xs px-6 py-2.5 rounded-xl hover:bg-red-600 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                     >
                       {saving ? <Icons.Loader2 className="h-4 w-4 animate-spin" /> : <Icons.Save className="h-4 w-4" />}
                       <span>Guardar Cambios</span>

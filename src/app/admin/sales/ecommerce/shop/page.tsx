@@ -266,7 +266,7 @@ export default function ShopConfiguratorPage() {
   if (loading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
-        <Icons.Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+        <Icons.Loader2 className="h-8 w-8 text-red-500 animate-spin" />
       </div>
     );
   }
@@ -284,7 +284,7 @@ export default function ShopConfiguratorPage() {
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between border-b border-border/30 pb-4">
         <div>
           <h1 className="text-xl font-extrabold text-foreground md:text-2xl flex items-center gap-2">
-            <Icons.LayoutTemplate className="h-6 w-6 text-amber-500" />
+            <Icons.LayoutTemplate className="h-6 w-6 text-red-500" />
             Configurador de Web & Modos
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
@@ -295,7 +295,7 @@ export default function ShopConfiguratorPage() {
         <button
           onClick={() => handleSaveShopConfig()}
           disabled={saving}
-          className="inline-flex h-9 items-center gap-2 rounded-xl bg-metallic-orange text-white px-5 text-xs font-bold shadow-md hover:bg-amber-600 disabled:opacity-50 transition-all cursor-pointer"
+          className="inline-flex h-9 items-center gap-2 rounded-xl bg-metallic-red text-white px-5 text-xs font-bold shadow-md hover:bg-red-600 disabled:opacity-50 transition-all cursor-pointer"
         >
           {saving ? <Icons.Loader2 className="h-4 w-4 animate-spin" /> : <Icons.Save className="h-4 w-4" />}
           <span>Guardar Cambios</span>
@@ -312,7 +312,7 @@ export default function ShopConfiguratorPage() {
           }}
           className={`flex items-center justify-center gap-2 p-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
             mode === "MINIMAL"
-              ? "bg-amber-500 text-white shadow-md"
+              ? "bg-red-500 text-white shadow-md"
               : "text-muted-foreground hover:bg-muted"
           }`}
         >
@@ -342,7 +342,7 @@ export default function ShopConfiguratorPage() {
         <div className="space-y-6">
           <div className="bg-card border border-border/40 p-6 rounded-2xl space-y-4">
             <h2 className="text-sm font-extrabold text-foreground uppercase tracking-wider flex items-center gap-2">
-              <Icons.Sparkles className="h-4 w-4 text-amber-500" />
+              <Icons.Sparkles className="h-4 w-4 text-red-500" />
               Selecciona una de las 10 Plantillas Prediseñadas
             </h2>
 
@@ -357,19 +357,19 @@ export default function ShopConfiguratorPage() {
                   }}
                   className={`flex flex-col justify-between text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
                     templateId === t.id
-                      ? "border-amber-500 bg-amber-500/10 shadow-md ring-2 ring-amber-500/20"
+                      ? "border-red-500 bg-red-500/10 shadow-md ring-2 ring-red-500/20"
                       : "border-border/40 bg-background hover:border-border"
                   }`}
                 >
                   <div className="space-y-2">
-                    <span className="text-[9px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-md inline-block">
+                    <span className="text-[9px] font-bold text-red-600 bg-red-500/10 px-2 py-0.5 rounded-md inline-block">
                       {t.badge}
                     </span>
                     <h3 className="font-extrabold text-xs text-foreground">{t.name}</h3>
                     <p className="text-[10px] text-muted-foreground leading-relaxed">{t.description}</p>
                   </div>
                   {templateId === t.id && (
-                    <div className="mt-3 text-[10px] font-extrabold text-amber-500 flex items-center gap-1">
+                    <div className="mt-3 text-[10px] font-extrabold text-red-500 flex items-center gap-1">
                       <Icons.CheckCircle2 className="h-3.5 w-3.5" /> Activa
                     </div>
                   )}
@@ -451,7 +451,7 @@ export default function ShopConfiguratorPage() {
               <a
                 href={`/shop/${shop?.slug}`}
                 target="_blank"
-                className="text-[10px] text-amber-500 font-bold hover:underline flex items-center gap-1"
+                className="text-[10px] text-red-500 font-bold hover:underline flex items-center gap-1"
               >
                 Abrir en nueva pestaña <Icons.ExternalLink className="h-3 w-3" />
               </a>
@@ -479,7 +479,7 @@ export default function ShopConfiguratorPage() {
         <div className="bg-card border border-border/40 p-6 rounded-2xl space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-extrabold text-foreground uppercase tracking-wider flex items-center gap-2">
-              <Icons.ShoppingBag className="h-4 w-4 text-amber-500" />
+              <Icons.ShoppingBag className="h-4 w-4 text-red-500" />
               Gestión de Productos del Día
             </h2>
 
@@ -508,7 +508,7 @@ export default function ShopConfiguratorPage() {
                   showToast("Error al importar productos.");
                 }
               }}
-              className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 hover:bg-amber-500/20 transition-all flex items-center gap-1 cursor-pointer"
+              className="text-[11px] font-bold text-red-600 dark:text-red-400 bg-red-500/10 px-2.5 py-1 rounded-lg border border-red-500/20 hover:bg-red-500/20 transition-all flex items-center gap-1 cursor-pointer"
             >
               <Icons.Download className="h-3.5 w-3.5" />
               <span>Importar de Catálogo Pilar</span>
@@ -552,7 +552,7 @@ export default function ShopConfiguratorPage() {
             />
             <button
               type="submit"
-              className="w-full py-2 bg-amber-500 text-white font-bold text-xs rounded-lg hover:bg-amber-600 cursor-pointer"
+              className="w-full py-2 bg-red-500 text-white font-bold text-xs rounded-lg hover:bg-red-600 cursor-pointer"
             >
               + Añadir Producto Al Catálogo
             </button>
@@ -569,7 +569,7 @@ export default function ShopConfiguratorPage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <input type="number" min={0} defaultValue={p.maxDaily} id={`max-${p.id}`} placeholder="max" className="w-16 px-2 py-1 text-xs rounded border border-border/50 bg-background" />
-                  <button onClick={() => { const el = document.getElementById(`max-${p.id}`) as HTMLInputElement; handleUpdateProductStock(p, el?.value || String(p.maxDaily)); }} className="px-2 py-1 rounded bg-amber-500 text-white font-bold hover:bg-amber-600">Ajustar</button>
+                  <button onClick={() => { const el = document.getElementById(`max-${p.id}`) as HTMLInputElement; handleUpdateProductStock(p, el?.value || String(p.maxDaily)); }} className="px-2 py-1 rounded bg-red-500 text-white font-bold hover:bg-red-600">Ajustar</button>
                   <button onClick={() => handleDeleteProduct(p.id)} className="text-red-500 hover:text-red-600 p-1"><Icons.Trash2 className="h-4 w-4" /></button>
                 </div>
               </div>
@@ -628,11 +628,11 @@ export default function ShopConfiguratorPage() {
                   <button onClick={() => handleDeletePickupPoint(pt.id)} className="text-red-500 hover:text-red-600 p-1"><Icons.Trash2 className="h-4 w-4" /></button>
                 </div>
                 {/* Franjas configurables por punto */}
-                <div className="ml-2 pl-3 border-l-2 border-amber-500/20 space-y-1.5">
-                  <div className="text-[10px] font-bold text-amber-600 uppercase flex items-center gap-1"><Icons.Clock className="h-3 w-3" /> Franjas ({windows.filter((w: any) => w.pickupPointId === pt.id).length})</div>
+                <div className="ml-2 pl-3 border-l-2 border-red-500/20 space-y-1.5">
+                  <div className="text-[10px] font-bold text-red-600 uppercase flex items-center gap-1"><Icons.Clock className="h-3 w-3" /> Franjas ({windows.filter((w: any) => w.pickupPointId === pt.id).length})</div>
                   {windows.filter((w: any) => w.pickupPointId === pt.id).map((w: any) => (
                     <div key={w.id} className="flex items-center justify-between bg-muted/20 px-2 py-1 rounded">
-                      <span className="font-semibold">{w.label} <span className="text-muted-foreground"> {w.start}-{w.end} </span> <span className="ml-1 bg-amber-500/10 px-1.5 py-0.5 rounded">Cap: {w.capacity}</span></span>
+                      <span className="font-semibold">{w.label} <span className="text-muted-foreground"> {w.start}-{w.end} </span> <span className="ml-1 bg-red-500/10 px-1.5 py-0.5 rounded">Cap: {w.capacity}</span></span>
                       <button onClick={() => handleDeleteWindow(w.id)} className="text-red-400 hover:text-red-600"><Icons.X className="h-3 w-3" /></button>
                     </div>
                   ))}
@@ -643,8 +643,8 @@ export default function ShopConfiguratorPage() {
           </div>
           {/* Añadir franja */}
           {pickupPoints.length > 0 && (
-            <form onSubmit={handleAddWindow} className="mt-4 p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-2">
-              <div className="text-[10px] font-bold text-amber-700 uppercase">+ Añadir franja configurable</div>
+            <form onSubmit={handleAddWindow} className="mt-4 p-3 bg-red-500/5 border border-red-500/20 rounded-xl space-y-2">
+              <div className="text-[10px] font-bold text-red-700 uppercase">+ Añadir franja configurable</div>
               <div className="grid gap-2 sm:grid-cols-5">
                 <select value={newWinPointId} onChange={(e) => setNewWinPointId(e.target.value)} className="px-2 py-1.5 text-xs rounded border bg-background col-span-2" required>
                   <option value="">Punto…</option>{pickupPoints.map((pt) => <option key={pt.id} value={pt.id}>{pt.name}</option>)}
@@ -655,7 +655,7 @@ export default function ShopConfiguratorPage() {
               </div>
               <div className="flex gap-2">
                 <input type="number" min={1} placeholder="Capacidad" value={newWinCap} onChange={(e) => setNewWinCap(e.target.value)} className="flex-1 px-2 py-1.5 text-xs rounded border bg-background" />
-                <button type="submit" className="px-4 py-1.5 bg-amber-500 text-white font-bold text-xs rounded hover:bg-amber-600">Añadir</button>
+                <button type="submit" className="px-4 py-1.5 bg-red-500 text-white font-bold text-xs rounded hover:bg-red-600">Añadir</button>
               </div>
             </form>
           )}

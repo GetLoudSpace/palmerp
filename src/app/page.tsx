@@ -341,7 +341,7 @@ export default function Home() {
 
   const priorityConfig = {
     critical: { color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/30", label: "Crítica" },
-    high: { color: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/30", label: "Alta" },
+    high: { color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/30", label: "Alta" },
     medium: { color: "text-yellow-500", bg: "bg-yellow-500/10", border: "border-yellow-500/30", label: "Media" },
     low: { color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/30", label: "Baja" },
   };
@@ -356,7 +356,7 @@ export default function Home() {
       {!profileLoaded && (
         <div className="min-h-screen bg-[#0c0a09] text-neutral-200 flex items-center justify-center">
           <div className="flex items-center gap-2 text-neutral-400">
-            <Icons.Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+            <Icons.Loader2 className="h-4 w-4 animate-spin text-red-500" />
           </div>
         </div>
       )}
@@ -367,18 +367,18 @@ export default function Home() {
 
       {profileLoaded && !showOnboarding && (
         <div className="relative min-h-screen w-full overflow-hidden bg-[#0c0a09] text-neutral-200 flex flex-col" style={{ fontFamily: "var(--font-outfit), sans-serif" }}>
-          <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[100px] pointer-events-none" />
-          <div className="absolute bottom-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
+          <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-red-500/10 blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-red-500/5 blur-[120px] pointer-events-none" />
 
       {/* Header */}
       <header className="relative z-10 mx-auto max-w-7xl w-full px-6 py-5 flex items-center justify-between border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-600 to-amber-500 shadow-md shadow-amber-500/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-red-600 to-red-500 shadow-md shadow-red-500/20">
             <Icons.Palmtree className="h-4 w-4 text-white" />
           </div>
           <div>
             <span className="text-sm font-medium tracking-tight text-white">
-              Palm <span className="text-amber-500">ERP</span>
+              Palm <span className="text-red-500">ERP</span>
             </span>
             {chatStarted && (
               <p className="text-[9px] text-neutral-500 uppercase tracking-widest font-semibold">
@@ -393,7 +393,7 @@ export default function Home() {
             <>
               <button
                 onClick={() => window.location.href = "/project"}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-amber-500 px-3 text-xs font-semibold text-white hover:bg-amber-600 transition-colors"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-red-500 px-3 text-xs font-semibold text-white hover:bg-red-600 transition-colors"
               >
                 <Icons.LayoutGrid className="h-3.5 w-3.5" />
                 <span>Ver Proyecto</span>
@@ -411,7 +411,7 @@ export default function Home() {
             href="/admin"
             className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10"
           >
-            <Icons.Palmtree className="h-3.5 w-3.5 text-amber-500" />
+            <Icons.Palmtree className="h-3.5 w-3.5 text-red-500" />
             <span>ERP</span>
           </a>
           {!isTenantSubdomain && (
@@ -420,7 +420,7 @@ export default function Home() {
               className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3.5 text-xs font-medium text-neutral-300 transition-colors hover:bg-white/10"
             >
               <span>Consola</span>
-              <Icons.ArrowRight className="h-3.5 w-3.5 text-amber-500" />
+              <Icons.ArrowRight className="h-3.5 w-3.5 text-red-500" />
             </a>
           )}
         </div>
@@ -450,12 +450,12 @@ export default function Home() {
                 <div
                   className={`max-w-2xl rounded-2xl px-5 py-3.5 ${
                     msg.role === "user"
-                      ? "bg-amber-500 text-white"
+                      ? "bg-red-500 text-white"
                       : "bg-white/5 border border-white/10 text-neutral-200"
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                  <p className={`text-[10px] mt-2 ${msg.role === "user" ? "text-amber-100/70" : "text-neutral-500"}`}>
+                  <p className={`text-[10px] mt-2 ${msg.role === "user" ? "text-red-100/70" : "text-neutral-500"}`}>
                     {msg.timestamp.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
@@ -466,7 +466,7 @@ export default function Home() {
               <div className="flex justify-start">
                 <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5">
                   <div className="flex items-center gap-2">
-                    <Icons.Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
+                    <Icons.Loader2 className="h-4 w-4 text-red-500 animate-spin" />
                     <span className="text-xs text-neutral-400">Procesando...</span>
                   </div>
                 </div>
@@ -490,8 +490,8 @@ export default function Home() {
           <div className="border-t border-white/5 bg-white/[0.02] px-4 py-4 max-h-80 overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Icons.CheckSquare className="h-4 w-4 text-amber-500" />
-                <span className="text-xs font-bold text-amber-500 uppercase tracking-widest">
+                <Icons.CheckSquare className="h-4 w-4 text-red-500" />
+                <span className="text-xs font-bold text-red-500 uppercase tracking-widest">
                   Tareas Extraídas ({extractedTasks.length})
                 </span>
               </div>
@@ -520,8 +520,8 @@ export default function Home() {
                         : validation === "rejected"
                         ? "border-red-500/20 bg-red-500/5 opacity-50"
                         : validation === "adjusted"
-                        ? "border-amber-500/30 bg-amber-500/5"
-                        : "border-white/5 bg-white/[0.02] hover:border-amber-500/20"
+                        ? "border-red-500/30 bg-red-500/5"
+                        : "border-white/5 bg-white/[0.02] hover:border-red-500/20"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -573,7 +573,7 @@ export default function Home() {
                             setTaskValidations((prev) => ({ ...prev, [task.id]: "adjusted" }));
                             updateAccuracy(task.id, "adjusted");
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors"
                         >
                           <Icons.Edit className="h-3 w-3" />
                           Ajustar
@@ -609,7 +609,7 @@ export default function Home() {
 
         {/* Input */}
         <div className="border-t border-white/5 bg-[#0c0a09]/80 backdrop-blur-md px-4 py-4">
-          <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 focus-within:border-amber-500/50 transition-colors">
+          <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 focus-within:border-red-500/50 transition-colors">
             <textarea
               ref={inputRef}
               value={input}
@@ -638,7 +638,7 @@ export default function Home() {
                 }
               }}
               disabled={!input.trim() || isLoading}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-30 disabled:hover:bg-amber-500 transition-colors"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white hover:bg-red-600 disabled:opacity-30 disabled:hover:bg-red-500 transition-colors"
             >
               {isLoading ? (
                 <Icons.Loader2 className="h-4 w-4 animate-spin" />
@@ -664,7 +664,7 @@ export default function Home() {
               const Icon = pill.icon;
               return (
                 <div key={idx} className="flex items-start gap-2.5 rounded-lg bg-white/[0.02] border border-white/5 px-3 py-2.5">
-                  <Icon className="h-3.5 w-3.5 text-amber-500/60 mt-0.5 shrink-0" />
+                  <Icon className="h-3.5 w-3.5 text-red-500/60 mt-0.5 shrink-0" />
                   <div>
                     <span className="text-[11px] font-medium text-neutral-400">{pill.title}</span>
                     <p className="text-[10px] text-neutral-600 leading-relaxed mt-0.5">{pill.text}</p>

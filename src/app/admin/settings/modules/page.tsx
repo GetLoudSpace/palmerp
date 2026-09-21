@@ -194,8 +194,8 @@ export default function ModulesSettingsPage() {
             key={mode.id}
             className={`flex flex-col justify-between bg-card border p-5 rounded-2xl shadow-xs transition-all duration-300 group ${
               mode.isActive
-                ? "border-amber-500/40 ring-4 ring-amber-500/5 shadow-md shadow-orange-500/5 bg-amber-500/[0.01]"
-                : "border-border/40 hover:border-amber-500/20"
+                ? "border-red-500/40 ring-4 ring-red-500/5 shadow-md shadow-red-500/5 bg-red-500/[0.01]"
+                : "border-border/40 hover:border-red-500/20"
             }`}
           >
             <div className="space-y-3">
@@ -203,7 +203,7 @@ export default function ModulesSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-all duration-300 ${
                   mode.isActive
-                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-500/30"
+                    ? "bg-red-500/10 text-red-600 dark:text-red-500 border-red-500/30"
                     : "bg-muted text-muted-foreground border-border"
                 }`}>
                   <DynamicIcon name={mode.icon} className="h-6 w-6" />
@@ -244,7 +244,7 @@ export default function ModulesSettingsPage() {
                 className={`inline-flex h-8.5 items-center justify-center px-4 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer ${
                   mode.isActive
                     ? "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20"
-                    : "bg-metallic-orange text-white shadow-md shadow-orange-500/20 hover:shadow-lg active:scale-95"
+                    : "bg-metallic-red text-white shadow-md shadow-red-500/20 hover:shadow-lg active:scale-95"
                 }`}
               >
                 {mode.isActive ? "Desactivar" : "Activar"}

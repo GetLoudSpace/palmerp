@@ -98,7 +98,7 @@ export default function GeneralSettingsPage() {
       <form onSubmit={handleSave} className="grid gap-6 md:grid-cols-3">
         {/* Left 2 Cols: Main settings */}
         <div className="md:col-span-2 space-y-6 bg-card border border-border/40 p-6 rounded-2xl">
-          <span className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest block mb-4 border-b border-border/20 pb-2">
+          <span className="text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest block mb-4 border-b border-border/20 pb-2">
             Identificación de la Empresa
           </span>
 
@@ -110,7 +110,7 @@ export default function GeneralSettingsPage() {
                 required
                 value={settings.companyName}
                 onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
-                className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
               />
             </div>
             <div className="space-y-1.5">
@@ -120,12 +120,12 @@ export default function GeneralSettingsPage() {
                 required
                 value={settings.systemEmail}
                 onChange={(e) => setSettings({ ...settings, systemEmail: e.target.value })}
-                className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500"
+                className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
               />
             </div>
           </div>
 
-          <span className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest block pt-4 mb-4 border-b border-border/20 pb-2">
+          <span className="text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest block pt-4 mb-4 border-b border-border/20 pb-2">
             Localización y Región
           </span>
 
@@ -135,7 +135,7 @@ export default function GeneralSettingsPage() {
               <select
                 value={settings.timezone}
                 onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500 font-semibold"
+                className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 font-semibold"
               >
                 <option value="Europe/Madrid">Europe/Madrid (UTC+01:00)</option>
                 <option value="Europe/London">Europe/London (UTC+00:00)</option>
@@ -147,7 +147,7 @@ export default function GeneralSettingsPage() {
               <select
                 value={settings.defaultLanguage}
                 onChange={(e) => setSettings({ ...settings, defaultLanguage: e.target.value })}
-                className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-amber-500 font-semibold"
+                className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 font-semibold"
               >
                 <option value="es">Español (Castellano)</option>
                 <option value="en">English (Inglés)</option>
@@ -160,7 +160,7 @@ export default function GeneralSettingsPage() {
           <div className="flex items-center justify-end border-t border-border/30 pt-4 mt-6">
             <button
               type="submit"
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-metallic-orange px-5 text-xs font-bold shadow-md shadow-orange-500/25 transition-all cursor-pointer"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-metallic-red px-5 text-xs font-bold shadow-md shadow-red-500/25 transition-all cursor-pointer"
             >
               <Icons.Save className="h-4 w-4" />
               <span>Guardar Ajustes</span>
@@ -171,7 +171,7 @@ export default function GeneralSettingsPage() {
         {/* Right Col: Diagnostics / Core States */}
         <div className="space-y-6">
           <div className="bg-card border border-border/40 p-6 rounded-2xl">
-            <span className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest block mb-4 border-b border-border/20 pb-2">
+            <span className="text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest block mb-4 border-b border-border/20 pb-2">
               Estado Operativo
             </span>
 
@@ -186,7 +186,7 @@ export default function GeneralSettingsPage() {
                   type="button"
                   onClick={() => setSettings({ ...settings, maintenanceMode: !settings.maintenanceMode })}
                   className={`relative inline-flex h-5.5 w-10.5 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 outline-hidden ${
-                    settings.maintenanceMode ? "bg-amber-500" : "bg-muted"
+                    settings.maintenanceMode ? "bg-red-500" : "bg-muted"
                   }`}
                 >
                   <span
@@ -207,7 +207,7 @@ export default function GeneralSettingsPage() {
                   type="button"
                   onClick={() => setSettings({ ...settings, cachingEnabled: !settings.cachingEnabled })}
                   className={`relative inline-flex h-5.5 w-10.5 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 outline-hidden ${
-                    settings.cachingEnabled ? "bg-amber-500" : "bg-muted"
+                    settings.cachingEnabled ? "bg-red-500" : "bg-muted"
                   }`}
                 >
                   <span
@@ -229,13 +229,13 @@ export default function GeneralSettingsPage() {
             </span>
           </div>
 
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-5">
             <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-amber-500/10 p-2 text-amber-600 dark:text-amber-400"><Icons.RefreshCw className="h-5 w-5" /></div>
+              <div className="rounded-xl bg-red-500/10 p-2 text-red-600 dark:text-red-400"><Icons.RefreshCw className="h-5 w-5" /></div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-bold text-foreground">Actualizaciones Fleet</h3>
                 <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Tu ERP se actualiza como el mío: semáforo verde/amarillo, 1-click con backup previo y verificación. Misma base que uso yo.</p>
-                <a href="/admin/settings/updates" className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-500/20 dark:text-amber-300"><Icons.RefreshCw className="h-4 w-4" />Abrir Actualizaciones</a>
+                <a href="/admin/settings/updates" className="mt-4 inline-flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-700 transition hover:bg-red-500/20 dark:text-red-300"><Icons.RefreshCw className="h-4 w-4" />Abrir Actualizaciones</a>
               </div>
             </div>
           </div>

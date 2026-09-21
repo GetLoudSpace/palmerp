@@ -60,7 +60,7 @@ export default function ArtistAudioRecorder({ onSave }: { onSave: (blob: Blob, f
       {blobUrl && (
         <div className="space-y-2">
           <ArtistAudioPlayer src={blobUrl} fileName={`Grabación ${Math.floor(duration/60)}:${String(duration%60).padStart(2,"0")}`} />
-          <button onClick={save} className="w-full rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-white">Guardar como DEMO</button>
+          <button onClick={save} className="w-full rounded-xl bg-red-500 px-4 py-2.5 text-xs font-bold text-white">Guardar como DEMO</button>
         </div>
       )}
       <p className="text-[10px] text-muted-foreground">Al pulsar Grabar el navegador pedirá permiso de micrófono. El mismo reproductor sirve para grabaciones y archivos subidos.</p>

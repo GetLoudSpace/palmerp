@@ -210,17 +210,17 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#0c0a09] text-neutral-200 flex flex-col" style={{ fontFamily: "var(--font-outfit), sans-serif" }}>
-      <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-red-500/10 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-red-500/5 blur-[120px] pointer-events-none" />
 
       {/* Header */}
       <header className="relative z-10 mx-auto max-w-7xl w-full px-6 py-5 flex items-center justify-between border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-600 to-amber-500 shadow-md shadow-amber-500/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-red-600 to-red-500 shadow-md shadow-red-500/20">
             <Icons.Palmtree className="h-4 w-4 text-white" />
           </div>
           <span className="text-sm font-medium tracking-tight text-white">
-            Palm <span className="text-amber-500">ERP</span>
+            Palm <span className="text-red-500">ERP</span>
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -229,7 +229,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
           </span>
           <div className="w-24 h-1.5 rounded-full bg-white/5 overflow-hidden">
             <div
-              className="h-full rounded-full bg-amber-500 transition-all duration-500"
+              className="h-full rounded-full bg-red-500 transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -251,7 +251,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
 
           {/* Input */}
           {step.type === "text" ? (
-            <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 focus-within:border-amber-500/50 transition-colors">
+            <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 focus-within:border-red-500/50 transition-colors">
               <textarea
                 ref={inputRef}
                 value={textValue}
@@ -264,7 +264,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
               <button
                 onClick={handleNext}
                 disabled={!textValue.trim()}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-30 disabled:hover:bg-amber-500 transition-colors"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white hover:bg-red-600 disabled:opacity-30 disabled:hover:bg-red-500 transition-colors"
               >
                 <Icons.ArrowUp className="h-4 w-4" />
               </button>
@@ -279,7 +279,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                     onClick={() => toggleOption(option.value)}
                     className={`w-full text-left p-3.5 rounded-xl border transition-all ${
                       isSelected
-                        ? "border-amber-500/50 bg-amber-500/10"
+                        ? "border-red-500/50 bg-red-500/10"
                         : "border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.03]"
                     }`}
                   >
@@ -287,7 +287,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                       <div
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
                           isSelected
-                            ? "border-amber-500 bg-amber-500"
+                            ? "border-red-500 bg-red-500"
                             : "border-white/20"
                         }`}
                       >
@@ -308,7 +308,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                 <button
                   onClick={handleNext}
                   disabled={selectedOptions.length === 0}
-                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-amber-500 px-5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-30 disabled:hover:bg-amber-500 transition-colors"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-red-500 px-5 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-30 disabled:hover:bg-red-500 transition-colors"
                 >
                   <span>{isLastStep ? "Empezar" : "Continuar"}</span>
                   <Icons.ArrowRight className="h-4 w-4" />

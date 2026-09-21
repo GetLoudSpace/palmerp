@@ -104,7 +104,7 @@ const INITIAL_EMPLOYEE_SHIFTS: EmployeeShift[] = [
 const DAYS_OF_WEEK = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 const SHIFT_COLORS: Record<string, string> = {
-  MAÑANA: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+  MAÑANA: "bg-red-500/15 text-red-600 border-red-500/30",
   TARDE: "bg-blue-500/15 text-blue-600 border-blue-500/30",
   NOCHE: "bg-purple-500/15 text-purple-600 border-purple-500/30",
   FIESTA: "bg-stone-500/10 text-stone-500 border-stone-500/20",
@@ -159,7 +159,7 @@ export default function ShiftPlannerTab() {
 
         <div className="bg-card/75 backdrop-blur-md p-5 rounded-2xl border border-border/40 space-y-1">
           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Masa Salarial Semanal</span>
-          <div className="text-2xl font-black text-amber-500">{totalWeeklyLaborCost.toFixed(2)}€</div>
+          <div className="text-2xl font-black text-red-500">{totalWeeklyLaborCost.toFixed(2)}€</div>
           <span className="text-[11px] text-muted-foreground">Promedio: {(totalWeeklyLaborCost / employees.length).toFixed(0)}€ / empleado</span>
         </div>
 
@@ -195,7 +195,7 @@ export default function ShiftPlannerTab() {
               key={role}
               onClick={() => setSelectedRole(role)}
               className={`px-3 py-1 rounded-xl text-[11px] font-bold transition-all ${
-                selectedRole === role ? "bg-amber-500 text-white" : "bg-muted/60 text-muted-foreground hover:text-foreground"
+                selectedRole === role ? "bg-red-500 text-white" : "bg-muted/60 text-muted-foreground hover:text-foreground"
               }`}
             >
               {role === "ALL" ? "Todos" : role}
@@ -204,7 +204,7 @@ export default function ShiftPlannerTab() {
         </div>
 
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold">
-          <span className="inline-block w-2 h-2 rounded-full bg-amber-500"></span> Mañana
+          <span className="inline-block w-2 h-2 rounded-full bg-red-500"></span> Mañana
           <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span> Tarde
           <span className="inline-block w-2 h-2 rounded-full bg-purple-500"></span> Noche
           <span className="inline-block w-2 h-2 rounded-full bg-stone-400"></span> Fiesta
@@ -229,10 +229,10 @@ export default function ShiftPlannerTab() {
               <tr key={emp.id} className="hover:bg-muted/30 transition-colors">
                 <td className="py-3.5 px-4">
                   <div className="font-bold text-foreground">{emp.name}</div>
-                  <span className="text-[10px] text-amber-500 font-extrabold uppercase">{emp.role}</span>
+                  <span className="text-[10px] text-red-500 font-extrabold uppercase">{emp.role}</span>
                 </td>
                 <td className="py-3.5 px-2 text-center">
-                  <span className={`font-mono font-bold ${emp.assignedHours > emp.contractHours ? "text-amber-500" : "text-foreground"}`}>
+                  <span className={`font-mono font-bold ${emp.assignedHours > emp.contractHours ? "text-red-500" : "text-foreground"}`}>
                     {emp.assignedHours}/{emp.contractHours}h
                   </span>
                 </td>

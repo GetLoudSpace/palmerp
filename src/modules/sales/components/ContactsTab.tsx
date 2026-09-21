@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
-import { getTenantStorageKey } from "@/lib/clientStorage";
+import { getTenantStorageKey, getDefaultSlug } from "@/lib/clientStorage";
 import SmartSearchInput from "@/components/SmartSearchInput";
 
 interface Contact {
@@ -41,7 +41,7 @@ export default function ContactsTab() {
   const getSlug = () => {
     const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
     const parts = hostname.split(".");
-    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : "gastroshows";
+    return parts.length > 1 && parts[0] !== "localhost" && parts[0] !== "www" ? parts[0] : getDefaultSlug();
   };
 
   const loadData = () => {
@@ -228,7 +228,7 @@ export default function ContactsTab() {
       <div className="lg:col-span-2 space-y-4">
         <div className="flex items-center justify-between border-b border-border/30 pb-3">
           <h3 className="text-sm font-bold text-foreground">Directorio de Clientes y Contactos</h3>
-          <span className="text-[10px] bg-amber-500/10 text-amber-600 px-2.5 py-0.5 rounded-full font-semibold">
+          <span className="text-[10px] bg-red-500/10 text-red-600 px-2.5 py-0.5 rounded-full font-semibold">
             {filtered.length} contactos
           </span>
         </div>
@@ -244,8 +244,8 @@ export default function ContactsTab() {
               onClick={() => setSelectedContact(c)}
               className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
                 selectedContact?.id === c.id
-                  ? "border-amber-500/50 bg-amber-500/5 shadow-xs"
-                  : "border-border/40 bg-card hover:border-amber-500/20"
+                  ? "border-red-500/50 bg-red-500/5 shadow-xs"
+                  : "border-border/40 bg-card hover:border-red-500/20"
               }`}
             >
               <div className="flex items-start gap-3">
@@ -296,7 +296,7 @@ export default function ContactsTab() {
           <div className="border border-border/40 bg-card p-5 rounded-2xl space-y-4 shadow-xs">
             <div className="border-b border-border/30 pb-3 flex justify-between items-start">
               <div>
-                <span className="text-[9px] uppercase font-bold text-amber-500 tracking-wider">Registrar Actividad</span>
+                <span className="text-[9px] uppercase font-bold text-red-500 tracking-wider">Registrar Actividad</span>
                 <h3 className="text-xs font-extrabold text-foreground truncate">{selectedContact.name}</h3>
               </div>
               {selectedContact.phone && (
@@ -321,7 +321,7 @@ export default function ContactsTab() {
                       onClick={() => setInteractionType(t)}
                       className={`py-1.5 text-[9px] font-bold rounded-lg border transition-all cursor-pointer ${
                         interactionType === t
-                          ? "bg-amber-500/10 border-amber-500/40 text-amber-600 dark:text-amber-500"
+                          ? "bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-500"
                           : "border-border/50 bg-background text-muted-foreground hover:bg-muted"
                       }`}
                     >
@@ -338,14 +338,14 @@ export default function ContactsTab() {
                   onChange={(e) => setFollowUpNote(e.target.value)}
                   placeholder="Detalla qué se habló, compromisos, próximos pasos..."
                   rows={3}
-                  className="w-full text-xs p-2.5 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                  className="w-full text-xs p-2.5 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full inline-flex h-9 items-center justify-center rounded-lg bg-metallic-orange text-white text-xs font-bold shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30 transition-all cursor-pointer"
+                className="w-full inline-flex h-9 items-center justify-center rounded-lg bg-metallic-red text-white text-xs font-bold shadow-md shadow-red-500/20 hover:shadow-lg hover:shadow-red-500/30 transition-all cursor-pointer"
               >
                 <Icons.Save className="h-4 w-4 mr-1.5" />
                 <span>Guardar Seguimiento</span>
@@ -363,7 +363,7 @@ export default function ContactsTab() {
                       <div className="flex items-center justify-between">
                         <span className={`text-[8px] font-extrabold uppercase border px-1.5 py-0.2 rounded-full ${
                           fu.type === "CALL" ? "bg-blue-500/10 text-blue-600 border-blue-500/20" :
-                          fu.type === "EMAIL" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
+                          fu.type === "EMAIL" ? "bg-red-500/10 text-red-600 border-red-500/20" :
                           fu.type === "MEETING" ? "bg-purple-500/10 text-purple-600 border-purple-500/20" :
                           "bg-stone-500/10 text-stone-600 border-stone-500/20"
                         }`}>
@@ -410,11 +410,11 @@ export default function ContactsTab() {
             <div className="grid gap-5 md:grid-cols-2">
               {/* Left Side: Dynamic Icebreaker Script */}
               <div className="border border-border/40 p-4.5 rounded-2xl bg-muted/15 space-y-3">
-                <span className="text-[9px] font-extrabold uppercase text-amber-500 tracking-wider flex items-center gap-1">
+                <span className="text-[9px] font-extrabold uppercase text-red-500 tracking-wider flex items-center gap-1">
                   <Icons.MessageSquareQuote className="h-3.5 w-3.5" />
                   <span>Guión de Apertura (Icebreaker)</span>
                 </span>
-                <p className="text-xs text-foreground/80 leading-relaxed font-semibold italic border-l-2 border-amber-500/60 pl-3">
+                <p className="text-xs text-foreground/80 leading-relaxed font-semibold italic border-l-2 border-red-500/60 pl-3">
                   "{getCustomScriptForContact(assistCallContact)}"
                 </p>
                 <div className="text-[9px] text-muted-foreground flex items-center gap-1 mt-2">
@@ -448,7 +448,7 @@ export default function ContactsTab() {
                       onChange={(e) => setChecklist({ ...checklist, allergies: e.target.checked })}
                       className="mt-0.5 accent-emerald-500 cursor-pointer"
                     />
-                    <span className="text-amber-600 dark:text-amber-500 font-bold">Intolerancias/Alergias (Menú poco modificable)</span>
+                    <span className="text-red-600 dark:text-red-500 font-bold">Intolerancias/Alergias (Menú poco modificable)</span>
                   </label>
 
                   <label className="flex items-start gap-2.5 text-xs text-foreground font-medium cursor-pointer">
@@ -492,7 +492,7 @@ export default function ContactsTab() {
                 onChange={(e) => setCallNote(e.target.value)}
                 placeholder="Escribe comentarios, respuestas del cliente o acuerdos..."
                 rows={2}
-                className="w-full text-xs p-2.5 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-amber-500/50"
+                className="w-full text-xs p-2.5 rounded-lg border border-border/50 bg-background text-foreground outline-hidden focus:border-red-500/50"
               />
             </div>
 

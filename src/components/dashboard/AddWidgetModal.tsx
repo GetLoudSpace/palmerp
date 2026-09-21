@@ -55,7 +55,7 @@ export default function AddWidgetModal({
         <div className="flex items-center justify-between border-b border-border/40 px-6 py-4">
           <div>
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Icons.LayoutGrid className="h-4 w-4 text-amber-500" /> Añadir métrica al escritorio
+              <Icons.LayoutGrid className="h-4 w-4 text-red-500" /> Añadir métrica al escritorio
             </h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">Elige qué datos visualizar. Los módulos inactivos se marcan y puedes activarlos desde aquí.</p>
           </div>
@@ -71,7 +71,7 @@ export default function AddWidgetModal({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar métrica..."
-              className="w-full pl-8 pr-3 h-8 rounded-lg border border-border/50 bg-background text-xs outline-none focus:border-amber-500"
+              className="w-full pl-8 pr-3 h-8 rounded-lg border border-border/50 bg-background text-xs outline-none focus:border-red-500"
             />
           </div>
           <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
@@ -79,7 +79,7 @@ export default function AddWidgetModal({
               <button
                 key={c}
                 onClick={() => setFilterCat(c)}
-                className={`whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors ${filterCat === c ? "bg-amber-500 text-white border-amber-500" : "bg-card border-border/50 text-muted-foreground hover:bg-muted"}`}
+                className={`whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors ${filterCat === c ? "bg-red-500 text-white border-red-500" : "bg-card border-border/50 text-muted-foreground hover:bg-muted"}`}
               >
                 {c}
               </button>
@@ -95,13 +95,13 @@ export default function AddWidgetModal({
             return (
               <div
                 key={item.source}
-                className={`rounded-xl border p-4 flex flex-col gap-3 transition-all ${isActive ? "bg-card border-border/40 hover:border-amber-500/30 hover:shadow-sm" : "bg-muted/30 border-border/30 opacity-75"}`}
+                className={`rounded-xl border p-4 flex flex-col gap-3 transition-all ${isActive ? "bg-card border-border/40 hover:border-red-500/30 hover:shadow-sm" : "bg-muted/30 border-border/30 opacity-75"}`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center border ${isActive ? "bg-amber-500/10 border-amber-500/20 text-amber-600" : "bg-muted border-border text-muted-foreground"}`}>
+                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center border ${isActive ? "bg-red-500/10 border-red-500/20 text-red-600" : "bg-muted border-border text-muted-foreground"}`}>
                     <DynamicIcon name={item.icon} className="h-4.5 w-4.5" />
                   </div>
-                  <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${isActive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 border-amber-500/20"}`}>
+                  <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${isActive ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-red-500/10 text-red-600 border-red-500/20"}`}>
                     {item.category}
                   </span>
                 </div>
@@ -109,7 +109,7 @@ export default function AddWidgetModal({
                   <h4 className="text-xs font-bold text-foreground">{item.title}</h4>
                   <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">{item.description}</p>
                   {requiresModule && (
-                    <p className={`text-[10px] font-semibold mt-1.5 flex items-center gap-1 ${isActive ? "text-emerald-600" : "text-amber-600"}`}>
+                    <p className={`text-[10px] font-semibold mt-1.5 flex items-center gap-1 ${isActive ? "text-emerald-600" : "text-red-600"}`}>
                       <Icons.Package className="h-3 w-3" />
                       Requiere: {item.moduleId} {isActive ? "• Activo" : "• Inactivo"}
                     </p>
@@ -122,7 +122,7 @@ export default function AddWidgetModal({
                   <button
                     onClick={() => handleAdd(item)}
                     disabled={alreadyAdded}
-                    className={`inline-flex h-7 px-3 items-center gap-1 rounded-lg text-[11px] font-bold transition-colors ${alreadyAdded ? "bg-muted text-muted-foreground cursor-not-allowed" : isActive ? "bg-metallic-orange text-white shadow" : "bg-amber-500/10 text-amber-700 border border-amber-500/20 hover:bg-amber-500/15"}`}
+                    className={`inline-flex h-7 px-3 items-center gap-1 rounded-lg text-[11px] font-bold transition-colors ${alreadyAdded ? "bg-muted text-muted-foreground cursor-not-allowed" : isActive ? "bg-metallic-red text-white shadow" : "bg-red-500/10 text-red-700 border border-red-500/20 hover:bg-red-500/15"}`}
                   >
                     {alreadyAdded ? (
                       <>

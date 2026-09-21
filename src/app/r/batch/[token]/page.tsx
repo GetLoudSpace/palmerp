@@ -29,7 +29,7 @@ export default function BatchPage(){
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="mx-auto max-w-2xl space-y-4">
         <div className="rounded-[1.5rem] border border-border/40 bg-card p-6 shadow-sm">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-600"><Icons.Link2 className="h-4 w-4" /> Recurso compartido · r/batch/{token}</div>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-red-600"><Icons.Link2 className="h-4 w-4" /> Recurso compartido · r/batch/{token}</div>
           <h1 className="mt-2 text-2xl font-black">Tus recursos de esta clase</h1>
           <p className="text-xs text-muted-foreground">Enviado por WhatsApp Cloud API — 1 link agregador con {items.length} recursos. Si reenvías, el log queda en Historial del alumno.</p>
         </div>
@@ -42,7 +42,7 @@ export default function BatchPage(){
                 <div className="text-sm font-bold">{ex.title} <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{ex.instrument} · {ex.level} · {ex.difficulty}/5 · {ex.estimatedMin}′</span></div>
                 <div className="text-xs mt-1">{ex.description}</div>
                 {ex.tabContent && <pre className="mt-2 overflow-auto rounded-lg bg-muted p-3 text-xs font-mono">{ex.tabContent}</pre>}
-                {ex.sourceUrl && <a href={ex.sourceUrl} target="_blank" rel="noreferrer" className="text-xs text-amber-600 underline">{ex.sourceUrl}</a>}
+                {ex.sourceUrl && <a href={ex.sourceUrl} target="_blank" rel="noreferrer" className="text-xs text-red-600 underline">{ex.sourceUrl}</a>}
                 <div className="mt-2 text-[11px] font-mono">r/{it.token}</div>
               </div>
             );
