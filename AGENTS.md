@@ -13,7 +13,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## 1. Antes de empezar (obligatorio)
 
 1. Ejecuta `./init.sh` y verifica que termine sin errores. Si falla, **para** y resuelve el entorno antes de tocar código de la aplicación.
-2. Lee `progress/current.md` para entender en qué estado quedó la última sesión de desarrollo.
+2. Lee `progress/current.md` para entender en qué estado quedó la última sesión de desarrollo. Si existe `progress/.checkpoint.json`, léelo también: es la huella automática más reciente y manda sobre recuerdos vagos.
 3. Lee `feature_list.json` y elige **una** tarea con estado `pending`. No trabajes en más de una a la vez para evitar colisiones de contexto.
 
 ## 2. Mapa del repositorio
@@ -22,6 +22,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | :--- | :--- | :--- |
 | `feature_list.json` | Lista de tareas del Core con estado (`pending` / `in_progress` / `done`) | Siempre, al empezar la sesión |
 | `progress/current.md` | Estado de la sesión actual y plan activo | Siempre, al empezar la sesión |
+| `progress/.checkpoint.json` | Huella automática (fecha, trigger, estados) escrita por el plugin tras cada tarea/cambio | Siempre, al empezar la sesión (si existe, manda sobre la memoria) |
 | `progress/history.md` | Bitácora append-only de sesiones anteriores | Para contexto histórico y ver qué se hizo antes |
 | `docs/architecture.md` | Estructura del Core, base de datos agnóstica y módulos | Antes de implementar un cambio |
 | `docs/conventions.md` | Convenciones de TypeScript, Next.js App Router y Prisma | Antes de escribir código |
@@ -37,6 +38,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Una sola feature a la vez.** No mezcles cambios de múltiples tareas en una sola sesión de git/progreso.
 - **No declares una tarea `done` sin pruebas y compilación correctas.** Ejecuta `./init.sh` y asegúrate de que el compilador de TypeScript (`npx tsc --noEmit`) y la compilación de Next.js pasen sin errores.
 - **Documenta lo que haces** en `progress/current.md` en tiempo real mientras programas, no al final.
+- **Autoguardado automático (no depende de recordar):** el plugin `.opencode/plugin/session-checkpoint.js` escribe `progress/.checkpoint.json` tras cada tarea (`todowrite`) o cambio (`edit`/`write`). Si la conversación se cierra sin querer, la siguiente sesión retoma desde esa huella + `current.md` + `feature_list.json`. El comando `/cierre` ejecuta el lifecycle completo.
 - **Deja el repositorio limpio** antes de cerrar la sesión (sin logs de pruebas basura o debuggers colgados).
 - **Si no sabes algo, busca en `docs/` o pregunta.** No inventes workarounds que violen la arquitectura modular.
 

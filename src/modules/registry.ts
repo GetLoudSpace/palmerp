@@ -10,7 +10,7 @@ export const coreModules: PalmModule[] = [
       { label: "Bandeja de Entrada", path: "/admin/conversations" },
       { label: "Alertas de Auditoría", path: "/admin/conversations/audit" },
     ],
-    requiredRole: "STAFF",
+    requiredRole: "USUARIO",
   },
   {
     id: "contacts",
@@ -21,7 +21,7 @@ export const coreModules: PalmModule[] = [
       { label: "Todos los Contactos", path: "/admin/contacts" },
       { label: "Nuevo Contacto", path: "/admin/contacts" },
     ],
-    requiredRole: "STAFF",
+    requiredRole: "USUARIO",
   },
   {
     id: "settings",
@@ -30,6 +30,7 @@ export const coreModules: PalmModule[] = [
     category: "Configuracion",
     menuItems: [
       { label: "General", path: "/admin/settings" },
+      { label: "Credenciales", path: "/admin/settings/credentials" },
       { label: "Usuarios & Permisos", path: "/admin/settings/users" },
       { label: "Gestión de modos", path: "/admin/settings/modules" },
       { label: "Actualizaciones", path: "/admin/settings/updates" },
@@ -214,12 +215,13 @@ export const PalmModesRegistry: Record<string, PalmModeConfig> = {
     category: "Operaciones",
     menuItems: [
       { label: "Profesor", path: "/admin/education" },
+      { label: "Curso Guitarra", path: "/admin/education/guitar" },
       { label: "Agenda", path: "/admin/education/agenda" },
       { label: "Alumnos", path: "/admin/education/students" },
       { label: "Clases & Seguimiento", path: "/admin/education/lessons" },
       { label: "Biblioteca", path: "/admin/education/library" },
       { label: "Artista", path: "/admin/education/artist" },
     ],
-    requiredRole: "STAFF",
+    requiredRole: "USUARIO",
   },
 };

@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   try {
     // Instancia independiente: prohibido crear workspaces nuevos aquí
     // (escribiría tenants ajenos en la DB compartida). Altas solo vía
-    // profesores (STAFF) o despliegue dedicado.
+    // profesores (USUARIO+PROFESOR) o despliegue dedicado.
     if ((process.env.PINNED_TENANT_SLUG || "").trim()) {
       return NextResponse.json(
         { error: "Registro de workspaces deshabilitado en esta instancia." },

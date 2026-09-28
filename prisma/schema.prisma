@@ -56,7 +56,14 @@ model User {
   name         String
   email        String
   passwordHash String
-  role         UserRole @default(STAFF)
+  // Nivel de acceso: DEV (técnico externo, todo) · ADMIN (gerencia, todo funcional) ·
+  // USUARIO (empleado: solo lo que le den sus roles de trabajo + módulos extra).
+  role         UserRole @default(USUARIO)
+  isActive     Boolean  @default(true)
+  // Roles de trabajo (solo USUARIO): PROFESOR, COMERCIAL, FINANZAS… (catálogo en src/lib/access.ts)
+  workRoles    String[] @default([])
+  // Módulos extra puntuales fuera de sus roles (nunca puede incluir "settings").
+  extraModules String[] @default([])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   eduLessonsAsTeacher EduLesson[]
@@ -285,10 +292,9 @@ model ApiTransferLog {
 }
 
 enum UserRole {
-  ADMIN
-  STAFF
   DEV
-  PROFESSOR
+  ADMIN
+  USUARIO
 }
 
 enum ContactType {

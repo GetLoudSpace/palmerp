@@ -41,11 +41,15 @@ export const authOptions: NextAuthOptions = {
                 });
 
                 if (user) {
+                  if ((user as { isActive?: boolean }).isActive === false) return null;
                   return {
                     id: user.id,
                     name: user.name,
                     email: user.email,
                     role: user.role,
+                    workRoles: (user as { workRoles?: string[] }).workRoles ?? [],
+                    extraModules: (user as { extraModules?: string[] }).extraModules ?? [],
+                    isActive: true,
                     tenantId: user.tenantId,
                     tenantSlug: tenant.slug,
                   };
@@ -87,6 +91,11 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
+          // Baja lógica: el usuario archivado no entra (lo reactiva un ADMIN).
+          if ((user as { isActive?: boolean }).isActive === false) {
+            return null;
+          }
+
           // 3. Verify the password
           const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
 
@@ -100,6 +109,9 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             email: user.email,
             role: user.role,
+            workRoles: (user as { workRoles?: string[] }).workRoles ?? [],
+            extraModules: (user as { extraModules?: string[] }).extraModules ?? [],
+            isActive: (user as { isActive?: boolean }).isActive ?? true,
             tenantId: user.tenantId,
             tenantSlug: tenant.slug,
           };
@@ -133,12 +145,19 @@ export const authOptions: NextAuthOptions = {
             if (!isPasswordValid) {
               return null;
             }
+
+            if ((user as { isActive?: boolean }).isActive === false) {
+              return null;
+            }
             
             return {
               id: user.id,
               name: user.name,
               email: user.email,
               role: user.role,
+              workRoles: (user as { workRoles?: string[] }).workRoles ?? [],
+              extraModules: (user as { extraModules?: string[] }).extraModules ?? [],
+              isActive: true,
               tenantId: tenant.id,
               tenantSlug: tenant.slug,
             };
@@ -155,6 +174,9 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.workRoles = (user as { workRoles?: string[] }).workRoles ?? [];
+        token.extraModules = (user as { extraModules?: string[] }).extraModules ?? [];
+        token.isActive = (user as { isActive?: boolean }).isActive ?? true;
         token.tenantId = user.tenantId;
         token.tenantSlug = user.tenantSlug;
       }
@@ -166,6 +188,9 @@ export const authOptions: NextAuthOptions = {
           ...session.user,
           id: token.id as string,
           role: token.role as string,
+          workRoles: (token.workRoles as string[] | undefined) ?? [],
+          extraModules: (token.extraModules as string[] | undefined) ?? [],
+          isActive: (token.isActive as boolean | undefined) ?? true,
           tenantId: token.tenantId as string,
           tenantSlug: token.tenantSlug as string,
         };

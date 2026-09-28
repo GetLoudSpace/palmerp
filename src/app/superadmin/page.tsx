@@ -58,7 +58,7 @@ export default function SuperadminPage() {
   // Add user sub-form state
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserRole, setNewUserRole] = useState("STAFF");
+  const [newUserRole, setNewUserRole] = useState("USUARIO");
   const [newUserPassword, setNewUserPassword] = useState("");
 
   // Simulated Email Modal
@@ -582,7 +582,7 @@ export default function SuperadminPage() {
     setEditableUsers(JSON.parse(JSON.stringify(tenant.users)));
     setNewUserName("");
     setNewUserEmail("");
-    setNewUserRole("STAFF");
+    setNewUserRole("USUARIO");
     setNewUserPassword("");
   };
 
@@ -618,7 +618,7 @@ export default function SuperadminPage() {
     // Reset subform
     setNewUserName("");
     setNewUserEmail("");
-    setNewUserRole("STAFF");
+    setNewUserRole("USUARIO");
     setNewUserPassword("");
     showToast("Usuario creado. Notificación de email preparada.");
   };
@@ -1501,7 +1501,7 @@ export default function SuperadminPage() {
                             className="w-full rounded-lg border border-stone-200 bg-white py-1.5 px-2 text-xs text-stone-900 outline-hidden focus:border-[#f27059]"
                           >
                             <option value="ADMIN">ADMIN</option>
-                            <option value="STAFF">STAFF</option>
+                            <option value="USUARIO">USUARIO</option>
                           </select>
                         </div>
 
@@ -1592,7 +1592,7 @@ export default function SuperadminPage() {
                       onChange={(e) => setNewUserRole(e.target.value)}
                       className="w-full rounded-lg border border-stone-200 bg-stone-50 py-1.5 px-2 text-xs text-stone-900 outline-hidden focus:border-[#f27059]"
                     >
-                      <option value="STAFF">STAFF</option>
+                      <option value="USUARIO">USUARIO</option>
                       <option value="ADMIN">ADMIN</option>
                     </select>
                   </div>

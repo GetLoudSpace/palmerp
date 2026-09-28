@@ -86,6 +86,12 @@ export default function ClassReportPanel() {
     try {
       const res = await fetch(`/api/education/calendar?email=${encodeURIComponent(professorEmail)}`);
       const data = await res.json();
+      // Google no configurado = modo solo-local, no es error (Palmera es source of truth).
+      if (data && data.configured === false) {
+        setGcEvents([]);
+        setGcError(null);
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Error cargando Google Calendar");
       setGcEvents(data.events || []);
     } catch (e: any) {
@@ -99,9 +105,10 @@ export default function ClassReportPanel() {
   const sessionRole = (session?.user as any)?.role as string | undefined;
   const sessionUserId = (session?.user as any)?.id as string | undefined;
   const sessionUserName = session?.user?.name as string | undefined;
-  // El profesor solo ve sus clases: vinculadas por teacherId/teacherName o sin asignar (legado).
+  // El empleado (USUARIO, legacy PROFESSOR/STAFF) solo ve sus clases:
+  // vinculadas por teacherId/teacherName o sin asignar (legado).
   // ADMIN/DEV ven todas. Google Calendar ya filtra por email en el servidor.
-  const isProfessorView = sessionRole === "PROFESSOR" || sessionRole === "STAFF";
+  const isProfessorView = sessionRole === "USUARIO" || sessionRole === "PROFESSOR" || sessionRole === "STAFF";
 
   const loadLocalLessons = useCallback(() => {
     const raw = localStorage.getItem(getTenantStorageKey("edu_lessons"));

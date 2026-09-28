@@ -74,14 +74,11 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
       setStudents(arr.map((s:any)=>({id:s.id, name:s.contactName||s.name, instrument: s.primaryInstrument|| (Array.isArray(s.instruments)?s.instruments[0]:undefined)})));
     } catch{}
 
-    // users: from Tenant users if available, else mock profesores
+    // users: profesores reales vía API (efecto dedicado); aquí no se inventa nadie.
     if (ukRaw) try{
       const pu = JSON.parse(ukRaw);
       if (Array.isArray(pu) && pu.length) setUsers(pu.map((u:any)=>({id:u.id||u.email, name:u.name||u.email})));
-      else throw new Error("empty");
-    } catch {
-      setUsers([{id:"u1", name:"Prof. Ana"},{id:"u2", name:"Prof. Carlos"},{id:"u3", name:"Prof. GetLoud"}]);
-    }
+    } catch {}
     if (lessRaw) try{
       const parsed = JSON.parse(lessRaw);
       const arr: any[] = Array.isArray(parsed)?parsed:[];
@@ -105,6 +102,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
         homeworkIds: Array.isArray(l.homeworkIds)?l.homeworkIds:Array.isArray(l.homeworkExerciseIds)?l.homeworkExerciseIds:[],
         songIds: Array.isArray(l.songIds)?l.songIds:[],
         googleEventId: l.googleEventId,
+        googleCalendarId: l.googleCalendarId,
         googleSyncStatus: l.googleSyncStatus,
         batchToken: l.batchToken,
       }));
@@ -116,6 +114,17 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
   };
 
   useEffect(()=>{ loadAll(); const h=()=>loadAll(); window.addEventListener("storage",h); window.addEventListener("palmera_edu_rooms_updated",h); window.addEventListener("palmera_edu_lessons_updated",h); return()=>{window.removeEventListener("storage",h); window.removeEventListener("palmera_edu_rooms_updated",h); window.removeEventListener("palmera_edu_lessons_updated",h);} }, [cursor]);
+
+  // Profesores reales (USUARIO+PROFESOR). Sin DB → lista vacía (el slot queda sin asignar).
+  useEffect(()=>{
+    fetch("/api/education/teachers")
+      .then(r=>r.json())
+      .then(d=>{
+        const list: any[] = Array.isArray(d?.users) ? d.users : [];
+        if (list.length) setUsers(list.map((u:any)=>({id:String(u.id), name:String(u.name||u.email)})));
+      })
+      .catch(()=>{});
+  }, []);
 
   const persistLessons = (next: LessonAgenda[])=>{
     setLessons(next);
@@ -147,6 +156,7 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
         homeworkIds: n.homeworkIds,
         songIds: n.songIds,
         googleEventId: n.googleEventId,
+        googleCalendarId: n.googleCalendarId,
         googleSyncStatus: n.googleSyncStatus,
         batchToken: n.batchToken,
       });
@@ -256,9 +266,22 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
   };
 
   const trySyncGoogle = async (lesson: LessonAgenda)=>{
-    // fire-and-forget hacia /api/education/calendar/sync (si no hay creds, queda pending)
+    // Sincroniza el slot y PERSISTE los IDs del espejo: sin googleEventId/
+    // googleCalendarId guardados, el DELETE posterior no podría borrar en Google.
     try{
-      await fetch("/api/education/calendar/sync",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ lessonId: lesson.id, lesson }) });
+      const res = await fetch("/api/education/calendar/sync",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ lessonId: lesson.id, lesson }) });
+      const data = await res.json().catch(()=>null);
+      if (data?.success && data?.googleEventId) {
+        const patch = { googleEventId: String(data.googleEventId), googleCalendarId: data.googleCalendarId ? String(data.googleCalendarId) : undefined, googleSyncStatus: "synced" };
+        setLessons(prev => prev.map(l => l.id===lesson.id ? { ...l, ...patch } : l));
+        const lk = getTenantStorageKey("edu_lessons");
+        try{
+          const raw = localStorage.getItem(lk);
+          const arr: any[] = raw ? JSON.parse(raw) : [];
+          localStorage.setItem(lk, JSON.stringify(arr.map((l:any)=> String(l.id)===lesson.id ? { ...l, ...patch } : l)));
+          window.dispatchEvent(new Event("palmera_edu_lessons_updated"));
+        }catch{}
+      }
     } catch{}
   };
 
@@ -267,9 +290,9 @@ export default function EducationAgenda({ onSelectLesson }: { onSelectLesson?: (
     if (!confirm("¿Borrar slot? Se archiva (posible sync Google delete).")) return;
     const next = lessons.filter(l=>l.id!==editing.id);
     persistLessons(next);
-    // también borrar en Google si tenía googleEventId
-    if (editing.googleEventId) {
-      fetch("/api/education/calendar/sync",{ method:"DELETE", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ googleEventId: editing.googleEventId, googleCalendarId: editing.googleEventId }) }).catch(()=>{});
+    // también borrar en Google si tenía espejo (cada ID en su campo)
+    if (editing.googleEventId && editing.googleCalendarId) {
+      fetch("/api/education/calendar/sync",{ method:"DELETE", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ googleEventId: editing.googleEventId, googleCalendarId: editing.googleCalendarId }) }).catch(()=>{});
     }
     setShowSlot(null); setEditing(null);
   };

@@ -9,7 +9,7 @@ export interface PalmModule {
   icon: string;
   category: "General" | "CRM" | "Herramientas" | "Configuracion";
   menuItems: MenuItem[];
-  requiredRole?: "ADMIN" | "STAFF" | "PROFESSOR" | "DEV";
+  requiredRole?: "ADMIN" | "USUARIO" | "DEV";
 }
 
 export interface PalmModeConfig {
@@ -19,7 +19,7 @@ export interface PalmModeConfig {
   icon: string;
   category: "Operaciones" | "Soporte" | "Estrategia" | "Configuracion";
   menuItems: MenuItem[];
-  requiredRole?: "ADMIN" | "STAFF" | "PROFESSOR" | "DEV";
+  requiredRole?: "ADMIN" | "USUARIO" | "DEV";
 }
 
 export type TaskPriority = "critical" | "high" | "medium" | "low";

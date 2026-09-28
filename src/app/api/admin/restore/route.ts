@@ -66,7 +66,7 @@ export async function POST(req: Request) {
           try {
             const exists = await prisma.user.findFirst({ where: { tenantId, email: u.email } });
             if (!exists && u.email) {
-              await prisma.user.create({ data: { tenantId, name: u.name || u.email, email: u.email, passwordHash: u.passwordHash || "!", role: (u.role as never) || "STAFF" } });
+              await prisma.user.create({ data: { tenantId, name: u.name || u.email, email: u.email, passwordHash: u.passwordHash || "!", role: ((r => (r === "ADMIN" || r === "DEV" || r === "USUARIO" ? r : "USUARIO"))(String((u as any).role || "").toUpperCase()) as never) } });
               restored++;
             }
           } catch {}

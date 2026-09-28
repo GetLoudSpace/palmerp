@@ -31,8 +31,17 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${outfit.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
+      className={`${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        {/* Restaura el tema guardado antes del primer pintado. Por defecto claro. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"){document.documentElement.classList.add("dark")}else{document.documentElement.classList.remove("dark")}}catch(e){document.documentElement.classList.remove("dark")}}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <SessionProvider>
           <GlobalErrorBoundary>

@@ -1,15 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getTenantIdFromHeaders } from "@/lib/tenant";
+import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { requireModuleAccess } from "@/lib/requireModule";
 import { buildGoogleEventFromLesson, syncLessonToGoogle, deleteGoogleEvent } from "@/modules/education/lib/googleCalendar";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
+  const auth = await requireModuleAccess("EDUCACION");
+  if ("error" in auth) return auth.error;
+  const { tenantId } = auth;
   try {
     const body = await req.json().catch(()=> ({}));
     const { lessonId, lesson } = body as { lessonId?: string; lesson?: any };
     if (!lesson) return NextResponse.json({ success:false, error:"lesson requerido" }, { status:400 });
-    const tenantId = (await getTenantIdFromHeaders()) || (lesson as any).tenantId || null;
-    if (!tenantId) return NextResponse.json({ success:true, skipped:true, reason:"no tenant" });
 
     // Try to find calendar link for teacher
     let link: any = null;
@@ -46,30 +47,38 @@ export async function POST(req: NextRequest) {
     if (result.googleEventId) {
       try {
         const prisma:any = db as any;
-        if (lessonId && prisma.eduLesson?.update) {
-          await prisma.eduLesson.update({ where:{ id: lessonId }, data:{ googleEventId: result.googleEventId, googleCalendarId: link.googleCalendarId, googleSyncStatus:"synced", googleSyncError: null } });
+        // Scoped por tenant: un lessonId adivinado de otro tenant no se toca.
+        if (lessonId && prisma.eduLesson?.findFirst) {
+          const owned = await prisma.eduLesson.findFirst({ where: { id: lessonId, tenantId } });
+          if (owned && prisma.eduLesson?.update) {
+            await prisma.eduLesson.update({ where:{ id: lessonId }, data:{ googleEventId: result.googleEventId, googleCalendarId: link.googleCalendarId, googleSyncStatus:"synced", googleSyncError: null } });
+          }
         }
       } catch {}
     }
 
     if (result.error) return NextResponse.json({ success:false, error: result.error }, { status:500 });
-    return NextResponse.json({ success:true, googleEventId: result.googleEventId });
+    // Se devuelve también el calendarId: la agenda local lo persiste para poder
+    // actualizar (PATCH) y borrar (DELETE) el evento espejo más tarde.
+    return NextResponse.json({ success:true, googleEventId: result.googleEventId, googleCalendarId: link.googleCalendarId });
   } catch (e:any) {
     return NextResponse.json({ success:false, error:String(e?.message??e) }, { status:500 });
   }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(req: Request) {
+  const auth = await requireModuleAccess("EDUCACION");
+  if ("error" in auth) return auth.error;
+  const { tenantId } = auth;
   try {
     const body = await req.json().catch(()=> ({}));
     const { googleEventId, googleCalendarId } = body as { googleEventId?: string; googleCalendarId?: string };
     if (!googleEventId || !googleCalendarId) return NextResponse.json({ success:false }, { status:400 });
-    const tenantId = await getTenantIdFromHeaders();
     let token: string | null = null;
-    let calId = googleCalendarId;
+    const calId = googleCalendarId;
     try {
       const prisma:any = db as any;
-      const link = tenantId ? await prisma.eduCalendarLink.findFirst({ where:{ tenantId, googleCalendarId: calId, syncEnabled:true } }) : null;
+      const link = await prisma.eduCalendarLink.findFirst({ where:{ tenantId, googleCalendarId: calId, syncEnabled:true } });
       token = link?.googleAccessToken || process.env.GOOGLE_ACCESS_TOKEN || null;
     } catch {}
     if (!token) return NextResponse.json({ success:true, skipped:true });
