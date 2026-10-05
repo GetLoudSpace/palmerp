@@ -319,14 +319,22 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                 <p className="text-[10px] text-muted-foreground truncate">{userEmail}</p>
               </div>
             </div>
-            {session && (
+            {session ? (
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}
                 className="p-1.5 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0 cursor-pointer"
-                title="Cerrar Sesión"
+                title={`Cerrar Sesión (${userEmail})`}
               >
                 <Icons.LogOut className="h-4.5 w-4.5" />
               </button>
+            ) : (
+              <Link
+                href="/login"
+                className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 cursor-pointer"
+                title="Sin sesión — ir a login"
+              >
+                <Icons.LogIn className="h-4.5 w-4.5" />
+              </Link>
             )}
           </div>
         </div>
