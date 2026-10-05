@@ -7,7 +7,7 @@ import { ProvisioningService } from "@/lib/provisioning";
 
 const provisioningService = new ProvisioningService();
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     // Select explícito sin deletedAt para evitar Invalid prisma.tenant.findMany si la columna soft-delete aún no está migrada en Supabase
     const tenants = await db.tenant.findMany({
@@ -32,11 +32,7 @@ export async function GET(req: Request) {
     // Producción: jamás servir mock (mezcla instancias y expone credenciales).
     if (process.env.VERCEL) {
       console.error("DB no disponible en producción:", error);
-      // Diagnóstico temporal: ?debug=db devuelve código de error saneado (sin credenciales).
-      const dbg = new URL(req.url).searchParams.get("debug") === "db";
-      const raw = error instanceof Error ? error.message : String(error);
-      const safe = raw.replace(/:[^:@\s/]+@/g, ":***@").slice(0, 200);
-      return NextResponse.json({ success: false, error: "DB unavailable", code: (error as { code?: string })?.code ?? null, ...(dbg ? { detail: safe } : {}) }, { status: 503 });
+      return NextResponse.json({ success: false, error: "DB unavailable" }, { status: 503 });
     }
     console.warn("DB no disponible (single-DB), fallback a mock JSON:", error);
     // Saneado: el mock local incluye password en claro, nunca exponerlo por API.
