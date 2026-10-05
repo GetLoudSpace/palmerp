@@ -249,7 +249,7 @@ export default function ClassReportPanel() {
             lessonId,
             done: form.done,
             todo: form.todo,
-            recipients: chosen.map((r) => ({ contactId: r.contactId, role: r.role })),
+            recipients: chosen.map((r) => ({ contactId: r.contactId, role: r.role, toPhone: (r as { toPhone?: string }).toPhone, label: (r as { label?: string }).label })),
           }),
         });
         const data = await res.json().catch(() => null);

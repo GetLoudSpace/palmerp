@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     done?: string;
     todo?: string;
     commsMode?: EduCommsMode;
-    recipients?: { contactId: string; role: RecipientRole }[];
+    recipients?: { contactId: string; role: RecipientRole; toPhone?: string; label?: string }[];
     batchToken?: string;
     link?: string;
   };
@@ -35,12 +35,42 @@ export async function POST(request: Request) {
 
   // tenantId ya verificado por requireModuleAccess (sesión servidor).
 
-  // 1. Resolver EduStudent + Contact alumno + Contact tutor (teléfonos reales)
+  // Cuerpo del mensaje (misma plantilla que el cliente para coherencia)
+  const message =
+    `Hola,\nResumen de la clase de hoy:\n` +
+    (done ? `Hecho: ${done}\n` : '') +
+    (todo ? `Tarea: ${todo}\n` : '') +
+    (link ? `Recursos: ${link}\n` : '');
+
+  // 1. Resolver EduStudent + Contact alumno + Contact tutor (teléfonos reales).
+  // Si la ficha aún solo vive en localStorage (sin Prisma), NO 404: el cliente
+  // manda los destinatarios ya resueltos con teléfono y se envía por Cloud API
+  // sin outbox (requiere studentId real). Ver src/app/api/education/report/route.ts:39.
   const student = await db.eduStudent.findFirst({
     where: { id: studentId, tenantId },
     include: { contact: true, tutorContact: true },
   });
-  if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+  if (!student) {
+    const localTargets = (Array.isArray(recipientsOverride) ? recipientsOverride : [])
+      .filter((r) => r && typeof r.toPhone === 'string' && r.toPhone.trim().length > 0)
+      .map((r) => ({ contactId: String(r.contactId), role: String(r.role), toPhone: String(r.toPhone).trim() }));
+    const waLocal = await resolveWhatsAppConfig(tenantId);
+    if (localTargets.length === 0 || !waLocal.configured) {
+      // Sin teléfonos o sin credenciales: el cliente hace fallback wa.me, no es error.
+      return NextResponse.json({ success: true, sent: 0, pendingWaMe: localTargets.length, results: [], warnings: [], needsClientFallback: true, whatsappConfigured: waLocal.configured, local: true });
+    }
+    const localResults: { contactId: string; role: string; toPhone: string; waMessageId: string | null; error?: string }[] = [];
+    for (const t of localTargets) {
+      const sent = await sendWhatsAppTextApi({ phoneNumberId: waLocal.phoneNumberId!, accessToken: waLocal.token!, to: t.toPhone, body: message });
+      localResults.push({ contactId: t.contactId, role: t.role, toPhone: t.toPhone, waMessageId: sent.waMessageId ?? null, error: sent.error });
+    }
+    try {
+      await db.auditLog.create({
+        data: { tenantId, userId: session.user.id, action: 'EDU_CLASS_REPORT_SENT', table: 'EduOutboxMessage', recordId: lessonId, details: `Report local lesson ${lessonId} → ${localResults.map((r) => `${r.role}:${r.toPhone}${r.waMessageId ? '' : '(failed)'}`).join(', ')}`, success: localResults.some((r) => r.waMessageId) },
+      });
+    } catch {}
+    return NextResponse.json({ success: true, sent: localResults.filter((r) => r.waMessageId).length, pendingWaMe: localResults.filter((r) => !r.waMessageId).length, results: localResults, warnings: [], needsClientFallback: false, whatsappConfigured: true, whatsappSource: vaultSourceKind(waLocal), local: true });
+  }
 
   const commsMode: EduCommsMode =
     commsOverride ?? (student.commsMode as EduCommsMode) ?? 'TUTOR_ONLY';
@@ -76,14 +106,7 @@ export async function POST(request: Request) {
   const sendable = sendableRecipients(computed);
   const warnings = computed.filter((r) => r.warning).map((r) => `${r.label}: ${r.warning}`);
 
-  // 2. Cuerpo del mensaje (misma plantilla que el cliente para coherencia)
-  const message =
-    `Hola,\nResumen de la clase de hoy:\n` +
-    (done ? `Hecho: ${done}\n` : '') +
-    (todo ? `Tarea: ${todo}\n` : '') +
-    (link ? `Recursos: ${link}\n` : '');
-
-  // 3. Envío Cloud API por destinatario (si hay credenciales; si no, el cliente hace wa.me)
+  // 2. Envío Cloud API por destinatario (si hay credenciales; si no, el cliente hace wa.me)
   // Creds: Setting por tenant (whatsapp_token / whatsapp_phone_number_id) > env
   // (WHATSAPP_TOKEN|WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID|WHATSAPP_PHONE_ID).
   const waConfig = await resolveWhatsAppConfig(tenantId);
