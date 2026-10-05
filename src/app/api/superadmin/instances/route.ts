@@ -29,8 +29,17 @@ export async function GET() {
     const auditLogs = await db.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 50 });
     return NextResponse.json({ success: true, tenants, auditLogs, source: "database" });
   } catch (error) {
+    // Producción: jamás servir mock (mezcla instancias y expone credenciales).
+    if (process.env.VERCEL) {
+      console.error("DB no disponible en producción:", error);
+      return NextResponse.json({ success: false, error: "DB unavailable" }, { status: 503 });
+    }
     console.warn("DB no disponible (single-DB), fallback a mock JSON:", error);
-    const mockTenants = getMockTenants();
+    // Saneado: el mock local incluye password en claro, nunca exponerlo por API.
+    const mockTenants = getMockTenants().map((t) => ({
+      ...t,
+      users: t.users.map((u) => ({ id: u.id, name: u.name, email: u.email, role: u.role, createdAt: u.createdAt })),
+    }));
     const mockAuditLogs = [
       { id: "al-1", tenant: "gastroshows", action: "USER_LOGIN", userId: "u2", details: "Renato García (admin@gastroshows.es) inició sesión en gastroshows.palmerp.es", ipAddress: "192.168.1.45", createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString() },
       { id: "al-2", tenant: "sport2live", action: "CRM_CONTACT_CREATED", userId: "u4", details: "Alex Ruiz creó el contacto 'Federación de Tenis' (CIF: A88372619)", ipAddress: "82.34.12.98", createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString() },
