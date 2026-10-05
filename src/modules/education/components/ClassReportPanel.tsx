@@ -2,6 +2,7 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
 import * as Icons from "lucide-react";
+// LessonFinishModal import removed as Seguimiento now uses Resumen de clase modal
 import { useSession } from "next-auth/react";
 import { getTenantStorageKey } from "@/lib/clientStorage";
 import { buildWaMeUrl } from "../lib/whatsapp";
@@ -78,6 +79,10 @@ export default function ClassReportPanel() {
   const [showForm, setShowForm] = useState(false);
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  // New state for Seguimiento modal
+  const [showSeguimiento, setShowSeguimiento] = useState(false);
+  const [searchStudent, setSearchStudent] = useState("");
+
 
   const fetchGoogleEvents = useCallback(async () => {
     if (!professorEmail) return;
@@ -86,6 +91,12 @@ export default function ClassReportPanel() {
     try {
       const res = await fetch(`/api/education/calendar?email=${encodeURIComponent(professorEmail)}`);
       const data = await res.json();
+      // Google no configurado = modo solo-local, no es error (Palmera es source of truth).
+      if (data && data.configured === false) {
+        setGcEvents([]);
+        setGcError(null);
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Error cargando Google Calendar");
       setGcEvents(data.events || []);
     } catch (e: any) {
@@ -99,9 +110,10 @@ export default function ClassReportPanel() {
   const sessionRole = (session?.user as any)?.role as string | undefined;
   const sessionUserId = (session?.user as any)?.id as string | undefined;
   const sessionUserName = session?.user?.name as string | undefined;
-  // El profesor solo ve sus clases: vinculadas por teacherId/teacherName o sin asignar (legado).
+  // El empleado (USUARIO, legacy PROFESSOR/STAFF) solo ve sus clases:
+  // vinculadas por teacherId/teacherName o sin asignar (legado).
   // ADMIN/DEV ven todas. Google Calendar ya filtra por email en el servidor.
-  const isProfessorView = sessionRole === "PROFESSOR" || sessionRole === "STAFF";
+  const isProfessorView = sessionRole === "USUARIO" || sessionRole === "PROFESSOR" || sessionRole === "STAFF";
 
   const loadLocalLessons = useCallback(() => {
     const raw = localStorage.getItem(getTenantStorageKey("edu_lessons"));
@@ -316,14 +328,77 @@ export default function ClassReportPanel() {
           <Icons.CalendarCheck className="h-4 w-4 text-red-500" />
           Clases de hoy
         </h2>
-        <button
-          onClick={() => { fetchGoogleEvents(); loadLocalLessons(); loadEduStudents(); }}
-          disabled={gcLoading}
-          className="flex items-center gap-1.5 rounded-xl border border-border/40 bg-background px-3 py-2 text-xs font-bold hover:bg-muted disabled:opacity-50"
-        >
-          <Icons.RefreshCw className={`h-3.5 w-3.5 ${gcLoading ? "animate-spin" : ""}`} />
-          {gcLoading ? "Cargando..." : "Actualizar"}
+<button
+  onClick={() => { fetchGoogleEvents(); loadLocalLessons(); loadEduStudents(); }}
+  disabled={gcLoading}
+  className="flex items-center gap-1.5 rounded-xl border border-border/40 bg-background px-3 py-2 text-xs font-bold hover:bg-muted disabled:opacity-50"
+>
+  <Icons.RefreshCw className={`h-3.5 w-3.5 ${gcLoading ? "animate-spin" : ""}`} />
+  {gcLoading ? "Cargando..." : "Actualizar"}
+</button>
+{/* Botón Seguimiento */}
+<button
+  onClick={() => setShowSeguimiento(true)}
+  className="flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-bold text-background hover:bg-muted"
+>
+  <Icons.Target className="h-3.5 w-3.5" /> Seguimiento
+</button>
+{/* Seguimiento modal */}
+{showSeguimiento && (
+  <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div className="bg-card rounded-xl p-4 max-w-md w-full">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-bold">Buscar alumno</h3>
+        <button onClick={() => setShowSeguimiento(false)} className="p-1">
+          <Icons.X className="h-5 w-5" />
         </button>
+      </div>
+      <input
+        type="text"
+        value={searchStudent}
+        onChange={e => setSearchStudent(e.target.value)}
+        placeholder="Nombre del alumno"
+        className="w-full mb-2 p-2 border rounded"
+      />
+      <div className="max-h-60 overflow-auto">
+        {eduStudents
+          .filter(s => s.contactName?.toLowerCase().includes(searchStudent.toLowerCase()))
+          .map(s => (
+            <button
+              key={s.id}
+              className="w-full text-left p-2 border-b last:border-b-0"
+              onClick={() => {
+                const lesson = localLessons.find(l => l.studentPhone === s.contactPhone || l.studentName === s.contactName);
+                if (lesson) {
+                  setSelectedLocal(lesson as any);
+                } else {
+                  // Create a placeholder local lesson for a new student
+                  const placeholder = {
+                    id: `new-${s.id}`,
+                    studentName: s.contactName,
+                    studentPhone: s.contactPhone,
+                    instrument: "",
+                    date: new Date().toISOString(),
+                    status: "PENDING",
+                    notes: "",
+                    // other fields optional
+                  } as any;
+                  setSelectedLocal(placeholder);
+                }
+                setShowForm(true);
+                setShowSeguimiento(false);
+                setSearchStudent("");
+              }}
+            >
+              {s.contactName}
+              {s.contactPhone && <span className="text-xs text-muted-foreground"> · {s.contactPhone}</span>}
+            </button>
+          ))}
+      </div>
+    </div>
+  </div>
+)}
+
       </div>
 
       {/* Google Calendar events */}

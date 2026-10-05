@@ -6,6 +6,7 @@ import { getTenantStorageKey, getTenantSlugClient } from "@/lib/clientStorage";
 import { isTenantDataCleared } from "@/lib/demoDataCleanup";
 import EditableLabel from "@/components/admin/EditableLabel";
 import SmartSearchInput from "@/components/SmartSearchInput";
+import { parseContactsExcel, generateContactsExcelTemplate } from "@/lib/contactImport";
 
 // 1. Interfaces & Demo Data
 interface Contact {
@@ -23,6 +24,10 @@ interface Contact {
   billingCountry?: string;
   notes?: string;
   birthDate?: string;
+  category?: "NONE" | "ALUMNO" | "TUTOR" | "PROFESOR";
+  instrument?: "BAJO" | "GUITARRA_ACUSTICA" | "GUITARRA_ELECTRICA" | "BATERIA" | "PIANO" | "VOZ";
+  tutoredStudentIds?: string[];
+  tutorIds?: string[];
   createdAt: string;
 }
 
@@ -201,7 +206,16 @@ export default function ContactsPage() {
     billingCountry: "España",
     notes: "",
     birthDate: "",
+    category: "NONE" as NonNullable<Contact["category"]>,
+    instrument: "",
+    tutoredStudentIds: [] as string[],
   });
+
+  // Import State
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importResult, setImportResult] = useState<any>(null);
+  const [isImporting, setIsImporting] = useState(false);
   // --- Edu roles (alumno / tutor) leídos de la agenda educativa local ---
   const [eduRoles, setEduRoles] = useState<Record<string, { isStudent: boolean; tutorOf: string[] }>>({});
   useEffect(() => {
@@ -311,6 +325,9 @@ export default function ContactsPage() {
       billingCountry: "España",
       notes: "",
       birthDate: "",
+      category: "NONE",
+      instrument: "",
+      tutoredStudentIds: [],
     });
     setIsModalOpen(true);
   };
@@ -331,6 +348,9 @@ export default function ContactsPage() {
       billingCountry: contact.billingCountry || "España",
       notes: contact.notes || "",
       birthDate: contact.birthDate || "",
+      category: contact.category || "NONE",
+      instrument: contact.instrument || "",
+      tutoredStudentIds: contact.tutoredStudentIds || [],
     });
     setIsModalOpen(true);
   };
@@ -343,34 +363,77 @@ export default function ContactsPage() {
     }
   };
 
+  // --- EduStudent Sync ---
+  const syncEduStudent = (c: Contact) => {
+    if (c.category === "ALUMNO") {
+      const slug = getTenantSlugClient();
+      const sk = localStorage.getItem(`palmera_edu_students_${slug}`) ? `palmera_edu_students_${slug}` : getTenantStorageKey("edu_students");
+      const raw = localStorage.getItem(sk);
+      let students: any[] = [];
+      if (raw) {
+        try { students = JSON.parse(raw); } catch (e) {}
+      }
+      const existingIndex = students.findIndex((s) => s.contactId === c.id);
+      if (existingIndex >= 0) {
+        students[existingIndex] = {
+           ...students[existingIndex],
+           contactName: c.name,
+           contactPhone: c.phone || "",
+           instruments: c.instrument ? [c.instrument] : students[existingIndex].instruments,
+           primaryInstrument: c.instrument || students[existingIndex].primaryInstrument,
+        };
+      } else {
+        students.push({
+          id: "stu_" + Date.now(),
+          contactId: c.id,
+          contactName: c.name,
+          contactPhone: c.phone || "",
+          instruments: c.instrument ? [c.instrument] : ["GUITARRA_ACUSTICA"],
+          primaryInstrument: c.instrument || "GUITARRA_ACUSTICA",
+          tier: "ALUMNO",
+          level: "BASICO",
+          commsMode: "TUTOR_ONLY",
+          billingMode: "TUTOR",
+          createdAt: new Date().toISOString(),
+        });
+      }
+      localStorage.setItem(sk, JSON.stringify(students));
+    }
+  };
+
   // --- Submit Handler ---
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return alert("El nombre es requerido");
+    if (formData.category === "ALUMNO" && !formData.instrument) return alert("El instrumento es obligatorio para un alumno.");
 
     if (editingContact) {
       // Edit
+      const updatedContact = {
+        ...editingContact,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        contactType: formData.contactType,
+        companyName: formData.contactType === "INDIVIDUAL" ? formData.companyName : "",
+        cif: formData.cif,
+        customGreeting: formData.customGreeting,
+        billingStreet: formData.billingStreet,
+        billingZip: formData.billingZip,
+        billingCity: formData.billingCity,
+        billingCountry: formData.billingCountry,
+        notes: formData.notes,
+        birthDate: formData.birthDate || undefined,
+        category: formData.category,
+        instrument: formData.category === "ALUMNO" ? (formData.instrument as any) : undefined,
+        tutoredStudentIds: formData.category === "TUTOR" ? formData.tutoredStudentIds : [],
+      };
+      
       const updated = contacts.map((c) =>
-        c.id === editingContact.id
-          ? {
-              ...c,
-              name: formData.name,
-              email: formData.email,
-              phone: formData.phone,
-              contactType: formData.contactType,
-              companyName: formData.contactType === "INDIVIDUAL" ? formData.companyName : "",
-              cif: formData.cif,
-              customGreeting: formData.customGreeting,
-              billingStreet: formData.billingStreet,
-              billingZip: formData.billingZip,
-              billingCity: formData.billingCity,
-              billingCountry: formData.billingCountry,
-              notes: formData.notes,
-              birthDate: formData.birthDate || undefined,
-            }
-          : c
+        c.id === editingContact.id ? updatedContact : c
       );
       saveContacts(updated);
+      syncEduStudent(updatedContact);
     } else {
       // Create
       const newContact: Contact = {
@@ -388,9 +451,13 @@ export default function ContactsPage() {
         billingCountry: formData.billingCountry,
         notes: formData.notes,
         birthDate: formData.birthDate || undefined,
+        category: formData.category,
+        instrument: formData.category === "ALUMNO" ? (formData.instrument as any) : undefined,
+        tutoredStudentIds: formData.category === "TUTOR" ? formData.tutoredStudentIds : [],
         createdAt: new Date().toISOString(),
       };
       saveContacts([...contacts, newContact]);
+      syncEduStudent(newContact);
     }
     setIsModalOpen(false);
   };
@@ -556,6 +623,71 @@ export default function ContactsPage() {
     window.open(`tel:${cleanPhone}`, "_self");
   };
 
+  // --- Import Handlers ---
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportFile(file);
+    try {
+      const res = await parseContactsExcel(file);
+      setImportResult(res);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const executeImport = () => {
+    if (!importResult || importResult.validRows.length === 0) return;
+    setIsImporting(true);
+
+    setTimeout(() => {
+      const currentContacts = [...contacts];
+      let updatedCount = 0;
+      let createdCount = 0;
+
+      importResult.validRows.forEach((row: any) => {
+        const existingIndex = currentContacts.findIndex(c => c.email.toLowerCase() === row.email.toLowerCase());
+        
+        const newContactData: Contact = {
+          id: existingIndex >= 0 ? currentContacts[existingIndex].id : "c_" + Date.now() + Math.random().toString(36).substr(2, 5),
+          name: row.name,
+          email: row.email,
+          phone: row.phone || (existingIndex >= 0 ? currentContacts[existingIndex].phone : ""),
+          contactType: row.contactType || "INDIVIDUAL",
+          category: row.category,
+          instrument: row.instrument,
+          companyName: row.companyName,
+          cif: row.cif,
+          birthDate: row.birthDate,
+          billingStreet: row.billingStreet,
+          billingZip: row.billingZip,
+          billingCity: row.billingCity,
+          billingCountry: row.billingCountry || "España",
+          notes: row.notes,
+          tutoredStudentIds: [],
+          createdAt: existingIndex >= 0 ? currentContacts[existingIndex].createdAt : new Date().toISOString()
+        };
+
+        if (existingIndex >= 0) {
+          currentContacts[existingIndex] = { ...currentContacts[existingIndex], ...newContactData };
+          updatedCount++;
+        } else {
+          currentContacts.push(newContactData);
+          createdCount++;
+        }
+        syncEduStudent(newContactData);
+      });
+
+      saveContacts(currentContacts);
+      setIsImporting(false);
+      setIsImportModalOpen(false);
+      setImportFile(null);
+      setImportResult(null);
+      setToastMessage(`Importación completada: ${createdCount} creados, ${updatedCount} actualizados.`);
+      setTimeout(() => setToastMessage(null), 4000);
+    }, 800);
+  };
+
   // --- Filter and Sort Logic ---
   const filteredContacts = contacts
     .filter((c) => {
@@ -608,17 +740,26 @@ export default function ContactsPage() {
             <div>
               <span className="text-xs font-bold text-foreground block">{contact.name}</span>
               {(() => {
+                // Legacy eduRoles integration + New Category Enum
                 const role = eduRoles[`id:${contact.id}`] || eduRoles[`name:${contact.name.toLowerCase()}`];
-                if (!role || (!role.isStudent && role.tutorOf.length === 0)) return null;
+                const isStudent = contact.category === "ALUMNO" || role?.isStudent;
+                const isTutor = contact.category === "TUTOR" || (role?.tutorOf && role.tutorOf.length > 0);
+                const isProfesor = contact.category === "PROFESOR";
+
+                if (!isStudent && !isTutor && !isProfesor) return null;
+                
                 return (
                   <span className="mt-1 flex flex-wrap gap-1">
-                    {role.isStudent && (
+                    {isStudent && (
                       <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-px text-[9px] font-bold text-emerald-700">🎸 Alumno</span>
                     )}
-                    {role.tutorOf.length > 0 && (
-                      <span className="rounded-full bg-sky-500/10 border border-sky-500/30 px-1.5 py-px text-[9px] font-bold text-sky-700" title={`Tutor de: ${role.tutorOf.join(", ")}`}>
-                        👨‍👩‍👧 Tutor{role.tutorOf.length > 1 ? ` ×${role.tutorOf.length}` : ""}
+                    {isTutor && (
+                      <span className="rounded-full bg-sky-500/10 border border-sky-500/30 px-1.5 py-px text-[9px] font-bold text-sky-700">
+                        👨‍👩‍👧 Tutor{(role?.tutorOf && role.tutorOf.length > 1) ? ` ×${role.tutorOf.length}` : ""}
                       </span>
+                    )}
+                    {isProfesor && (
+                      <span className="rounded-full bg-amber-500/10 border border-amber-500/30 px-1.5 py-px text-[9px] font-bold text-amber-700">🎓 Profesor</span>
                     )}
                   </span>
                 );
@@ -878,14 +1019,23 @@ export default function ContactsPage() {
                   <EditableLabel apiKey="contacts.col.city" defaultValue="Ciudad" />
                 </th>
                 {/* Column 8: User Requirement: A "+" button located in the LAST column horizontally and FIRST row vertically */}
-                <th className="px-6 py-3.5 text-right w-24">
-                  <button
-                    onClick={openCreateModal}
-                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-metallic-red shadow-md shadow-red-500/20 transition-all hover:scale-105 duration-200 cursor-pointer"
-                    title="Añadir nuevo contacto (+)"
-                  >
-                    <Icons.Plus className="h-4.5 w-4.5" />
-                  </button>
+                <th className="px-6 py-3.5 text-right w-32">
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => setIsImportModalOpen(true)}
+                      className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-green-600/10 text-green-600 shadow-md transition-all hover:scale-105 hover:bg-green-600/20 duration-200 cursor-pointer"
+                      title="Importar Excel"
+                    >
+                      <Icons.FileSpreadsheet className="h-4.5 w-4.5" />
+                    </button>
+                    <button
+                      onClick={openCreateModal}
+                      className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-metallic-red shadow-md shadow-red-500/20 transition-all hover:scale-105 duration-200 cursor-pointer"
+                      title="Añadir nuevo contacto (+)"
+                    >
+                      <Icons.Plus className="h-4.5 w-4.5" />
+                    </button>
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -963,6 +1113,50 @@ export default function ContactsPage() {
                     className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   />
                 </div>
+              </div>
+
+              {/* Categoría y Campos Específicos */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Categoría CRM</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                    className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
+                  >
+                    <option value="NONE">Sin Categoría</option>
+                    <option value="ALUMNO">Alumno</option>
+                    <option value="TUTOR">Tutor / Responsable</option>
+                    <option value="PROFESOR">Profesor</option>
+                  </select>
+                </div>
+                {formData.category === "ALUMNO" && (
+                  <div className="space-y-1.5 animate-in fade-in zoom-in-95 duration-200">
+                    <label className="text-xs font-bold text-muted-foreground uppercase">Instrumento Principal</label>
+                    <select
+                      value={formData.instrument}
+                      onChange={(e) => setFormData({ ...formData, instrument: e.target.value })}
+                      required
+                      className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
+                    >
+                      <option value="">Seleccione instrumento...</option>
+                      <option value="BAJO">Bajo</option>
+                      <option value="GUITARRA_ACUSTICA">Guitarra Acústica</option>
+                      <option value="GUITARRA_ELECTRICA">Guitarra Eléctrica</option>
+                      <option value="BATERIA">Batería</option>
+                      <option value="PIANO">Piano</option>
+                      <option value="VOZ">Voz</option>
+                    </select>
+                  </div>
+                )}
+                {formData.category === "TUTOR" && (
+                  <div className="space-y-1.5 animate-in fade-in zoom-in-95 duration-200">
+                    <label className="text-xs font-bold text-muted-foreground uppercase">Alumnos tutelados</label>
+                    <div className="text-xs text-muted-foreground border border-border/50 rounded-lg p-2 bg-muted/20">
+                      (El enlace se realizará automáticamente si importas desde Excel, o desde el módulo de Educación)
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Greeting & Email & Phone & Tax ID (CIF) */}
@@ -1101,6 +1295,92 @@ export default function ContactsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-border/50 bg-card p-6 text-card-foreground shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-border/40 pb-4 mb-4">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Icons.FileSpreadsheet className="h-5 w-5 text-green-500" />
+                Importar Contactos (Excel)
+              </h3>
+              <button onClick={() => { setIsImportModalOpen(false); setImportResult(null); setImportFile(null); }} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted">
+                <Icons.X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-center justify-between bg-muted/30 p-4 rounded-xl border border-border/50">
+                <div className="text-sm">
+                  <p className="font-semibold mb-1">Paso 1: Preparar archivo</p>
+                  <p className="text-muted-foreground text-xs">Descarga la plantilla, rellénala y guárdala como .xlsx</p>
+                </div>
+                <button
+                  onClick={generateContactsExcelTemplate}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-background border border-border px-4 text-xs font-semibold hover:bg-muted transition-colors"
+                >
+                  <Icons.Download className="h-4 w-4" />
+                  Descargar Plantilla
+                </button>
+              </div>
+
+              <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                <p className="font-semibold text-sm mb-3">Paso 2: Subir archivo completado</p>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  onChange={handleImportFile}
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 dark:file:bg-green-900/30 dark:file:text-green-400"
+                />
+              </div>
+
+              {importResult && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold border-b border-border/50 pb-2">Resultados del análisis</h4>
+                  
+                  {importResult.errors.length > 0 && (
+                    <div className="bg-red-500/10 text-red-600 dark:text-red-400 p-3 rounded-lg text-xs space-y-1">
+                      <p className="font-bold flex items-center gap-1"><Icons.AlertTriangle className="h-4 w-4" /> Se encontraron errores en {importResult.errors.length} fila(s):</p>
+                      <ul className="list-disc pl-5 max-h-32 overflow-y-auto">
+                        {importResult.errors.map((e: string, i: number) => <li key={i}>{e}</li>)}
+                      </ul>
+                      <p className="mt-2 font-semibold">Corrige el archivo y vuelve a subirlo.</p>
+                    </div>
+                  )}
+
+                  {importResult.validRows.length > 0 && importResult.errors.length === 0 && (
+                    <div className="bg-green-500/10 text-green-700 dark:text-green-400 p-3 rounded-lg text-xs flex items-center gap-2">
+                      <Icons.CheckCircle className="h-5 w-5" />
+                      <div>
+                        <p className="font-bold">¡Archivo listo para importar!</p>
+                        <p>Se detectaron {importResult.validRows.length} contactos válidos.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/40">
+                <button
+                  onClick={() => { setIsImportModalOpen(false); setImportResult(null); setImportFile(null); }}
+                  className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-card px-4 text-xs font-semibold text-foreground hover:bg-muted"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={executeImport}
+                  disabled={!importResult || importResult.errors.length > 0 || importResult.validRows.length === 0 || isImporting}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-green-600 px-5 text-xs font-bold text-white shadow-md shadow-green-500/25 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isImporting ? <Icons.Loader2 className="h-4 w-4 animate-spin" /> : <Icons.Upload className="h-4 w-4" />}
+                  <span>{isImporting ? "Importando..." : "Importar Contactos"}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

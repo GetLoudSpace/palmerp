@@ -8,6 +8,7 @@ import { useSession, signOut } from "next-auth/react";
 import { coreModules, PalmModesRegistry } from "@/modules/registry";
 import EditableLabel from "./EditableLabel";
 import { getTenantStorageKey } from "@/lib/clientStorage";
+import { resolveAccess, canAccessModule } from "@/lib/access";
 
 // Dynamic Icon resolver for Lucide icons
 export const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
@@ -97,42 +98,28 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   }, []);
 
   const userRole = (session?.user as any)?.role as string | undefined;
-  const sessionEmail = (session?.user as any)?.email as string | undefined;
-  const [isProfessorSTAFF, setIsProfessorSTAFF] = useState(false);
-  // Detectar si STAFF es profesor (tiene EduTeacherProfile): fetch /api/education/teachers
-  useEffect(()=>{
-    if (userRole !== "STAFF" || !sessionEmail) { setIsProfessorSTAFF(false); return; }
-    fetch("/api/education/teachers").then(r=>r.json()).then(d=>{
-      const list: any[] = Array.isArray(d?.users) ? d.users : Array.isArray(d?.teachers) ? d.teachers : [];
-      const isProf = list.some((u:any)=> (u.email||u.user?.email||"").toLowerCase() === sessionEmail.toLowerCase());
-      setIsProfessorSTAFF(isProf);
-      // fallback legacy PROFESSOR role
-      if (!isProf && list.length===0) {
-        // si no hay EduTeacherProfile pero es STAFF, no es profesor limitado
-        setIsProfessorSTAFF(false);
-      }
-    }).catch(()=> setIsProfessorSTAFF(false));
-  }, [userRole, sessionEmail]);
-  const isProfessor = userRole === "PROFESSOR" || isProfessorSTAFF;
-  const isStaffProfessor = isProfessor; // STAFF profesor: solo EDUCACION, no core, no opciones modulo
-
-  // Filter core modules: STAFF profesor solo ve educación + conversaciones mínimas, no admin
-  const coreBase = coreModules.filter((m) => {
-    if (isStaffProfessor) return m.id === "conversations";
-    return m.id !== "settings";
+  // Acceso real por nivel + roles de trabajo (JWT). Sin sesión → solo base mínima.
+  const access = resolveAccess({
+    role: userRole,
+    workRoles: (session?.user as any)?.workRoles as string[] | undefined,
+    extraModules: (session?.user as any)?.extraModules as string[] | undefined,
   });
-  const coreSettings = isStaffProfessor ? [] : coreModules.filter((m) => m.id === "settings");
+  const canSee = (moduleId: string) => canAccessModule(access, moduleId);
 
-  // Get active mode configurations — STAFF profesor solo EDUCACION aunque admin haya activado otros
+  // Menú por acceso real: cada módulo/modo solo si el nivel/roles lo permiten.
+  // "settings" (Ajustes: usuarios, credenciales, modos) jamás sale para USUARIO.
+  const coreBase = coreModules.filter((m) => m.id !== "settings" && canSee(m.id));
+  const coreSettings = coreModules.filter((m) => m.id === "settings" && canSee(m.id));
+
+  // Get active mode configurations — filtrados también por acceso del usuario.
   const activeModeConfigsAll = activeModes
     .map((modeId) => PalmModesRegistry[modeId])
-    .filter(Boolean);
-  const activeModeConfigs = isStaffProfessor
-    ? activeModeConfigsAll.filter((m) => m.id === "EDUCACION")
-    : activeModeConfigsAll;
+    .filter(Boolean)
+    .filter((m) => canSee(m.id));
+  const activeModeConfigs = activeModeConfigsAll;
 
   const operationsModes = activeModeConfigs.filter((m) => m.category === "Operaciones");
-  const supportModes = isStaffProfessor ? [] : activeModeConfigs.filter((m) => m.category === "Soporte" || m.category === "Estrategia");
+  const supportModes = activeModeConfigs.filter((m) => m.category === "Soporte" || m.category === "Estrategia");
 
   // Keep the active area open after route and browser back/forward navigation.
   useEffect(() => {

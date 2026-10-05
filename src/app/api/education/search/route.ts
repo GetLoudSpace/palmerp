@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getTenantIdFromHeaders } from "@/lib/tenant";
+import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { requireModuleAccess } from "@/lib/requireModule";
 import { buildBraveQuery, buildSearchQueryHash, NORMALIZER_SYSTEM_PROMPT, SearchQuery } from "@/modules/education/lib/search";
 
 // POST /api/education/search { instrument, level, skill, text, durationMax }
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
+  // Con sesión: evita que anónimos quemen la cuota de Brave/OpenRouter.
+  const auth = await requireModuleAccess("EDUCACION");
+  if ("error" in auth) return auth.error;
+  const { tenantId } = auth;
   try {
     const body = (await req.json().catch(()=>({}))) as SearchQuery;
-    const tenantId = (await getTenantIdFromHeaders()) || "demo";
     const qHash = buildSearchQueryHash(tenantId, body);
     // check cache 24h
     try {

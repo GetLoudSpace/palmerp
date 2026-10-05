@@ -8,6 +8,7 @@ export const educationModule: PalmModeConfig = {
   category: "Operaciones",
   menuItems: [
     { label: "Profesor", path: "/admin/education" },
+    { label: "Curso Guitarra", path: "/admin/education/guitar" },
     { label: "Agenda", path: "/admin/education/agenda" },
     { label: "Alumnos", path: "/admin/education/students" },
     { label: "Clases & Seguimiento", path: "/admin/education/lessons" },

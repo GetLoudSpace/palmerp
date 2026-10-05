@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# harness: huella automática de sesión (se regenera sola)
+progress/.checkpoint.json

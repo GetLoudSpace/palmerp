@@ -2,22 +2,21 @@
 // Reporte fin de clase → WhatsApp multi-destinatario (tutor único + alumno según commsMode).
 // Contact es fuente de verdad: el teléfono sale de Contact, nunca del studentId.
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions, hasRole } from '@/lib/auth';
 import db from '@/lib/db';
+import { requireModuleAccess } from '@/lib/requireModule';
 import {
   getReportRecipients,
   sendableRecipients,
   type EduCommsMode,
   type RecipientRole,
 } from '@/modules/education/lib/recipients';
+import { resolveWhatsAppConfig, vaultSourceKind } from '@/modules/education/lib/whatsappConfig';
+import { sendWhatsAppTextApi } from '@/modules/education/lib/whatsapp';
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
-  if (!hasRole(session.user, 'STAFF') && !hasRole(session.user, 'ADMIN') && !hasRole(session.user, 'PROFESSOR')) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const auth = await requireModuleAccess('EDUCACION');
+  if ('error' in auth) return auth.error;
+  const { session, tenantId } = auth;
 
   const body = await request.json().catch(() => ({}));
   const { studentId, lessonId, done, todo, commsMode: commsOverride, recipients: recipientsOverride, batchToken, link } = body as {
@@ -34,7 +33,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'studentId and lessonId required' }, { status: 400 });
   }
 
-  const tenantId = session.user.tenantId as string;
+  // tenantId ya verificado por requireModuleAccess (sesión servidor).
 
   // 1. Resolver EduStudent + Contact alumno + Contact tutor (teléfonos reales)
   const student = await db.eduStudent.findFirst({
@@ -85,31 +84,25 @@ export async function POST(request: Request) {
     (link ? `Recursos: ${link}\n` : '');
 
   // 3. Envío Cloud API por destinatario (si hay credenciales; si no, el cliente hace wa.me)
-  const whatsappToken = process.env.WHATSAPP_TOKEN;
-  const whatsappPhoneId = process.env.WHATSAPP_PHONE_ID;
+  // Creds: Setting por tenant (whatsapp_token / whatsapp_phone_number_id) > env
+  // (WHATSAPP_TOKEN|WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID|WHATSAPP_PHONE_ID).
+  const waConfig = await resolveWhatsAppConfig(tenantId);
+  const whatsappToken = waConfig.token;
+  const whatsappPhoneId = waConfig.phoneNumberId;
   const results: { contactId: string; role: string; toPhone: string; waMessageId: string | null; error?: string }[] = [];
 
   for (const r of sendable) {
     let waMessageId: string | null = null;
     let error: string | undefined;
     if (whatsappToken && whatsappPhoneId) {
-      try {
-        const resp = await fetch(`https://graph.facebook.com/v20.0/${whatsappPhoneId}/messages`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${whatsappToken}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messaging_product: 'whatsapp',
-            to: r.toPhone,
-            type: 'text',
-            text: { body: message },
-          }),
-        });
-        const data = await resp.json().catch(() => ({}));
-        if (resp.ok && data.messages?.[0]?.id) waMessageId = data.messages[0].id;
-        else error = typeof data === 'string' ? data : JSON.stringify(data).slice(0, 500);
-      } catch (e: any) {
-        error = String(e?.message ?? e);
-      }
+      const sent = await sendWhatsAppTextApi({
+        phoneNumberId: whatsappPhoneId,
+        accessToken: whatsappToken,
+        to: r.toPhone,
+        body: message,
+      });
+      waMessageId = sent.waMessageId ?? null;
+      error = sent.error;
     }
     results.push({ contactId: r.contactId, role: r.role, toPhone: r.toPhone, waMessageId, error });
 
@@ -151,9 +144,12 @@ export async function POST(request: Request) {
   return NextResponse.json({
     success: true,
     sent: results.filter((r) => r.waMessageId).length,
-    pendingWaMe: !whatsappToken ? sendable.length : results.filter((r) => !r.waMessageId).length,
+    pendingWaMe: !waConfig.configured ? sendable.length : results.filter((r) => !r.waMessageId).length,
     results,
     warnings,
-    needsClientFallback: !whatsappToken,
+    needsClientFallback: !waConfig.configured,
+    whatsappConfigured: waConfig.configured,
+    // Genérico a propósito: no revela nombres de vars del servidor a USUARIO.
+    whatsappSource: vaultSourceKind(waConfig),
   });
 }

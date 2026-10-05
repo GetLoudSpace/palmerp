@@ -34,7 +34,7 @@ const DEFAULT_TENANTS: MockTenant[] = [
     users: [
       { id: "u2", name: "Renato García", email: "admin@gastroshows.es", role: "ADMIN", createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), password: "gastroshows123" },
       { id: "u2b", name: "Tech Admin", email: "tech@gastroshows.es", role: "ADMIN", createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), password: "G4STR0SH0WSb4rc3l0n42018" },
-      { id: "u3", name: "Silvia Fernández", email: "silvia@gastroshows.es", role: "STAFF", createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), password: "gastroshows123" },
+      { id: "u3", name: "Silvia Fernández", email: "silvia@gastroshows.es", role: "USUARIO", createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), password: "gastroshows123" },
     ],
   },
   {

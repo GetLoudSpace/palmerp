@@ -187,7 +187,7 @@ export async function POST(req: Request) {
             for (const u of t.users) {
               const emailNorm = String(u.email ?? "").trim().toLowerCase();
               if (!emailNorm || !u.name) continue;
-              const roleNorm = String(u.role).toUpperCase() === "ADMIN" ? "ADMIN" : "STAFF";
+              const roleNorm = ["ADMIN","DEV","USUARIO"].includes(String(u.role).toUpperCase()) ? String(u.role).toUpperCase() : "USUARIO";
               const hasRealPassword = typeof u.password === "string" && u.password.trim().length > 0 && u.password !== "••••••••";
 
               const byId = existingUsers.find((e) => e.id === u.id);

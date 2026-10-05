@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
-/* Premium HSL Design Tokens */
+/* Premium HSL Design Tokens — modo claro por defecto (fondo luminoso, navegación clara) */
 :root {
-  --background: 0 0% 100%; /* Pure white background */
-  --foreground: 0 0% 10%; /* Very dark slate for sophisticated look */
-  --card: 0 0% 98%; /* Light gray card */
-  --card-foreground: 0 0% 10%;
+  --background: 220 20% 98%; /* Gris muy claro casi blanco para la página */
+  --foreground: 222 25% 12%; /* Tinta azulada suave para texto */
+  --card: 0 0% 100%; /* Tarjetas blancas que destacan sobre el fondo */
+  --card-foreground: 222 25% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 10%;
+  --popover-foreground: 222 25% 12%;
   --primary: 359 83% 48%; /* Vibrant Red */
   --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 90%;
-  --secondary-foreground: 0 0% 10%;
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 45%;
-  --accent: 0 0% 90%;
-  --accent-foreground: 0 0% 10%;
+  --secondary: 220 15% 93%;
+  --secondary-foreground: 222 25% 12%;
+  --muted: 220 15% 94%;
+  --muted-foreground: 220 10% 42%;
+  --accent: 220 15% 93%;
+  --accent-foreground: 222 25% 12%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 60 9.1% 97.8%;
-  --border: 0 0% 90%;
-  --input: 0 0% 90%;
+  --border: 220 15% 88%; /* Bordes visibles para delimitar navegación */
+  --input: 220 15% 88%;
   --ring: 359 83% 48%;
   --radius: 0.85rem; /* Slightly smoother rounded corners */
 }

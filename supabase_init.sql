@@ -3,7 +3,7 @@
 CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'STAFF', 'DEV');
+CREATE TYPE "UserRole" AS ENUM ('DEV', 'ADMIN', 'USUARIO');
 
 -- CreateEnum
 CREATE TYPE "ContactType" AS ENUM ('INDIVIDUAL', 'COMPANY');
@@ -52,7 +52,10 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
-    "role" "UserRole" NOT NULL DEFAULT 'STAFF',
+    "role" "UserRole" NOT NULL DEFAULT 'USUARIO',
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "workRoles" TEXT[] NOT NULL DEFAULT '{}',
+    "extraModules" TEXT[] NOT NULL DEFAULT '{}',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

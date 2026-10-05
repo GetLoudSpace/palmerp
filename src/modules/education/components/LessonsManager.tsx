@@ -14,6 +14,7 @@ const MOCK_SONG = [{id:"s1",title:"Entre dos aguas", artist:"Paco"},{id:"s2",tit
 export default function LessonsManager() {
   const [lessons, setLessons] = useState<LessonRow[]>([]);
   const [filter, setFilter] = useState<string>("ALL");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [showFinish, setShowFinish] = useState<LessonRow|null>(null);
   const [form, setForm] = useState<{instrument:string; duration:number; skills:string[]; notes:string; rating:number; homework:string[]; songs:string[]}>({instrument:"GUITARRA", duration:45, skills:[], notes:"", rating:3, homework:[], songs:[]});
   const [sending, setSending] = useState(false);
@@ -134,7 +135,7 @@ export default function LessonsManager() {
     setToast(`Batch del día: ${pending.length} pendientes — abre cada uno y envía (Cloud API)`); setTimeout(()=>setToast(null),3000);
   };
 
-  const filtered = lessons.filter(l=> filter==="ALL" || l.instrument===filter);
+  const filtered = lessons.filter(l=> (filter==="ALL" || l.instrument===filter) && l.studentName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="space-y-4">

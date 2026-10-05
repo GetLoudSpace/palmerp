@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { pathToModule, resolveAccess, canAccessModule } from "@/lib/access";
 
 const PLATFORM_SUBDOMAINS = new Set(["app", "platform", "superadmin", "www"]);
 const RESERVED_SUBDOMAINS = new Set(["api", "admin", "login", "register", "_next", "favicon"]);
@@ -169,6 +170,28 @@ export async function middleware(req: NextRequest) {
   // Evitar loop en /tenant-not-found
   if (isTenantNotFoundRoute) {
     return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  // Control de accesos por nivel/roles de trabajo (JWT lleva role/workRoles/extraModules).
+  // Sin token → lo gestiona el check de /admin de arriba (redirect login).
+  // El módulo requerido sale de la ruta; cada API además lo verifica con sesión.
+  if (!isPlatformRoute && token && (isAdminRoute || (isApiRoute && !isAuthApi))) {
+    const required = pathToModule(url.pathname);
+    if (required) {
+      const access = resolveAccess({
+        role: (token as any).role,
+        workRoles: (token as any).workRoles,
+        extraModules: (token as any).extraModules,
+      });
+      if (!canAccessModule(access, required)) {
+        if (isApiRoute) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+        const denied = new URL("/admin", req.url);
+        denied.searchParams.set("error", "Forbidden");
+        return NextResponse.redirect(denied);
+      }
+    }
   }
 
   return NextResponse.next({ request: { headers: requestHeaders } });
