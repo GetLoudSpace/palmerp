@@ -120,6 +120,14 @@
 - Auditoría: ningún otro `"use client"` importa `db/auth/secrets/requireModule/tenant/provisioning/storage` ni directa ni transitivamente (`phone/clientStorage/recipients/instruments` puros).
 - `tsc` 0 ✅ · `npm run build` OK ✅ · `tests` 8/8 ✅
 
+**Deploy DB 2026-09-28 (db push equivalente, motor Prisma no alcanza pooler):**
+- `migrate status/deploy` y `db push` se cuelgan desde aquí (schema engine ↔ Supabase pooler; `pg` directo sí conecta). Vía alternativa: `migrate diff --from-empty` (motor local OK) + `scripts/apply-schema-diff.mjs` (idempotente: solo crea TYPE/TABLE/INDEX/FK/columnas ausentes).
+- Migración niveles aplicada a mano con `scripts/run-one-migration.mjs` (3 intentos: orden ADD VALUE, DROP DEFAULT para recrear enum). Verificado: enum DEV/ADMIN/USUARIO, 3 ADMIN intactos.
+- `apply-schema-diff`: 130 aplicados / 136 ya existían. Prod: 29→51 tablas, 22 Edu* creadas y legibles. `Contact` ya traía las columnas nuevas.
+- Sin `_prisma_migrations` en prod (se construyó con db push): NO ejecutar `migrate deploy` completo nunca (intentaría todo el historial). Los 2 scripts quedan en `scripts/` para futuras Diff.
+- Nota: tablas Edu* sin RLS (paridad con db push; la app filtra por tenantId). Pendiente: extender `20260603_rls_tenant_isolation` o política equivalente.
+- Git: commit `ed180d7` local (51 ficheros). Push BLOQUEADO: 403 en ambos remotos con ambas cuentas (`belpaneobrador` y `renoplastia` tienen `push:false` vía API en los dos repos). Falta que un admin de la org dé write a una de las dos cuentas; cuenta activa restaurada a `belpaneobrador`, commit listo para `git push`.
+
 **Pendiente:**
 - Configurar `GOOGLE_SERVICE_ACCOUNT_JSON` y `GOOGLE_CALENDAR_ID` en `.env` para activar sincronización real con Google Calendar
 - Configurar `WHATSAPP_TOKEN` y `WHATSAPP_PHONE_NUMBER_ID` (= `WHATSAPP_PHONE_ID` legacy) para envío real por WhatsApp Cloud API

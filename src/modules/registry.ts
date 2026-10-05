@@ -216,7 +216,7 @@ export const PalmModesRegistry: Record<string, PalmModeConfig> = {
     menuItems: [
       { label: "Profesor", path: "/admin/education" },
       { label: "Curso Guitarra", path: "/admin/education/guitar" },
-      { label: "Agenda", path: "/admin/education/agenda" },
+
       { label: "Alumnos", path: "/admin/education/students" },
       { label: "Clases & Seguimiento", path: "/admin/education/lessons" },
       { label: "Biblioteca", path: "/admin/education/library" },

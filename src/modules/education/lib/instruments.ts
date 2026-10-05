@@ -9,7 +9,9 @@ export interface InstrumentDef {
 }
 
 export const EDUCATION_INSTRUMENTS: Record<string, InstrumentDef> = {
-  GUITARRA: { key: "GUITARRA", label: "Guitarra", icon: "Music", color: "amber", description: "Guitarra acústica/clásica/eléctrica" },
+  GUITARRA: { key: "GUITARRA", label: "Guitarra", icon: "Music", color: "amber", description: "Guitarra genérica (legado)" },
+  GUITARRA_ACUSTICA: { key: "GUITARRA_ACUSTICA", label: "Guitarra Acústica", icon: "Music", color: "amber", description: "Guitarra acústica/clásica" },
+  GUITARRA_ELECTRICA: { key: "GUITARRA_ELECTRICA", label: "Guitarra Eléctrica", icon: "AudioLines", color: "rose", description: "Guitarra eléctrica" },
   BAJO: { key: "BAJO", label: "Bajo", icon: "AudioLines", color: "sky", description: "Bajo eléctrico" },
   PIANO: { key: "PIANO", label: "Piano", icon: "Piano", color: "zinc", description: "Piano acústico/digital" },
   BATERIA: { key: "BATERIA", label: "Batería", icon: "Drum", color: "red", description: "Batería acústica/electrónica" },

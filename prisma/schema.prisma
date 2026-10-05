@@ -19,6 +19,7 @@ model Tenant {
   // Relations
   users               User[]
   contacts            Contact[]
+  contactTutorStudents ContactTutorStudent[]
   settings            Setting[]
   auditLogs           AuditLog[]
   apiTransferGrants   ApiTransferGrant[]
@@ -97,6 +98,8 @@ model Contact {
   phoneNormalized String?    // E164 sin +, ej. 34622334455 (solo dígitos, 9-15)
   email          String?
   contactType    ContactType @default(INDIVIDUAL)
+  category       ContactCategory @default(NONE)
+  instrument     Instrument?
   companyName    String?
   cif            String?     // NIF / CIF / DNI
   billingStreet  String?
@@ -127,6 +130,9 @@ model Contact {
   orders         Order[]
   eduStudentAsContact EduStudent[] @relation("EduStudentContact")
   eduStudentAsTutor   EduStudent[] @relation("EduStudentTutor")
+  
+  tutoredStudents     ContactTutorStudent[] @relation("TutorContact")
+  tutorsOfMe          ContactTutorStudent[] @relation("StudentContact")
 
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -139,6 +145,23 @@ model Contact {
   @@index([tenantId, phoneNormalized])
   @@index([createdAt])
   @@index([contactType])
+}
+
+model ContactTutorStudent {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tutorId     String
+  tutor       Contact  @relation("TutorContact", fields: [tutorId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Contact  @relation("StudentContact", fields: [studentId], references: [id], onDelete: Cascade)
+  relation    String?  // "MADRE", "PADRE", "ABUELA", "TIA", etc.
+  createdAt   DateTime @default(now())
+
+  @@unique([tutorId, studentId])
+  @@index([tenantId])
+  @@index([tutorId])
+  @@index([studentId])
 }
 
 model Artwork {
@@ -300,6 +323,22 @@ enum UserRole {
 enum ContactType {
   INDIVIDUAL
   COMPANY
+}
+
+enum ContactCategory {
+  NONE
+  ALUMNO
+  TUTOR
+  PROFESOR
+}
+
+enum Instrument {
+  BAJO
+  GUITARRA_ACUSTICA
+  GUITARRA_ELECTRICA
+  BATERIA
+  PIANO
+  VOZ
 }
 
 enum ArtworkStatus {
