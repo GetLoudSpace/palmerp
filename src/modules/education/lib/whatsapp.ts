@@ -74,8 +74,16 @@ async function postToGraph(opts: {
       body: JSON.stringify({ messaging_product: "whatsapp", to: toNorm, ...opts.payload }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.messages?.[0]?.id)
-      return { success: false, error: typeof data === "string" ? data : JSON.stringify(data).slice(0, 500) };
+    if (!res.ok || !data.messages?.[0]?.id) {
+      const raw = typeof data === "string" ? data : JSON.stringify(data).slice(0, 500);
+      // code 100/subcode 33 = phone_number_id inexistente o sin acceso: el valor
+      // guardado no es el Phone Number ID (suele ser el Business Account ID u otro).
+      const metaErr = (data as { error?: { code?: number; error_subcode?: number } })?.error;
+      if (metaErr?.code === 100) {
+        return { success: false, error: "Meta: el phone number ID no existe o el token no tiene acceso a ese número. Revisa que sea el Phone Number ID de WhatsApp > API Setup (no el Business Account ID) y que token y número sean del mismo negocio. Detalle: " + raw.slice(0, 200) };
+      }
+      return { success: false, error: raw };
+    }
     return { success: true, waMessageId: data.messages[0].id as string };
   } catch (e: any) {
     return { success: false, error: String(e?.message ?? e) };

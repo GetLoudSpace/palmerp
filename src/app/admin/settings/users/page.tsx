@@ -152,9 +152,11 @@ export default function UsersSettingsPage() {
             id: editingUser.id,
             name: formData.name,
             level: formData.level,
-            workRoles: formData.workRoles,
-            extraModules: formData.extraModules,
-            instruments: formData.instruments,
+            // Los roles/extras solo aplican a USUARIO: mandarlos con ADMIN/DEV
+            // hace que el servidor responda 400 ("solo aplican a USUARIO").
+            ...(formData.level === "USUARIO"
+              ? { workRoles: formData.workRoles, extraModules: formData.extraModules, instruments: formData.instruments }
+              : {}),
             isActive: formData.isActive,
             ...(formData.password.trim() ? { password: formData.password.trim() } : {}),
           }),
@@ -172,9 +174,9 @@ export default function UsersSettingsPage() {
             name: formData.name,
             email: formData.email,
             level: formData.level,
-            workRoles: formData.workRoles,
-            extraModules: formData.extraModules,
-            instruments: formData.instruments,
+            ...(formData.level === "USUARIO"
+              ? { workRoles: formData.workRoles, extraModules: formData.extraModules, instruments: formData.instruments }
+              : {}),
             isActive: formData.isActive,
             ...(formData.password.trim() ? { password: formData.password.trim() } : {}),
           }),
