@@ -45,7 +45,9 @@ export async function parseContactsExcel(file: File): Promise<ImportResult> {
           const categoryRaw = String(row.category || "NONE").trim().toUpperCase();
           const category = ["ALUMNO", "TUTOR", "PROFESOR"].includes(categoryRaw) ? categoryRaw : "NONE";
           
-          const instrument = String(row.instrument || "").trim().toUpperCase();
+          const rawInstrument = String(row.instrument || "").trim().toUpperCase();
+          // Legado: acústica/eléctrica se unifican en GUITARRA.
+          const instrument = rawInstrument === "GUITARRA_ACUSTICA" || rawInstrument === "GUITARRA_ELECTRICA" ? "GUITARRA" : rawInstrument;
 
           if (!name) {
             errors.push(`Fila ${rowNum}: El nombre es obligatorio.`);
@@ -61,7 +63,7 @@ export async function parseContactsExcel(file: File): Promise<ImportResult> {
             return;
           }
 
-          const validInstruments = ["BAJO", "GUITARRA_ACUSTICA", "GUITARRA_ELECTRICA", "BATERIA", "PIANO", "VOZ"];
+          const validInstruments = ["BAJO", "GUITARRA", "BATERIA", "PIANO", "VOZ"];
           if (category === "ALUMNO" && !validInstruments.includes(instrument)) {
             errors.push(`Fila ${rowNum}: Instrumento '${instrument}' no válido.`);
             return;
@@ -133,7 +135,7 @@ export function generateContactsExcelTemplate() {
       "ALUMNO",
       "+34600123456",
       "INDIVIDUAL",
-      "GUITARRA_ACUSTICA",
+       "GUITARRA",
       "",
       "",
       "12345678Z",

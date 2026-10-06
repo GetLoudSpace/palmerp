@@ -76,11 +76,23 @@ async function postToGraph(opts: {
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.messages?.[0]?.id) {
       const raw = typeof data === "string" ? data : JSON.stringify(data).slice(0, 500);
-      // code 100/subcode 33 = phone_number_id inexistente o sin acceso: el valor
-      // guardado no es el Phone Number ID (suele ser el Business Account ID u otro).
+      // Errores Meta frecuentes, traducidos a acción:
+      // 100/33 = phone_number_id inexistente o sin acceso (suele ser el Business Account ID).
+      // 131030 = app en pruebas: el destinatario no está en la lista de autorizados.
+      // 131047 = fuera de la ventana 24h: el texto libre no vale, hay que usar plantilla.
+      // 190 = token caducado o inválido.
       const metaErr = (data as { error?: { code?: number; error_subcode?: number } })?.error;
       if (metaErr?.code === 100) {
         return { success: false, error: "Meta: el phone number ID no existe o el token no tiene acceso a ese número. Revisa que sea el Phone Number ID de WhatsApp > API Setup (no el Business Account ID) y que token y número sean del mismo negocio. Detalle: " + raw.slice(0, 200) };
+      }
+      if (metaErr?.code === 131030) {
+        return { success: false, error: "Meta: tu móvil no está en la lista de destinatarios de prueba. Añádelo en WhatsApp > API Setup (apartado de destinatarios, te llegará un código para confirmar) o pon la app en modo Live. Detalle: " + raw.slice(0, 200) };
+      }
+      if (metaErr?.code === 131047) {
+        return { success: false, error: "Meta: fuera de la ventana de 24h el texto libre no está permitido; hay que enviar una plantilla aprobada. Detalle: " + raw.slice(0, 200) };
+      }
+      if (metaErr?.code === 190) {
+        return { success: false, error: "Meta: el token ha caducado o no es válido. Genera uno nuevo (System User con whatsapp_business_messaging) y guárdalo en Credenciales. Detalle: " + raw.slice(0, 200) };
       }
       return { success: false, error: raw };
     }

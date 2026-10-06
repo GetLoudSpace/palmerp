@@ -25,7 +25,7 @@ interface Contact {
   notes?: string;
   birthDate?: string;
   category?: "NONE" | "ALUMNO" | "TUTOR" | "PROFESOR";
-  instrument?: "BAJO" | "GUITARRA_ACUSTICA" | "GUITARRA_ELECTRICA" | "BATERIA" | "PIANO" | "VOZ";
+  instrument?: "BAJO" | "GUITARRA" | "BATERIA" | "PIANO" | "VOZ";
   tutoredStudentIds?: string[];
   tutorIds?: string[];
   createdAt: string;
@@ -388,8 +388,8 @@ export default function ContactsPage() {
           contactId: c.id,
           contactName: c.name,
           contactPhone: c.phone || "",
-          instruments: c.instrument ? [c.instrument] : ["GUITARRA_ACUSTICA"],
-          primaryInstrument: c.instrument || "GUITARRA_ACUSTICA",
+           instruments: c.instrument ? [c.instrument] : ["GUITARRA"],
+           primaryInstrument: c.instrument || "GUITARRA",
           tier: "ALUMNO",
           level: "BASICO",
           commsMode: "TUTOR_ONLY",
@@ -1141,8 +1141,7 @@ export default function ContactsPage() {
                     >
                       <option value="">Seleccione instrumento...</option>
                       <option value="BAJO">Bajo</option>
-                      <option value="GUITARRA_ACUSTICA">Guitarra Acústica</option>
-                      <option value="GUITARRA_ELECTRICA">Guitarra Eléctrica</option>
+                       <option value="GUITARRA">Guitarra</option>
                       <option value="BATERIA">Batería</option>
                       <option value="PIANO">Piano</option>
                       <option value="VOZ">Voz</option>
