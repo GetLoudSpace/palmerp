@@ -8,7 +8,7 @@ import { isTenantDataCleared } from "@/lib/demoDataCleanup";
 import EditableLabel from "@/components/admin/EditableLabel";
 import SmartSearchInput from "@/components/SmartSearchInput";
 import { parseContactsExcel, generateContactsExcelTemplate } from "@/lib/contactImport";
-import { buildReviewWaMeUrl, phonesEqual } from "@/lib/contactSync";
+import { buildReviewWaMeUrl } from "@/lib/contactSync";
 
 // 1. Interfaces & Demo Data
 interface Contact {
@@ -504,15 +504,16 @@ export default function ContactsPage() {
   };
 
   // --- Feature #14: solicitar reseña Google vía wa.me (como Seguimiento) ---
-  // El saludo lleva el nombre del DUEÑO del teléfono: si el móvil del alumno
-  // es en realidad el del tutor (mismo número), se saluda al tutor.
+  // Regla del usuario: si el alumno tiene tutor/madre/padre enlazado, el
+  // mensaje saluda AL TUTOR (los móviles son de los padres); solo sin tutor
+  // se saluda al alumno. (Los tutores de Notion no traen teléfono, por eso no
+  // se compara por número: manda el enlace.)
   const requestReview = async (contact: Contact) => {
     const tutor = contact.tutors?.[0];
-    const tutorPhone = tutor?.phone || "";
-    const sharedPhone = !!tutor?.name && phonesEqual(contact.phone, tutorPhone);
-    const sendPhone = contact.phone || tutorPhone;
-    const greetName = sharedPhone || !contact.phone ? (tutor?.name || contact.name) : contact.name;
-    const url = buildReviewWaMeUrl(sendPhone, greetName);
+    const tutorName = tutor?.name || "";
+    const sendPhone = contact.phone || tutor?.phone || "";
+    const greetName = tutorName || contact.name;
+    const url = buildReviewWaMeUrl(sendPhone, greetName, tutorName ? contact.name : undefined);
     if (!url) {
       alert("Ni el contacto ni su tutor tienen teléfono válido para WhatsApp.");
       return;
@@ -1006,6 +1007,13 @@ export default function ContactsPage() {
             </div>
             <div>
               <span className="text-xs font-bold text-foreground block">{contact.name}</span>
+              {/* Feature #14: tutor visible en la ficha (nombre de madre/padre). */}
+              {contact.tutors && contact.tutors.length > 0 && (
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                  <Icons.Users className="h-3 w-3" />
+                  Tutor: {contact.tutors.map((t) => t.name).join(", ")}
+                </span>
+              )}
               {(() => {
                 // Legacy eduRoles integration + New Category Enum
                 const role = eduRoles[`id:${contact.id}`] || eduRoles[`name:${contact.name.toLowerCase()}`];

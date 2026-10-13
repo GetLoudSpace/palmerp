@@ -56,11 +56,20 @@ describe("contactSync — feature #11 contacts_shared_db", () => {
   it("mensaje de reseña con nombre de pila + enlace (feature #14)", () => {
     const msg = buildReviewMessage("Ana Ruiz Gil");
     expect(msg).toContain("¡Hola, Ana!");
+    expect(msg).toContain("cómo te lo estás pasando");
     expect(msg).toContain("reseña de Google");
     expect(msg).toContain("Get Loud");
     expect(msg).toContain(GOOGLE_REVIEW_URL);
     expect(buildReviewWaMeUrl("600111222", "Ana Ruiz")).toContain("https://wa.me/34600111222?text=");
     expect(buildReviewWaMeUrl("", "Ana")).toBe("");
+  });
+
+  it("mensaje a tutor: saluda al tutor y habla del alumno en 3ª persona", () => {
+    const msg = buildReviewMessage("María López", "Lucía Martín");
+    expect(msg).toContain("¡Hola, María!");
+    expect(msg).toContain("cómo se lo está pasando Lucía");
+    expect(msg).not.toContain("cómo te lo estás pasando");
+    expect(msg).toContain(GOOGLE_REVIEW_URL);
   });
 
   it("phonesEqual compara aunque cambie el formato", () => {

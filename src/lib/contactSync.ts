@@ -159,21 +159,27 @@ export function splitPhone(raw: unknown): { phone: string; phoneNormalized: stri
 // Feature #14: solicitud de reseña Google vía wa.me (como Seguimiento).
 export const GOOGLE_REVIEW_URL = "https://g.page/r/CTe40ljLgS4KEAI/review";
 
-/** Mensaje preset con el nombre de pila del contacto + enlace de reseña. */
-export function buildReviewMessage(contactName: string): string {
-  const first = String(contactName || "gracias").trim().split(/\s+/)[0] || "gracias";
+/** Mensaje preset de reseña.
+ * - Sin `studentName`: se habla AL alumno ("cómo te lo estás pasando").
+ * - Con `studentName` (va al tutor/padre/madre): "cómo se lo está pasando {alumno}". */
+export function buildReviewMessage(greetName: string, studentName?: string): string {
+  const first = String(greetName || "gracias").trim().split(/\s+/)[0] || "gracias";
+  const about =
+    studentName && studentName.trim()
+      ? `cómo se lo está pasando ${String(studentName).trim().split(/\s+/)[0]}`
+      : "cómo te lo estás pasando";
   return (
     `¡Hola, ${first}! Nos gustaría que le contases al resto del mundo a través de una reseña de Google ` +
-    `cómo te lo estás pasando en Get Loud. Si tienes 1 minuto para dedicarnos, te lo agradeceremos de corazón. ` +
+    `${about} en Get Loud. Si tienes 1 minuto para dedicarnos, te lo agradeceremos de corazón. ` +
     `Así que... ¡adelante! ${GOOGLE_REVIEW_URL}`
   );
 }
 
 /** URL wa.me con el mensaje de reseña pre-rellenado. "" si no hay teléfono. */
-export function buildReviewWaMeUrl(phone: string, contactName: string): string {
+export function buildReviewWaMeUrl(phone: string, greetName: string, studentName?: string): string {
   const norm = normalizePhoneES(phone);
   if (!norm) return "";
-  return `https://wa.me/${norm}?text=${encodeURIComponent(buildReviewMessage(contactName))}`;
+  return `https://wa.me/${norm}?text=${encodeURIComponent(buildReviewMessage(greetName, studentName))}`;
 }
 
 /** ¿Son el mismo teléfono aunque vengan en distinto formato? */
