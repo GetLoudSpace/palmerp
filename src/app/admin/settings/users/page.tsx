@@ -64,6 +64,7 @@ export default function UsersSettingsPage() {
     instruments: [] as string[],
     isActive: true,
     password: "",
+    clockPin: "",
   });
 
   const triggerToast = useCallback((msg: string) => {
@@ -103,7 +104,7 @@ export default function UsersSettingsPage() {
 
   const openCreateModal = () => {
     setEditingUser(null);
-    setFormData({ name: "", email: "", level: "USUARIO", workRoles: [], extraModules: [], instruments: [], isActive: true, password: "" });
+    setFormData({ name: "", email: "", level: "USUARIO", workRoles: [], extraModules: [], instruments: [], isActive: true, password: "", clockPin: "" });
     setIsModalOpen(true);
   };
 
@@ -118,6 +119,7 @@ export default function UsersSettingsPage() {
       instruments: user.instruments || [],
       isActive: user.isActive,
       password: "",
+      clockPin: "",
     });
     setIsModalOpen(true);
   };
@@ -163,10 +165,10 @@ export default function UsersSettingsPage() {
               : {}),
             isActive: formData.isActive,
             ...(formData.password.trim() ? { password: formData.password.trim() } : {}),
+            ...(formData.clockPin.trim() ? { clockPin: formData.clockPin.trim() } : {}),
           }),
         });
-        triggerToast(`¡Ficha de ${formData.name} actualizada!`);
-        if (data.tempPassword) {
+        triggerToast(`¡Ficha de ${formData.name} actualizada!`);        if (data.tempPassword) {
           setEmailDetails({ to: formData.email, name: formData.name, role: formData.level, tempPassword: data.tempPassword, accessLink: accessLinkFor(formData.email) });
           setShowEmailModal(true);
         }
@@ -183,6 +185,7 @@ export default function UsersSettingsPage() {
               : {}),
             isActive: formData.isActive,
             ...(formData.password.trim() ? { password: formData.password.trim() } : {}),
+            ...(formData.clockPin.trim() ? { clockPin: formData.clockPin.trim() } : {}),
           }),
         });
         triggerToast(`¡Usuario ${formData.name} creado con éxito!`);
@@ -409,6 +412,11 @@ export default function UsersSettingsPage() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase">Contraseña {editingUser ? "(vacío = mantener)" : "(vacío = autogenerar)"}</label>
                   <input type="text" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="Mínimo 8 caracteres" className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 font-mono" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase">PIN fichaje {editingUser ? "(vacío = mantener)" : "(opcional)"}</label>
+                  <input type="text" inputMode="numeric" value={formData.clockPin} onChange={(e) => setFormData({ ...formData, clockPin: e.target.value.replace(/\D/g, "").slice(0, 8) })} placeholder="4-8 dígitos" className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 font-mono" />
+                  <p className="text-[10px] text-muted-foreground">Se guarda cifrado y nunca se muestra.</p>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase block mb-1">Estado</label>

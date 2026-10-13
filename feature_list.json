@@ -163,6 +163,20 @@
       "status": "done"
     },
     {
+      "id": 13,
+      "name": "team_clocking",
+      "title": "Fichajes reales simples (PIN por usuario + terminal móvil)",
+      "description": "Terminal de fichaje simple para móvil: PIN de 4-8 dígitos configurable por usuario (cifrado), página directa /admin/team/fichar accesible a todo empleado (para enlace en escritorio del móvil), entradas/salidas en TeamClockEntry por tenant y empleados reales desde Usuarios (fin de seeds demo en fichajes).",
+      "acceptance": [
+        "Prisma: User.clockPin (hash, nunca se devuelve) + TeamClockEntry (tenantId, userId nullable SetNull, userName snapshot, kind IN/OUT, at, source) con columna aplicada en prod",
+        "POST /api/team/clock {pin} resuelve usuario por PIN del tenant y registra ENTRADA/SALIDA auto (toggle por último registro) + AuditLog; GET devuelve estado propio y (ADMIN/DEV) lista del día",
+        "PATCH /api/admin/users acepta clockPin (solo ADMIN/DEV) y UI lo configura por usuario (write-only)",
+        "/admin/team/fichar: PIN pad + botón gigante Entrada/Salida + lista de hoy; accesible a todo logueado (mapeo a módulo base) para shortcut de móvil",
+        "npx tsc --noEmit → 0 errores · ./init.sh verde"
+      ],
+      "status": "done"
+    },
+    {
       "id": 11,
       "name": "contacts_shared_db",
       "title": "Contactos de Palmerp en DB compartida (multiusuario) en lugar de localStorage",

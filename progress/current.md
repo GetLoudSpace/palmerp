@@ -154,6 +154,17 @@
 - Fix `ClassReportPanel.tsx`: `seguimientoResults` (useMemo) = locales + contactos `ALUMNO` del servidor sin duplicar por nombre; placeholder y destinatarios resuelven por nombre contra DB (tutor incluido); botón Actualizar recarga también servidor; empty-state útil.
 - `tsc` 0 ✅ · tests 24/24 ✅ · build OK ✅ · `init.sh` verde ✅. Sin commitear (espera orden push).
 
+**Hotfix 2026-10-13 (403 /api/admin/dashboard para no-ADMIN):**
+- Misma clase que modes: el panel `/admin` (todos) lee el layout pero la ruta colgaba de `settings` en middleware. Fix idéntico: GET con sesión (401), POST ADMIN/DEV del tenant (403). Verificado con el resto abajo.
+
+**Ejecutado 2026-10-13 (feature #13 team_clocking — done, sin commitear):**
+- Schema: `User.clockPin` (hash bcrypt, write-only, `sanitize` lo oculta) + `TeamClockEntry` (userId nullable SetNull + userName snapshot; sin RLS como tablas Edu) — aplicado en prod (`applied=6`, todo aditivo).
+- `POST /api/team/clock {pin}`: resuelve usuario activo del tenant por PIN, toggle auto IN/OUT por último registro del día + audit; `GET`: estado propio + fichajes de hoy. Sin sesión → 401.
+- `PATCH/POST /api/admin/users`: acepta `clockPin` (4-8 dígitos); UI en ficha (write-only).
+- `/admin/team/fichar`: PIN pad + botón FICHAR + resultado + lista de hoy + ayuda de acceso directo; accesible a todo logueado (mapeo a `contacts` base); entrada "Fichar (terminal)" en menú para gestores.
+- Verificado: `tsc` 0 ✅ · tests 25/25 ✅ · build OK ✅ · `init.sh` verde ✅ · clock sin sesión → 401 ✅.
+- Nota: turnos/vacaciones conservan seeds demo restaurante (fuera de alcance); fichaje usa usuarios reales.
+
 **Ejecutado 2026-10-13 (feature #12 user_admin_delete — done, sin commitear):**
 - Solo ADMIN/DEV (el profesor ni ve Ajustes: módulo `settings` no asignable). Borrado FK-seguro: clases a `SetNull`, perfil profesor en cascada, auditoría conserva histórico.
 - `src/lib/userGuards.ts` [NUEVO, puro] + tests 3/3: `canEditUser` (DEV solo por DEV), `canDeleteUser` (+ nunca a sí mismo), `normalizeLoginEmail`.

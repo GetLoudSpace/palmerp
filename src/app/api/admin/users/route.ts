@@ -12,7 +12,7 @@ import bcrypt from "bcryptjs";
 import db from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { WORK_ROLES, isAssignableModule, isWorkRole } from "@/lib/access";
-import { canDeleteUser, canEditUser, normalizeLoginEmail } from "@/lib/userGuards";
+import { canDeleteUser, canEditUser, isValidClockPin, normalizeLoginEmail } from "@/lib/userGuards";
 
 type Caller = { id: string; role: string; tenantId: string };
 
@@ -29,7 +29,7 @@ async function requireManager(): Promise<{ caller: Caller } | { error: NextRespo
 }
 
 function sanitize(row: Record<string, unknown>) {
-  const { passwordHash, ...rest } = row;
+  const { passwordHash, clockPin, ...rest } = row;
   return rest;
 }
 
@@ -92,6 +92,13 @@ export async function POST(req: Request) {
   const instruments: string[] = Array.isArray(body.instruments) ? body.instruments.map(String) : [];
   const password = typeof body.password === "string" && body.password ? body.password : genTempPassword();
   if (password.length < 8) return NextResponse.json({ error: "Mínimo 8 caracteres" }, { status: 400 });
+  let clockPinHash: string | null = null;
+  if (typeof body.clockPin === "string" && body.clockPin.trim()) {
+    if (!isValidClockPin(body.clockPin)) {
+      return NextResponse.json({ error: "PIN de 4-8 dígitos" }, { status: 400 });
+    }
+    clockPinHash = await bcrypt.hash(body.clockPin.trim(), 10);
+  }
 
   const existing = await (db as any).user
     .findUnique({ where: { tenantId_email: { tenantId: caller.tenantId, email } } })
@@ -104,6 +111,7 @@ export async function POST(req: Request) {
       name,
       email,
       passwordHash: await bcrypt.hash(password, 10),
+      ...(clockPinHash ? { clockPin: clockPinHash } : {}),
       role: level,
       isActive: body.isActive === false ? false : true,
       workRoles: level === "USUARIO" ? workRoles : [],
@@ -210,6 +218,16 @@ export async function PATCH(req: Request) {
     tempPassword = body.password;
   }
 
+  // Feature #13: PIN de fichaje (write-only, hash bcrypt, jamás se devuelve).
+  let pinChanged = false;
+  if (typeof body.clockPin === "string" && body.clockPin.trim()) {
+    if (!isValidClockPin(body.clockPin)) {
+      return NextResponse.json({ error: "PIN de 4-8 dígitos" }, { status: 400 });
+    }
+    data.clockPin = await bcrypt.hash(body.clockPin.trim(), 10);
+    pinChanged = true;
+  }
+
   const updated = await (db as any).user.update({ where: { id }, data });
 
   // Sincronizar perfil de profesor con el rol PROFESOR.
@@ -235,7 +253,7 @@ export async function PATCH(req: Request) {
         action: "USER_UPDATED",
         table: "User",
         recordId: id,
-        details: `${updated.name} <${updated.email}> nivel ${updated.role} roles ${(roles as string[]).join(",") || "—"} activo ${updated.isActive ? "sí" : "no"}${emailChanged ? ` email ${emailChanged.from} → ${emailChanged.to}` : ""}`,
+        details: `${updated.name} <${updated.email}> nivel ${updated.role} roles ${(roles as string[]).join(",") || "—"} activo ${updated.isActive ? "sí" : "no"}${emailChanged ? ` email ${emailChanged.from} → ${emailChanged.to}` : ""}${pinChanged ? " +PIN fichaje" : ""}`,
         success: true,
       },
     });

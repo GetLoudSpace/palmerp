@@ -120,8 +120,9 @@ export function pathToModule(pathname: string): string | null {
     ["/admin/settings", "settings"],
     ["/api/admin/users", "settings"],
     ["/api/admin/credentials", "settings"],
-    ["/api/admin/updates", "settings"],
-    ["/api/admin/dashboard", "settings"],
+    // NOTA: /api/admin/modes y /api/admin/dashboard NO van aquí: los leen
+    // todos los logueados (sidebar/panel); cada ruta exige sesión en GET y
+    // ADMIN/DEV del tenant en POST.
     ["/api/admin/restore", "settings"],
     ["/admin/contacts", "contacts"],
     ["/api/contacts", "contacts"],
@@ -134,6 +135,11 @@ export function pathToModule(pathname: string): string | null {
     ["/admin/crm", "VENTAS"],
     ["/admin/communication", "COMUNICACION"],
     ["/admin/finance", "FINANZAS"],
+    // Feature #13: el terminal de fichaje lo usa TODO empleado (para el
+    // acceso directo desde el móvil). Va antes que /admin/team y cuelga del
+    // módulo base "contacts" que todo activo tiene. El resto de /admin/team
+    // sigue exigiendo GESTION_EQUIPO.
+    ["/admin/team/fichar", "contacts"],
     ["/admin/team", "GESTION_EQUIPO"],
     ["/admin/purchasing", "COMPRAS_INTELIGENTES"],
     ["/admin/restaurant", "RESTAURANTE"],

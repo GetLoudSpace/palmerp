@@ -138,6 +138,7 @@ export const PalmModesRegistry: Record<string, PalmModeConfig> = {
     icon: "Users2",
     category: "Soporte",
     menuItems: [
+      { label: "Fichar (terminal)", path: "/admin/team/fichar" },
       { label: "Control de Fichajes", path: "/admin/team/clocking" },
       { label: "Nóminas & Contratos", path: "/admin/team/payroll" },
       { label: "Organigrama & Turnos", path: "/admin/team/shifts" },

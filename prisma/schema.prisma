@@ -48,6 +48,7 @@ model Tenant {
   eduCalendarLinks    EduCalendarLink[]
   eduTeacherProfiles  EduTeacherProfile[]
   backupLogs          BackupLog[]
+  clockEntries        TeamClockEntry[]
 }
 
 model User {
@@ -57,6 +58,7 @@ model User {
   name         String
   email        String
   passwordHash String
+  clockPin     String?  // Hash bcrypt del PIN de fichaje (4-8 dígitos, write-only, nunca se devuelve)
   // Nivel de acceso: DEV (técnico externo, todo) · ADMIN (gerencia, todo funcional) ·
   // USUARIO (empleado: solo lo que le den sus roles de trabajo + módulos extra).
   role         UserRole @default(USUARIO)
@@ -69,10 +71,31 @@ model User {
   updatedAt    DateTime @updatedAt
   eduLessonsAsTeacher EduLesson[]
   eduTeacherProfile EduTeacherProfile?
+  clockEntries TeamClockEntry[]
 
   @@unique([tenantId, email])
   @@index([email])
   @@index([tenantId])
+}
+
+// Feature #13: registro de jornada real. userId nullable + SetNull para que
+// el histórico sobreviva al borrado del usuario (userName snapshot).
+// Sin RLS (paridad con tablas Edu*: la app filtra siempre por tenantId).
+model TeamClockEntry {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userName  String   // snapshot para histórico aunque se borre el usuario
+  kind      String   // "IN" (entrada) | "OUT" (salida)
+  at        DateTime @default(now())
+  source    String   @default("TERMINAL") // TERMINAL | MANUAL
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, userId, at])
+  @@index([tenantId, at])
 }
 
 model PasswordResetToken {

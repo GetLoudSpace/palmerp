@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { canEditUser, canDeleteUser, normalizeLoginEmail } from "../lib/userGuards";
+import { canEditUser, canDeleteUser, normalizeLoginEmail, isValidClockPin } from "../lib/userGuards";
 
 const ADMIN = { id: "a1", role: "ADMIN" };
 const DEV = { id: "d1", role: "DEV" };
@@ -27,5 +27,14 @@ describe("userGuards — feature #12", () => {
     expect(normalizeLoginEmail("no-es-email")).toBeNull();
     expect(normalizeLoginEmail("")).toBeNull();
     expect(normalizeLoginEmail(undefined)).toBeNull();
+  });
+
+  it("acepta PIN de fichaje de 4-8 dígitos", () => {
+    expect(isValidClockPin("1234")).toBe(true);
+    expect(isValidClockPin("  12345678 ")).toBe(true);
+    expect(isValidClockPin("123")).toBe(false);
+    expect(isValidClockPin("123456789")).toBe(false);
+    expect(isValidClockPin("12a4")).toBe(false);
+    expect(isValidClockPin("")).toBe(false);
   });
 });

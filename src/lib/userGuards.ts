@@ -33,3 +33,8 @@ export function normalizeLoginEmail(raw: unknown): string | null {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
   return email;
 }
+
+/** PIN de fichaje: 4-8 dígitos. */
+export function isValidClockPin(raw: unknown): boolean {
+  return typeof raw === "string" && /^\d{4,8}$/.test(raw.trim());
+}
