@@ -26,8 +26,8 @@ export const WORK_ROLES: readonly WorkRoleDef[] = [
   {
     id: "PROFESOR",
     label: "Profesor",
-    description: "Clases, agenda, alumnos, biblioteca y artista. Más Contactos.",
-    modules: ["EDUCACION", "contacts", "conversations"],
+    description: "Clases, agenda, biblioteca y curso. Más Contactos y Artista.",
+    modules: ["EDUCACION", "ARTISTA", "contacts", "conversations"],
   },
   {
     id: "COMERCIAL",
@@ -52,6 +52,7 @@ export function isWorkRole(id: unknown): id is string {
 /** Módulos asignables como extra (settings queda fuera a propósito). */
 export const ASSIGNABLE_MODULES: readonly { id: string; label: string }[] = [
   { id: "EDUCACION", label: "Educación" },
+  { id: "ARTISTA", label: "Artista" },
   { id: "VENTAS", label: "Ventas" },
   { id: "FINANZAS", label: "Finanzas" },
   { id: "COMUNICACION", label: "Comunicación" },
@@ -127,6 +128,7 @@ export function pathToModule(pathname: string): string | null {
     ["/admin/conversations", "conversations"],
     ["/admin/education", "EDUCACION"],
     ["/api/education", "EDUCACION"],
+    ["/admin/artist", "ARTISTA"],
     ["/admin/sales", "VENTAS"],
     ["/admin/products", "VENTAS"],
     ["/admin/crm", "VENTAS"],

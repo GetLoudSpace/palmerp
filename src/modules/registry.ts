@@ -210,17 +210,25 @@ export const PalmModesRegistry: Record<string, PalmModeConfig> = {
   EDUCACION: {
     id: "EDUCACION",
     name: "Educación",
-    description: "Profesores, agenda calendario (aulas), seguimiento multi-instrumento, biblioteca, WhatsApp Cloud y portal artista.",
+    description: "Profesores, agenda calendario (aulas), seguimiento multi-instrumento, biblioteca y WhatsApp.",
     icon: "GraduationCap",
     category: "Operaciones",
     menuItems: [
       { label: "Profesor", path: "/admin/education" },
-      { label: "Curso Guitarra", path: "/admin/education/guitar" },
-
-      { label: "Alumnos", path: "/admin/education/students" },
+      { label: "Agenda", path: "/admin/education/agenda" },
       { label: "Clases & Seguimiento", path: "/admin/education/lessons" },
       { label: "Biblioteca", path: "/admin/education/library" },
-      { label: "Artista", path: "/admin/education/artist" },
+    ],
+    requiredRole: "USUARIO",
+  },
+  ARTISTA: {
+    id: "ARTISTA",
+    name: "Artista",
+    description: "Portal de artista: grabaciones, rimador y espacio creativo independiente de Educación.",
+    icon: "MicVocal",
+    category: "Operaciones",
+    menuItems: [
+      { label: "Portal Artista", path: "/admin/artist" },
     ],
     requiredRole: "USUARIO",
   },

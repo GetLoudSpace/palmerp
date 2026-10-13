@@ -151,8 +151,16 @@ export default function ClassReportPanel() {
       const raw = localStorage.getItem(getTenantStorageKey("edu_students"));
       if (!raw) return;
       const arr: any[] = JSON.parse(raw);
+      const seen = new Set<string>();
       setEduStudents(
-        (Array.isArray(arr) ? arr : []).map((s: any) => ({
+        (Array.isArray(arr) ? arr : [])
+          .filter((s: any) => {
+            const k = String(s.id);
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          })
+          .map((s: any) => ({
           id: String(s.id),
           contactId: s.contactId ? String(s.contactId) : undefined,
           contactName: String(s.contactName || s.name || "Alumno"),
@@ -222,11 +230,8 @@ export default function ClassReportPanel() {
     }
     setSending(true);
 
-    const lessonId = selectedLocal?.id || selectedEvent?.id || "gc-" + Date.now();
     const lessonName = selectedLocal?.studentName || selectedEvent?.summary || "Alumno";
     const instrument = selectedLocal?.instrument || "";
-    // studentId real si la ficha existe en local (el servidor valida contra Prisma; 404 → solo fallback local)
-    const matchedStudent = eduStudents.find((s) => s.contactName.toLowerCase() === lessonName.toLowerCase());
 
     const body =
       `*Clase de hoy — ${new Date().toLocaleDateString("es-ES")}*\n` +
@@ -239,26 +244,8 @@ export default function ClassReportPanel() {
     const fallbackTargets = chosen.length > 0 ? chosen : sendableRecipients(recipients);
 
     try {
-      let cloudOk = false;
-      try {
-        const res = await fetch("/api/education/report", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            studentId: matchedStudent?.id || lessonId,
-            lessonId,
-            done: form.done,
-            todo: form.todo,
-            recipients: chosen.map((r) => ({ contactId: r.contactId, role: r.role, toPhone: (r as { toPhone?: string }).toPhone, label: (r as { label?: string }).label })),
-          }),
-        });
-        const data = await res.json().catch(() => null);
-        // 404 = ficha aún solo en localStorage (sin Prisma): no es error, seguimos con wa.me
-        cloudOk = res.ok && !!data?.success && (data?.sent ?? 0) > 0;
-        if (!res.ok && res.status !== 404) throw new Error(data?.error || "Error enviando reporte");
-      } catch (apiErr: any) {
-        if (!String(apiErr?.message || "").includes("404") && !String(apiErr?.message || "").includes("Student not found")) throw apiErr;
-      }
+      // Envío por click-to-chat wa.me (sin Meta Cloud API): abre WhatsApp
+      // con el mensaje pre-rellenado en el chat de cada destinatario.
 
       if (selectedLocal) {
         const raw = localStorage.getItem(getTenantStorageKey("edu_lessons"));
@@ -276,10 +263,22 @@ export default function ClassReportPanel() {
         }
       }
 
-      if (cloudOk) {
-        setToast({ msg: `✅ Reporte enviado por WhatsApp Cloud API (${fallbackTargets.length} destinatario${fallbackTargets.length === 1 ? "" : "s"})`, ok: true });
-      } else if (fallbackTargets.length > 0) {
-        setToast({ msg: `📲 Abriendo WhatsApp (fallback wa.me) → ${fallbackTargets.length} chat${fallbackTargets.length === 1 ? "" : "s"}...`, ok: true });
+      if (fallbackTargets.length > 0) {
+        setToast({ msg: `📲 Abriendo WhatsApp → ${fallbackTargets.length} chat${fallbackTargets.length === 1 ? "" : "s"}...`, ok: true });
+        try {
+          const logKey = getTenantStorageKey("edu_wa_outbox");
+          const prev = JSON.parse(localStorage.getItem(logKey) || "[]");
+          const entry = {
+            id: `walog_${Date.now()}`,
+            at: new Date().toISOString(),
+            lesson: lessonName,
+            instrument,
+            recipients: fallbackTargets.map((r) => ({ label: r.label, phone: r.toPhone })),
+            body,
+          };
+          localStorage.setItem(logKey, JSON.stringify([entry, ...prev].slice(0, 200)));
+          window.dispatchEvent(new Event("palmera_wa_outbox_updated"));
+        } catch {}
         fallbackTargets.forEach((r, i) => {
           setTimeout(() => window.open(buildWaMeUrl(r.toPhone, body), "_blank"), i * 600);
         });
@@ -363,6 +362,7 @@ export default function ClassReportPanel() {
       <div className="max-h-60 overflow-auto">
         {eduStudents
           .filter(s => s.contactName?.toLowerCase().includes(searchStudent.toLowerCase()))
+          .filter((s, i, arr) => arr.findIndex((x) => x.id === s.id) === i)
           .map(s => (
             <button
               key={s.id}
@@ -371,6 +371,8 @@ export default function ClassReportPanel() {
                 const lesson = localLessons.find(l => l.studentPhone === s.contactPhone || l.studentName === s.contactName);
                 if (lesson) {
                   setSelectedLocal(lesson as any);
+                  setForm({ done: lesson.notes || "", todo: "", attendance: true });
+                  openRecipients(lesson.studentName, lesson.studentPhone || s.contactPhone);
                 } else {
                   // Create a placeholder local lesson for a new student
                   const placeholder = {
@@ -384,6 +386,8 @@ export default function ClassReportPanel() {
                     // other fields optional
                   } as any;
                   setSelectedLocal(placeholder);
+                  setForm({ done: "", todo: "", attendance: true });
+                  openRecipients(s.contactName, s.contactPhone);
                 }
                 setShowForm(true);
                 setShowSeguimiento(false);

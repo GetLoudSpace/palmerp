@@ -132,3 +132,13 @@
 - Configurar `GOOGLE_SERVICE_ACCOUNT_JSON` y `GOOGLE_CALENDAR_ID` en `.env` para activar sincronización real con Google Calendar
 - Configurar `WHATSAPP_TOKEN` y `WHATSAPP_PHONE_NUMBER_ID` (= `WHATSAPP_PHONE_ID` legacy) para envío real por WhatsApp Cloud API
 - `prisma db push` / migrate para aplicar los nuevos campos en la DB del tenant cuando toque
+
+**Plan ejecutado 2026-10-13 (reporte por click-to-chat + pestañas profesor + módulo Artista):**
+- Repo sincronizado: `master` pasa a trackear `origin` (GetLoudSpace/palmerp, rápido-forward a `7706363`); autor de commits locales = `Palm-ERP <326903259+Palm-ERP@users.noreply.github.com>`
+- `src/modules/education/components/ClassReportPanel.tsx`: el reporte de clase **ya no llama a Cloud API** — siempre click-to-chat `wa.me` con texto pre-rellenado por destinatario; fix destinatarios vacíos al abrir desde "Seguimiento" (ahora invoca `openRecipients`); dedupe de fichas duplicadas por `id` (clave React repetida); registro de cada envío en localStorage `edu_wa_outbox` (últ. 200) + evento `palmera_wa_outbox_updated`
+- `src/modules/education/components/TeacherTabs.tsx` [NUEVO]: pestañas "Clases de hoy | Curso Guitarra | Registro de envíos" en `/admin/education` (incluye `GuitarCourseViewer` embebido)
+- `src/modules/education/components/SendLogPanel.tsx` [NUEVO]: historial fusionado `edu_wa_outbox` (reportes wa.me) + `edu_outbox` (flujo Clases & Seguimiento), badges de estado y botón vaciar
+- `src/app/admin/education/page.tsx`: eliminado `ProfessorsManager` (la gestión de profesores vive en Usuarios & Permisos); usa `TeacherTabs`
+- Menús (`registry.ts` + `education/module.ts`): fuera "Curso Guitarra" (pestaña del profesor), "Alumnos" (se ve en Contactos filtrando categoría Alumno) y "Artista" de EDUCACION
+- Artista como módulo aparte `ARTISTA` (mismo nivel que Educación): nuevo `src/app/admin/artist/page.tsx` (reusa `ArtistWorkspace`), assignable como extra, rol PROFESOR lo incluye, `pathToModule` `/admin/artist → ARTISTA`. Requiere activar el modo en Gestión de modos (o por defecto para PROFESOR vía acceso)
+- `tsc` 0 ✅ · `./init.sh` verde ✅
