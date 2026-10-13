@@ -120,7 +120,6 @@ export function pathToModule(pathname: string): string | null {
     ["/admin/settings", "settings"],
     ["/api/admin/users", "settings"],
     ["/api/admin/credentials", "settings"],
-    ["/api/admin/modes", "settings"],
     ["/api/admin/updates", "settings"],
     ["/api/admin/dashboard", "settings"],
     ["/api/admin/restore", "settings"],

@@ -172,7 +172,7 @@
         "/admin/contacts lee/escribe vía API; elimina el seed de demoContacts para tenant con DB poblada; keeps offline-safe (loading + error states)",
         "Migración localStorage→DB: botón/detect 'Importar contactos locales' (solo ADMIN/DEV, dedupe por phoneNormalized, no duplica en re-ejecución)",
         "ClassReportPanel/resolveRecipients resuelven destinatarios desde API (DB) cuando existe, conservando fallback localStorage para fichas aún locales",
-        "USUARIO con rol PROFESOR: solo ve/alumna-asignados (mismo patrón Only Assigned Data que GHL: por EduTeacherProfile/teacherId de sus clases)",
+        "USUARIO con rol PROFESOR: ve todos los contactos del tenant como el resto (decisión del usuario 2026-10-13: sin filtro por asignados; el filtro por EduLesson DB dejaba la lista a cero porque las clases viven en localStorage)",
         "npx tsc --noEmit → 0 errores · ./init.sh verde"
       ],
       "status": "done"

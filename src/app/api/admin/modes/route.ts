@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import db from "@/lib/db";
+import { authOptions } from "@/lib/auth";
 import { getTenantSlugFromHeaders, enforcePinnedTenant } from "@/lib/tenant";
 import { getToken } from "next-auth/jwt";
 
@@ -25,6 +27,11 @@ async function resolveSlug(req?: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    // Lectura para TODOS los usuarios logueados (el sidebar la necesita para
+    // pintar el menú según rol). Sin sesión → 401, nunca 403 de middleware:
+    // esta ruta ya no mapea al módulo "settings" (ver pathToModule).
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     const slug = await resolveSlug(req);
     // Sin tenant resuelto NO devolver success:true+vacío: el sidebar lo interpreta
     // como "cero modos" y SOBRESCRIBE el localStorage bueno dejándolo como fresh install.
@@ -44,10 +51,21 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Escritura SOLO ADMIN/DEV del tenant (antes no exigía nada: cualquiera
+    // podía reescribir los modos activos).
+    const session = await getServerSession(authOptions);
+    const u = session?.user as unknown as { role?: string; tenantId?: string } | undefined;
+    if (!u?.tenantId) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+    if (u.role !== "ADMIN" && u.role !== "DEV") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const slug = await resolveSlug(req);
     if (!slug) return NextResponse.json({ success: true, modes: [] });
     const tenant = await db.tenant.findUnique({ where: { slug } });
     if (!tenant) return NextResponse.json({ success: false, error: "Tenant not found" }, { status: 404 });
+    if ((tenant as { id: string }).id !== u.tenantId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await req.json();
     const modes = Array.isArray(body.modes) ? body.modes : [];
     await db.setting.upsert({

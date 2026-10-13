@@ -19,31 +19,10 @@ import {
 
 type Caller = { id: string; role: string; workRoles?: string[]; tenantId: string };
 
-function isProfessorOnly(u: Caller): boolean {
-  if (u.role === "ADMIN" || u.role === "DEV") return false;
-  const roles = Array.isArray(u.workRoles) ? u.workRoles : [];
-  return roles.includes("PROFESOR") || u.role === "PROFESSOR";
-}
-
-/** ContactIds que un PROFESOR puede ver: sus alumnos (por sus clases) + tutores. */
-async function professorAllowedContactIds(tenantId: string, teacherId: string): Promise<string[]> {
-  const lessons = await (db as any).eduLesson.findMany({
-    where: { tenantId, teacherId },
-    select: { studentId: true },
-  });
-  const studentIds = [...new Set((lessons as { studentId: string }[]).map((l) => l.studentId))];
-  if (!studentIds.length) return [];
-  const students = await (db as any).eduStudent.findMany({
-    where: { tenantId, id: { in: studentIds } },
-    select: { contactId: true, tutorContactId: true },
-  });
-  const ids = new Set<string>();
-  for (const s of students as { contactId: string; tutorContactId: string | null }[]) {
-    if (s.contactId) ids.add(s.contactId);
-    if (s.tutorContactId) ids.add(s.tutorContactId);
-  }
-  return [...ids];
-}
+// Decisión usuario 2026-10-13: los contactos del tenant se ven desde
+// CUALQUIER usuario (incl. profesor). Sin filtro por alumnos asignados:
+// la asignación vive en EduLesson local y filtrar por la tabla DB vacía
+// dejaba la lista a cero.
 
 const CONTACT_INCLUDE = {
   tutorsOfMe: { include: { tutor: { select: { id: true, name: true, phone: true, phoneNormalized: true } } } },
@@ -99,7 +78,6 @@ export async function GET(req: Request) {
   const auth = await requireModuleAccess("contacts");
   if ("error" in auth) return auth.error;
   const { tenantId } = auth;
-  const caller = auth.session.user as unknown as Caller;
 
   const url = new URL(req.url);
   const q = (url.searchParams.get("q") || "").trim();
@@ -122,10 +100,6 @@ export async function GET(req: Request) {
       { companyName: contains },
       { billingCity: contains },
     ];
-  }
-  if (isProfessorOnly(caller)) {
-    const allowed = await professorAllowedContactIds(tenantId, caller.id);
-    where.id = { in: allowed };
   }
 
   const [total, rows] = await Promise.all([
@@ -248,11 +222,6 @@ export async function PATCH(req: Request) {
   if (!id) return NextResponse.json({ error: "id requerido" }, { status: 400 });
   const v = validateContactPayload(body);
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
-
-  if (isProfessorOnly(caller)) {
-    const allowed = await professorAllowedContactIds(tenantId, caller.id);
-    if (!allowed.includes(id)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   try {
     const updated = await withTenantContext(tenantId, async (tx) => {

@@ -139,6 +139,16 @@
 - Verificado: `tsc` 0 ✅ · tests 21/21 ✅ · `next build` OK ✅ · `init.sh` verde ✅.
 - Falta: commit + push (deploy Vercel con `NOTION_TOKEN`/`NOTION_CONTACTS_DB_ID` en env) y pulsar el botón para la copia real (~100 alumnos).
 
+**Fix build 2026-10-13 (push 85ae50e):** deploy `7d126bd` falló en Vercel con `Turbopack build failed: Can't resolve '@vercel/turbopack-next/internal/font/google/font'` (3 deploys previos en success; build local OK). Fix: fuera `next/font/google` de `layout.tsx`, pilas del sistema en `globals.css` (`--font-outfit/--font-mono`). `tsc` 0 + build local OK + tests 24/24. Push a `dst/master`, Vercel en `pending`.
+
+**Hotfix 2026-10-13 (403 /api/admin/modes para renato, USUARIO+PROFESOR):**
+- Causa exacta: `src/middleware.ts:187-188` devuelve 403 porque `pathToModule("/api/admin/modes")` era `"settings"` (`access.ts`) y el sidebar la llama con TODOS los usuarios para pintar el menú. La ruta en sí no tenía auth (el POST lo podía escribir cualquiera).
+- Fix: `access.ts` sin ese mapeo (el middleware ya no bloquea); `modes/route.ts` GET exige sesión (401) y POST exige ADMIN/DEV del tenant (403). `tsc` 0 + tests 24/24 + build OK + `init.sh` verde. Sin commitear (espera orden push).
+
+**Hotfix 2026-10-13 (renato no ve contactos tras sync Notion 94/1/0/46):**
+- Causa: el filtro PROFESOR-solo-asignados cruzaba `EduLesson` en DB (vacía; las clases viven en localStorage) → lista a cero. Decisión usuario: contactos visibles para TODO el tenant.
+- Fix: fuera `isProfessorOnly`/`professorAllowedContactIds` de `GET` y `PATCH` en `src/app/api/contacts/route.ts` + acceptance #11 actualizada. Sin commitear (espera orden push).
+
 **Ejecutado 2026-10-13 (feature #12 user_admin_delete — done, sin commitear):**
 - Solo ADMIN/DEV (el profesor ni ve Ajustes: módulo `settings` no asignable). Borrado FK-seguro: clases a `SetNull`, perfil profesor en cascada, auditoría conserva histórico.
 - `src/lib/userGuards.ts` [NUEVO, puro] + tests 3/3: `canEditUser` (DEV solo por DEV), `canDeleteUser` (+ nunca a sí mismo), `normalizeLoginEmail`.
