@@ -172,6 +172,12 @@
 - UI Contactos: botón G (colores Google; `Chrome` no existe en este lucide) junto a editar/borrar → abre wa.me y registra; badges ⭐✓ / ☆Solicitada / ☆Sin reseña siempre visibles en fila.
 - Verificado: `tsc` 0 ✅ · tests 27/27 ✅ · build OK ✅ · `init.sh` verde ✅.
 
+**Hotfix 2026-10-13 (saludo con nombre del dueño del teléfono):**
+- El botón Google saludaba al alumno aunque el móvil fuese del padre. Ahora: si el teléfono del alumno es el del tutor (mismo número) se saluda al tutor; si el alumno no tiene teléfono pero el tutor sí, se envía al tutor saludándole; si no, al alumno como antes. Comparación insensible a formato (`phonesEqual` + tests). La auditoría registra a quién se saludó.
+- `tsc` 0 ✅ · tests 28/28 ✅ · build OK ✅ · `init.sh` verde ✅. Sin commitear (espera orden push).
+
+**Cierre 2026-10-13 (feature #10 done):** sync real verificada en prod — 95 Contactos (59 ALUMNO + 36 TUTOR), 36 enlaces tutor-alumno, audit `SYNC_NOTION_CONTACTS` con conteos. Usuario confirma que reseñas y Seguimiento funcionan.
+
 **Ejecutado 2026-10-13 (feature #12 user_admin_delete — done, sin commitear):**
 - Solo ADMIN/DEV (el profesor ni ve Ajustes: módulo `settings` no asignable). Borrado FK-seguro: clases a `SetNull`, perfil profesor en cascada, auditoría conserva histórico.
 - `src/lib/userGuards.ts` [NUEVO, puro] + tests 3/3: `canEditUser` (DEV solo por DEV), `canDeleteUser` (+ nunca a sí mismo), `normalizeLoginEmail`.

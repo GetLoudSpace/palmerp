@@ -8,7 +8,7 @@ import { isTenantDataCleared } from "@/lib/demoDataCleanup";
 import EditableLabel from "@/components/admin/EditableLabel";
 import SmartSearchInput from "@/components/SmartSearchInput";
 import { parseContactsExcel, generateContactsExcelTemplate } from "@/lib/contactImport";
-import { buildReviewWaMeUrl } from "@/lib/contactSync";
+import { buildReviewWaMeUrl, phonesEqual } from "@/lib/contactSync";
 
 // 1. Interfaces & Demo Data
 interface Contact {
@@ -504,10 +504,17 @@ export default function ContactsPage() {
   };
 
   // --- Feature #14: solicitar reseña Google vía wa.me (como Seguimiento) ---
+  // El saludo lleva el nombre del DUEÑO del teléfono: si el móvil del alumno
+  // es en realidad el del tutor (mismo número), se saluda al tutor.
   const requestReview = async (contact: Contact) => {
-    const url = buildReviewWaMeUrl(contact.phone, contact.name);
+    const tutor = contact.tutors?.[0];
+    const tutorPhone = tutor?.phone || "";
+    const sharedPhone = !!tutor?.name && phonesEqual(contact.phone, tutorPhone);
+    const sendPhone = contact.phone || tutorPhone;
+    const greetName = sharedPhone || !contact.phone ? (tutor?.name || contact.name) : contact.name;
+    const url = buildReviewWaMeUrl(sendPhone, greetName);
     if (!url) {
-      alert("Este contacto no tiene teléfono válido para WhatsApp.");
+      alert("Ni el contacto ni su tutor tienen teléfono válido para WhatsApp.");
       return;
     }
     window.open(url, "_blank");
@@ -516,14 +523,14 @@ export default function ContactsPage() {
       const res = await fetch("/api/contacts/review-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: contact.id }),
+        body: JSON.stringify({ id: contact.id, greetedAs: greetName }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.requestedAt) {
         setContacts((prev) =>
           prev.map((c) => (c.id === contact.id ? { ...c, googleReviewRequestedAt: data.requestedAt } : c)),
         );
-        setToastMessage(`Reseña solicitada a ${contact.name}.`);
+        setToastMessage(`Reseña solicitada a ${greetName}.`);
         setTimeout(() => setToastMessage(null), 4000);
       }
     } catch {}

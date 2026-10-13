@@ -147,7 +147,7 @@
         "Prueba real con token/BD del tenant getloud: ≥1 alumno y su tutor aterrizan correctos en Contact y visibles en el flujo de Seguimiento",
         "npx tsc --noEmit → 0 errores · ./init.sh verde"
       ],
-      "status": "blocked"
+      "status": "done"
     },
     {
       "id": 12,

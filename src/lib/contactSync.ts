@@ -175,3 +175,10 @@ export function buildReviewWaMeUrl(phone: string, contactName: string): string {
   if (!norm) return "";
   return `https://wa.me/${norm}?text=${encodeURIComponent(buildReviewMessage(contactName))}`;
 }
+
+/** ¿Son el mismo teléfono aunque vengan en distinto formato? */
+export function phonesEqual(a: string, b: string): boolean {
+  const na = normalizePhoneES(a || "");
+  const nb = normalizePhoneES(b || "");
+  return !!na && na === nb;
+}

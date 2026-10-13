@@ -7,6 +7,7 @@ import {
   splitPhone,
   buildReviewMessage,
   buildReviewWaMeUrl,
+  phonesEqual,
   GOOGLE_REVIEW_URL,
 } from "../lib/contactSync";
 
@@ -60,5 +61,12 @@ describe("contactSync — feature #11 contacts_shared_db", () => {
     expect(msg).toContain(GOOGLE_REVIEW_URL);
     expect(buildReviewWaMeUrl("600111222", "Ana Ruiz")).toContain("https://wa.me/34600111222?text=");
     expect(buildReviewWaMeUrl("", "Ana")).toBe("");
+  });
+
+  it("phonesEqual compara aunque cambie el formato", () => {
+    expect(phonesEqual("+34 600 111 222", "600111222")).toBe(true);
+    expect(phonesEqual("600111222", "611222333")).toBe(false);
+    expect(phonesEqual("", "600111222")).toBe(false);
+    expect(phonesEqual("", "")).toBe(false);
   });
 });

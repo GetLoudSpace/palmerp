@@ -15,6 +15,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const id = String(body.id || "");
   if (!id) return NextResponse.json({ error: "id requerido" }, { status: 400 });
+  const greetedAs = String(body.greetedAs || "").slice(0, 80);
 
   const target = await (db as any).contact
     .findFirst({ where: { id, tenantId, deletedAt: null }, select: { id: true, name: true } })
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
         action: "REVIEW_REQUESTED",
         table: "Contact",
         recordId: id,
-        details: `Reseña Google solicitada a ${(target as { name: string }).name} vía wa.me`,
+        details: `Reseña Google solicitada a ${(target as { name: string }).name}${greetedAs ? ` (saludo: ${greetedAs})` : ""} vía wa.me`,
         success: true,
       },
     });
