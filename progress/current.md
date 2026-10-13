@@ -149,6 +149,11 @@
 - Causa: el filtro PROFESOR-solo-asignados cruzaba `EduLesson` en DB (vacía; las clases viven en localStorage) → lista a cero. Decisión usuario: contactos visibles para TODO el tenant.
 - Fix: fuera `isProfessorOnly`/`professorAllowedContactIds` de `GET` y `PATCH` en `src/app/api/contacts/route.ts` + acceptance #11 actualizada. Sin commitear (espera orden push).
 
+**Hotfix 2026-10-13 (Seguimiento solo mostraba alumnos locales "Test..."):**
+- Causa: el buscador del modal listaba solo `eduStudents` de localStorage; los 94 de Notion viven solo en servidor.
+- Fix `ClassReportPanel.tsx`: `seguimientoResults` (useMemo) = locales + contactos `ALUMNO` del servidor sin duplicar por nombre; placeholder y destinatarios resuelven por nombre contra DB (tutor incluido); botón Actualizar recarga también servidor; empty-state útil.
+- `tsc` 0 ✅ · tests 24/24 ✅ · build OK ✅ · `init.sh` verde ✅. Sin commitear (espera orden push).
+
 **Ejecutado 2026-10-13 (feature #12 user_admin_delete — done, sin commitear):**
 - Solo ADMIN/DEV (el profesor ni ve Ajustes: módulo `settings` no asignable). Borrado FK-seguro: clases a `SetNull`, perfil profesor en cascada, auditoría conserva histórico.
 - `src/lib/userGuards.ts` [NUEVO, puro] + tests 3/3: `canEditUser` (DEV solo por DEV), `canDeleteUser` (+ nunca a sí mismo), `normalizeLoginEmail`.

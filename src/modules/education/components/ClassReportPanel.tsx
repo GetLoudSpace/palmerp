@@ -1,6 +1,6 @@
 // src/modules/education/components/ClassReportPanel.tsx
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import * as Icons from "lucide-react";
 // LessonFinishModal import removed as Seguimiento now uses Resumen de clase modal
 import { useSession } from "next-auth/react";
@@ -50,6 +50,7 @@ type DbContactLite = {
   id: string;
   name: string;
   phone: string;
+  category: string;
   tutorId?: string;
   tutorName?: string;
   tutorPhone?: string;
@@ -188,29 +189,33 @@ export default function ClassReportPanel() {
     } catch {}
   }, []);
 
+  const loadDbContacts = useCallback(async () => {
+    // Feature #11/#10: fichas del servidor para destinatarios y buscador
+    // (fallback: listas locales). Solo lectura.
+    try {
+      const res = await fetch("/api/contacts?pageSize=500");
+      if (!res.ok) return;
+      const data = await res.json();
+      setDbContacts(
+        ((data.contacts || []) as any[]).map((c: any) => ({
+          id: String(c.id),
+          name: String(c.name || ""),
+          phone: String(c.phone || ""),
+          category: String(c.category || "NONE"),
+          tutorId: c.tutors?.[0]?.id ? String(c.tutors[0].id) : undefined,
+          tutorName: c.tutors?.[0]?.name ? String(c.tutors[0].name) : undefined,
+          tutorPhone: c.tutors?.[0]?.phone ? String(c.tutors[0].phone) : undefined,
+        })),
+      );
+    } catch {}
+  }, []);
+
   useEffect(() => {
     fetchGoogleEvents();
     loadLocalLessons();
     loadEduStudents();
-    // Feature #11: fichas del servidor para destinatarios (fallback: local).
-    (async () => {
-      try {
-        const res = await fetch("/api/contacts?pageSize=500");
-        if (!res.ok) return;
-        const data = await res.json();
-        setDbContacts(
-          ((data.contacts || []) as any[]).map((c: any) => ({
-            id: String(c.id),
-            name: String(c.name || ""),
-            phone: String(c.phone || ""),
-            tutorId: c.tutors?.[0]?.id ? String(c.tutors[0].id) : undefined,
-            tutorName: c.tutors?.[0]?.name ? String(c.tutors[0].name) : undefined,
-            tutorPhone: c.tutors?.[0]?.phone ? String(c.tutors[0].phone) : undefined,
-          })),
-        );
-      } catch {}
-    })();
-  }, [fetchGoogleEvents, loadLocalLessons, loadEduStudents]);
+    loadDbContacts();
+  }, [fetchGoogleEvents, loadLocalLessons, loadEduStudents, loadDbContacts]);
 
   /** Resuelve destinatarios según ficha del alumno (Contact manda) o teléfono suelto de la clase. */
   const resolveRecipients = useCallback((lessonName: string, lessonPhone?: string): ReportRecipient[] => {
@@ -240,6 +245,21 @@ export default function ClassReportPanel() {
     setRecipients(recs);
     setSelectedRecipientIds(sendableRecipients(recs).map((r) => r.contactId));
   };
+
+  /** Buscador Seguimiento: alumnos locales + contactos ALUMNO del servidor
+      (los importados de Notion viven solo en servidor). Sin duplicar por nombre. */
+  const seguimientoResults = useMemo(() => {
+    const q = searchStudent.trim().toLowerCase();
+    const local = eduStudents
+      .filter((s) => (s.contactName || "").toLowerCase().includes(q))
+      .filter((s, i, arr) => arr.findIndex((x) => x.id === s.id) === i)
+      .map((s) => ({ key: `local-${s.id}`, name: s.contactName, phone: s.contactPhone }));
+    const seen = new Set(local.map((l) => l.name.toLowerCase()));
+    const fromServer = dbContacts
+      .filter((c) => c.category === "ALUMNO" && c.name.toLowerCase().includes(q) && !seen.has(c.name.toLowerCase()))
+      .map((c) => ({ key: `db-${c.id}`, name: c.name, phone: c.phone }));
+    return [...local, ...fromServer];
+  }, [eduStudents, dbContacts, searchStudent]);
 
   const selectGcEvent = (ev: GoogleEvent) => {
     setSelectedEvent(ev);
@@ -363,7 +383,7 @@ export default function ClassReportPanel() {
           Clases de hoy
         </h2>
 <button
-  onClick={() => { fetchGoogleEvents(); loadLocalLessons(); loadEduStudents(); }}
+  onClick={() => { fetchGoogleEvents(); loadLocalLessons(); loadEduStudents(); loadDbContacts(); }}
   disabled={gcLoading}
   className="flex items-center gap-1.5 rounded-xl border border-border/40 bg-background px-3 py-2 text-xs font-bold hover:bg-muted disabled:opacity-50"
 >
@@ -395,25 +415,26 @@ export default function ClassReportPanel() {
         className="w-full mb-2 p-2 border rounded"
       />
       <div className="max-h-60 overflow-auto">
-        {eduStudents
-          .filter(s => s.contactName?.toLowerCase().includes(searchStudent.toLowerCase()))
-          .filter((s, i, arr) => arr.findIndex((x) => x.id === s.id) === i)
+        {seguimientoResults.length === 0 && (
+          <p className="p-3 text-xs text-muted-foreground">Sin resultados. Prueba con otro nombre o pulsa Actualizar.</p>
+        )}
+        {seguimientoResults
           .map(s => (
             <button
-              key={s.id}
+              key={s.key}
               className="w-full text-left p-2 border-b last:border-b-0"
               onClick={() => {
-                const lesson = localLessons.find(l => l.studentPhone === s.contactPhone || l.studentName === s.contactName);
+                const lesson = localLessons.find(l => l.studentPhone === s.phone || l.studentName === s.name);
                 if (lesson) {
                   setSelectedLocal(lesson as any);
                   setForm({ done: lesson.notes || "", todo: "", attendance: true });
-                  openRecipients(lesson.studentName, lesson.studentPhone || s.contactPhone);
+                  openRecipients(lesson.studentName, lesson.studentPhone || s.phone);
                 } else {
                   // Create a placeholder local lesson for a new student
                   const placeholder = {
-                    id: `new-${s.id}`,
-                    studentName: s.contactName,
-                    studentPhone: s.contactPhone,
+                    id: `new-${s.key}`,
+                    studentName: s.name,
+                    studentPhone: s.phone,
                     instrument: "",
                     date: new Date().toISOString(),
                     status: "PENDING",
@@ -422,15 +443,15 @@ export default function ClassReportPanel() {
                   } as any;
                   setSelectedLocal(placeholder);
                   setForm({ done: "", todo: "", attendance: true });
-                  openRecipients(s.contactName, s.contactPhone);
+                  openRecipients(s.name, s.phone);
                 }
                 setShowForm(true);
                 setShowSeguimiento(false);
                 setSearchStudent("");
               }}
             >
-              {s.contactName}
-              {s.contactPhone && <span className="text-xs text-muted-foreground"> · {s.contactPhone}</span>}
+              {s.name}
+              {s.phone && <span className="text-xs text-muted-foreground"> · {s.phone}</span>}
             </button>
           ))}
       </div>
