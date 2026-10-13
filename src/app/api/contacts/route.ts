@@ -51,6 +51,10 @@ function toClient(c: Record<string, unknown>): Record<string, unknown> {
     notes: c.notes ?? "",
     birthDate: c.birthDate ? (c.birthDate as Date).toISOString() : undefined,
     enrollmentDate: c.enrollmentDate ? (c.enrollmentDate as Date).toISOString().slice(0, 10) : undefined,
+    googleReviewLeft: c.googleReviewLeft ?? false,
+    googleReviewRequestedAt: c.googleReviewRequestedAt
+      ? (c.googleReviewRequestedAt as Date).toISOString()
+      : undefined,
     commsOptOut: c.commsOptOut ?? false,
     tutors: tutorsOfMe.map((t) => ({ ...t.tutor, relation: t.relation })),
     tutorIds: tutorsOfMe.map((t) => String((t.tutor as { id: string }).id)),

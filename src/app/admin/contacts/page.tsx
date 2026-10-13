@@ -8,6 +8,7 @@ import { isTenantDataCleared } from "@/lib/demoDataCleanup";
 import EditableLabel from "@/components/admin/EditableLabel";
 import SmartSearchInput from "@/components/SmartSearchInput";
 import { parseContactsExcel, generateContactsExcelTemplate } from "@/lib/contactImport";
+import { buildReviewWaMeUrl } from "@/lib/contactSync";
 
 // 1. Interfaces & Demo Data
 interface Contact {
@@ -26,6 +27,8 @@ interface Contact {
   notes?: string;
   birthDate?: string;
   enrollmentDate?: string;
+  googleReviewLeft?: boolean;
+  googleReviewRequestedAt?: string;
   category?: "NONE" | "ALUMNO" | "TUTOR" | "PROFESOR";
   instrument?: "BAJO" | "GUITARRA" | "BATERIA" | "PIANO" | "VOZ";
   tutoredStudentIds?: string[];
@@ -51,6 +54,8 @@ const serverToContact = (c: any): Contact => ({
   notes: c.notes || "",
   birthDate: c.birthDate ? String(c.birthDate).slice(0, 10) : undefined,
   enrollmentDate: c.enrollmentDate ? String(c.enrollmentDate).slice(0, 10) : undefined,
+  googleReviewLeft: !!c.googleReviewLeft,
+  googleReviewRequestedAt: c.googleReviewRequestedAt ? String(c.googleReviewRequestedAt) : undefined,
   category: c.category === "ALUMNO" || c.category === "TUTOR" || c.category === "PROFESOR" ? c.category : "NONE",
   instrument: c.instrument || undefined,
   tutoredStudentIds: Array.isArray(c.students) ? c.students.map((s: any) => String(s.id)) : [],
@@ -496,6 +501,32 @@ export default function ContactsPage() {
       tutoredStudentIds: contact.tutoredStudentIds || [],
     });
     setIsModalOpen(true);
+  };
+
+  // --- Feature #14: solicitar reseña Google vía wa.me (como Seguimiento) ---
+  const requestReview = async (contact: Contact) => {
+    const url = buildReviewWaMeUrl(contact.phone, contact.name);
+    if (!url) {
+      alert("Este contacto no tiene teléfono válido para WhatsApp.");
+      return;
+    }
+    window.open(url, "_blank");
+    if (mode !== "server") return; // local: se envía pero no se registra
+    try {
+      const res = await fetch("/api/contacts/review-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: contact.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.requestedAt) {
+        setContacts((prev) =>
+          prev.map((c) => (c.id === contact.id ? { ...c, googleReviewRequestedAt: data.requestedAt } : c)),
+        );
+        setToastMessage(`Reseña solicitada a ${contact.name}.`);
+        setTimeout(() => setToastMessage(null), 4000);
+      }
+    } catch {}
   };
 
   // --- Delete Handler (servidor o local según modo) ---
@@ -975,8 +1006,8 @@ export default function ContactsPage() {
                 const isTutor = contact.category === "TUTOR" || (role?.tutorOf && role.tutorOf.length > 0);
                 const isProfesor = contact.category === "PROFESOR";
 
-                if (!isStudent && !isTutor && !isProfesor) return null;
-                
+                // Feature #14: sin early-return — la fila muestra siempre el estado
+                // de reseña (seguimiento visible) aunque no tenga rol educativo.
                 return (
                   <span className="mt-1 flex flex-wrap gap-1">
                     {isStudent && (
@@ -989,6 +1020,20 @@ export default function ContactsPage() {
                     )}
                     {isProfesor && (
                       <span className="rounded-full bg-amber-500/10 border border-amber-500/30 px-1.5 py-px text-[9px] font-bold text-amber-700">🎓 Profesor</span>
+                    )}
+                    {/* Feature #14: estado reseña Google (sync Notion Reseña Google) */}
+                    {contact.googleReviewLeft ? (
+                      <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-px text-[9px] font-bold text-emerald-700" title="Ya dejó reseña en Google">
+                        ⭐ Reseña ✓
+                      </span>
+                    ) : contact.googleReviewRequestedAt ? (
+                      <span className="rounded-full bg-sky-500/10 border border-sky-500/30 px-1.5 py-px text-[9px] font-bold text-sky-700" title={`Solicitada el ${contact.googleReviewRequestedAt.slice(0, 10)}`}>
+                        ☆ Solicitada
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-stone-500/10 border border-stone-500/20 px-1.5 py-px text-[9px] font-bold text-stone-500" title="Aún no dejó reseña">
+                        ☆ Sin reseña
+                      </span>
                     )}
                   </span>
                 );
@@ -1065,6 +1110,15 @@ export default function ContactsPage() {
         </td>
         <td className="px-6 py-4">
           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <button
+              onClick={() => requestReview(contact)}
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150"
+              title={contact.googleReviewLeft ? "Ya dejó reseña — solicitar de nuevo" : "Solicitar reseña de Google por WhatsApp"}
+            >
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white border border-border text-[11px] font-black leading-none">
+                <span className="text-[#4285F4]">G</span>
+              </span>
+            </button>
             <button
               onClick={() => openEditModal(contact)}
               className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150"

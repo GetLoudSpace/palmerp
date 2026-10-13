@@ -133,6 +133,8 @@ model Contact {
   notes          String?
   birthDate      DateTime?
   enrollmentDate DateTime? // Fecha de inscripción (sync Notion: Fecha inicio)
+  googleReviewLeft Boolean @default(false) // Notion "Reseña Google": ya dejó reseña
+  googleReviewRequestedAt DateTime? // Última solicitud de reseña (botón Google)
   preferredChannel String?  @default("WHATSAPP")
   commsOptOut    Boolean    @default(false)
 

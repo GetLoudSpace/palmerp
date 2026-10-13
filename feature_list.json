@@ -163,6 +163,19 @@
       "status": "done"
     },
     {
+      "id": 14,
+      "name": "google_review_tracking",
+      "title": "Seguimiento de reseñas Google (botón solicitar vía wa.me)",
+      "description": "Copia Notion Reseña Google a Contact.googleReviewLeft; en /admin/contacts botón Google junto a editar/borrar que abre wa.me con mensaje preset (nombre + enlace) y registra googleReviewRequestedAt; badge de estado por contacto.",
+      "acceptance": [
+        "Prisma Contact.googleReviewLeft + googleReviewRequestedAt con columnas aplicadas en prod",
+        "Sync Notion mapea checkbox Reseña Google; mensaje preset exacto del usuario vía wa.me con nombre y enlace",
+        "POST /api/contacts/review-request registra solicitud + AuditLog; badge pendiente/hecha en filas",
+        "npx tsc --noEmit → 0 errores · ./init.sh verde"
+      ],
+      "status": "done"
+    },
+    {
       "id": 13,
       "name": "team_clocking",
       "title": "Fichajes reales simples (PIN por usuario + terminal móvil)",

@@ -165,6 +165,13 @@
 - Verificado: `tsc` 0 ✅ · tests 25/25 ✅ · build OK ✅ · `init.sh` verde ✅ · clock sin sesión → 401 ✅.
 - Nota: turnos/vacaciones conservan seeds demo restaurante (fuera de alcance); fichaje usa usuarios reales.
 
+**Ejecutado 2026-10-13 (feature #14 google_review_tracking — done, sin commitear):**
+- `Contact.googleReviewLeft` (sync checkbox Notion `Reseña Google`) + `googleReviewRequestedAt` (botón); columnas aplicadas en prod (aditivo).
+- `buildReviewMessage/buildReviewWaMeUrl` en `contactSync` (mensaje exacto del usuario + nombre de pila + enlace) + tests; mapper checkbox + tests.
+- `POST /api/contacts/review-request` (cualquier rol con contacts) sella solicitud + audit `REVIEW_REQUESTED`; API expone ambos campos.
+- UI Contactos: botón G (colores Google; `Chrome` no existe en este lucide) junto a editar/borrar → abre wa.me y registra; badges ⭐✓ / ☆Solicitada / ☆Sin reseña siempre visibles en fila.
+- Verificado: `tsc` 0 ✅ · tests 27/27 ✅ · build OK ✅ · `init.sh` verde ✅.
+
 **Ejecutado 2026-10-13 (feature #12 user_admin_delete — done, sin commitear):**
 - Solo ADMIN/DEV (el profesor ni ve Ajustes: módulo `settings` no asignable). Borrado FK-seguro: clases a `SetNull`, perfil profesor en cascada, auditoría conserva histórico.
 - `src/lib/userGuards.ts` [NUEVO, puro] + tests 3/3: `canEditUser` (DEV solo por DEV), `canDeleteUser` (+ nunca a sí mismo), `normalizeLoginEmail`.

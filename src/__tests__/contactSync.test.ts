@@ -5,6 +5,9 @@ import {
   validateContactPayload,
   contactDedupeKey,
   splitPhone,
+  buildReviewMessage,
+  buildReviewWaMeUrl,
+  GOOGLE_REVIEW_URL,
 } from "../lib/contactSync";
 
 describe("contactSync — feature #11 contacts_shared_db", () => {
@@ -47,5 +50,15 @@ describe("contactSync — feature #11 contacts_shared_db", () => {
   it("splitPhone normaliza ES anteponiendo 34", () => {
     expect(splitPhone("600111222")).toEqual({ phone: "600111222", phoneNormalized: "34600111222" });
     expect(splitPhone("")).toEqual({ phone: "", phoneNormalized: null });
+  });
+
+  it("mensaje de reseña con nombre de pila + enlace (feature #14)", () => {
+    const msg = buildReviewMessage("Ana Ruiz Gil");
+    expect(msg).toContain("¡Hola, Ana!");
+    expect(msg).toContain("reseña de Google");
+    expect(msg).toContain("Get Loud");
+    expect(msg).toContain(GOOGLE_REVIEW_URL);
+    expect(buildReviewWaMeUrl("600111222", "Ana Ruiz")).toContain("https://wa.me/34600111222?text=");
+    expect(buildReviewWaMeUrl("", "Ana")).toBe("");
   });
 });

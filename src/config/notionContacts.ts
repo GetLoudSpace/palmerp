@@ -32,6 +32,8 @@ export interface MappedStudent {
   billingStreet: string;
   /** Fecha de inscripción (Notion `Fecha inicio`, ISO) o null. */
   enrollmentDate: string | null;
+  /** Notion `Reseña Google` (checkbox): ya dejó reseña. */
+  googleReviewLeft: boolean;
   /** Motivo de descarte (baja / sin-teléfono / sin-nombre). null = importable. */
   skipReason: string | null;
 }
@@ -101,6 +103,8 @@ export function mapNotionStudent(page: {
     inicioProp?.type === "date" && inicioProp.date
       ? String((inicioProp.date as { start?: string }).start || "") || null
       : null;
+  const reviewProp = get("Reseña Google");
+  const googleReviewLeft = !!reviewProp && reviewProp.type === "checkbox" && reviewProp.checkbox === true;
 
   const bajaProp = get("Fecha baja");
   const hasBajaDate = !!bajaProp && bajaProp.type === "date" && !!bajaProp.date;
@@ -128,6 +132,7 @@ export function mapNotionStudent(page: {
     billingCity,
     billingStreet,
     enrollmentDate,
+    googleReviewLeft,
     skipReason,
   };
 }

@@ -155,3 +155,23 @@ export function splitPhone(raw: unknown): { phone: string; phoneNormalized: stri
   const norm = normalizePhoneES(phone);
   return { phone, phoneNormalized: norm || null };
 }
+
+// Feature #14: solicitud de reseña Google vía wa.me (como Seguimiento).
+export const GOOGLE_REVIEW_URL = "https://g.page/r/CTe40ljLgS4KEAI/review";
+
+/** Mensaje preset con el nombre de pila del contacto + enlace de reseña. */
+export function buildReviewMessage(contactName: string): string {
+  const first = String(contactName || "gracias").trim().split(/\s+/)[0] || "gracias";
+  return (
+    `¡Hola, ${first}! Nos gustaría que le contases al resto del mundo a través de una reseña de Google ` +
+    `cómo te lo estás pasando en Get Loud. Si tienes 1 minuto para dedicarnos, te lo agradeceremos de corazón. ` +
+    `Así que... ¡adelante! ${GOOGLE_REVIEW_URL}`
+  );
+}
+
+/** URL wa.me con el mensaje de reseña pre-rellenado. "" si no hay teléfono. */
+export function buildReviewWaMeUrl(phone: string, contactName: string): string {
+  const norm = normalizePhoneES(phone);
+  if (!norm) return "";
+  return `https://wa.me/${norm}?text=${encodeURIComponent(buildReviewMessage(contactName))}`;
+}

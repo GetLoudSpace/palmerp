@@ -16,6 +16,7 @@ function page(overrides: Record<string, unknown> = {}) {
       Ciudad: { type: "select", select: { name: "Ripollet" } },
       "Dirección": { type: "rich_text", rich_text: [{ plain_text: "Calle Ejemplo 1" }] },
       "Fecha inicio": { type: "date", date: { start: "2026-09-25" } },
+      "Reseña Google": { type: "checkbox", checkbox: true },
       "Día": { type: "multi_select", multi_select: [{ name: "Jueves" }] },
       "Hora (individual)": { type: "rich_text", rich_text: [{ plain_text: "17:30-18:30" }] },
       "Fecha baja": { type: "date", date: null },
@@ -37,6 +38,13 @@ describe("notionContacts — feature #10", () => {
     expect(m.primaryInstrumentDb).toBe("BATERIA");
     expect(m.billingCity).toBe("Ripollet");
     expect(m.enrollmentDate).toBe("2026-09-25");
+    expect(m.googleReviewLeft).toBe(true);
+  });
+
+  it("sin checkbox de reseña queda pendiente", () => {
+    const m = mapNotionStudent(page({ "Reseña Google": { type: "checkbox", checkbox: false } }) as never);
+    expect(m.skipReason).toBeNull();
+    expect(m.googleReviewLeft).toBe(false);
   });
 
   it("marca baja por fecha o por estado", () => {

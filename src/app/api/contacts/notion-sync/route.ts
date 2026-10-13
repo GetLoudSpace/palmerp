@@ -134,6 +134,7 @@ export async function POST() {
           billingStreet: m.billingStreet || null,
           billingCountry: "España",
           enrollmentDate: ed && !isNaN(ed.getTime()) ? ed : null,
+          googleReviewLeft: m.googleReviewLeft,
           deletedAt: null,
         };
 
@@ -150,6 +151,7 @@ export async function POST() {
             same(student.email, scalars.email) &&
             same(student.instrument, scalars.instrument) &&
             same(student.billingCity, scalars.billingCity) &&
+            same(student.googleReviewLeft, scalars.googleReviewLeft) &&
             (student.enrollmentDate ? new Date(String(student.enrollmentDate)).toISOString().slice(0, 10) : "") ===
               (m.enrollmentDate || "").slice(0, 10);
           if (sameScalars && !m.tutorName) {

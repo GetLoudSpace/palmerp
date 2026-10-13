@@ -21,6 +21,7 @@
 | `Ciudad` | select | `Contact.billingCity` | valores Vallès/Barcelona; a veces vacío |
 | `Dirección` | rich_text | `Contact.billingStreet` | a veces vacío |
 | `Fecha inicio` | date | `Contact.enrollmentDate` (NUEVO 2026-10-13: no existía en Palmerp, añadido al schema) | fecha de inscripción del alumno |
+| `Reseña Google` | checkbox | `Contact.googleReviewLeft` (NUEVO feature #14) | seguimiento de quién ya dejó reseña; el botón Google registra `googleReviewRequestedAt` |
 | `Día` / `Hora (individual)` | multi_select / rich_text | NO se sincronizan (decidido con el usuario 2026-10-13: solo los 7 campos) | |
 | `Fecha baja` | date | filtro activo (vacía) / `skipped("baja")` | + `Estado de pagos` en Baja definitiva/julio/Congelado → también `skipped("baja")` |
 | `Profe` | people | NO se sincroniza en #10 (decidido: visibilidad profe va por `EduLesson.teacherId`, feature #11) | se reevalúa si piden asignar clases |
