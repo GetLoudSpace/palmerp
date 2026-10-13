@@ -71,6 +71,7 @@ function toClient(c: Record<string, unknown>): Record<string, unknown> {
     billingCountry: c.billingCountry ?? "España",
     notes: c.notes ?? "",
     birthDate: c.birthDate ? (c.birthDate as Date).toISOString() : undefined,
+    enrollmentDate: c.enrollmentDate ? (c.enrollmentDate as Date).toISOString().slice(0, 10) : undefined,
     commsOptOut: c.commsOptOut ?? false,
     tutors: tutorsOfMe.map((t) => ({ ...t.tutor, relation: t.relation })),
     tutorIds: tutorsOfMe.map((t) => String((t.tutor as { id: string }).id)),
@@ -149,7 +150,7 @@ export async function GET(req: Request) {
 
 function contactData(tenantId: string, d: ContactPayload): Record<string, unknown> {
   const { phone, phoneNormalized } = splitPhone(d.phone);
-  return {
+  const data: Record<string, unknown> = {
     tenantId,
     name: d.name,
     phone,
@@ -167,6 +168,10 @@ function contactData(tenantId: string, d: ContactPayload): Record<string, unknow
     notes: d.notes || null,
     birthDate: d.birthDate ? new Date(d.birthDate) : null,
   };
+  // La fecha de inscripción solo la escribe la sync de Notion: si el
+  // llamante no la envía, se conserva (no se borra con null).
+  if (d.enrollmentDate) data.enrollmentDate = new Date(d.enrollmentDate);
+  return data;
 }
 
 async function assertTutorsInTenant(tx: unknown, tenantId: string, tutorIds: string[], selfId?: string) {

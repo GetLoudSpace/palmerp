@@ -49,6 +49,7 @@ export interface ContactPayload {
   billingCountry: string;
   notes: string;
   birthDate?: string;
+  enrollmentDate?: string;
   tutorIds: string[];
 }
 
@@ -95,6 +96,14 @@ export function validateContactPayload(body: unknown): { ok: true; data: Contact
     birthDate = d.toISOString();
   }
 
+  let enrollmentDate: string | undefined;
+  const rawEnroll = str(b.enrollmentDate);
+  if (rawEnroll) {
+    const d = new Date(rawEnroll);
+    if (isNaN(d.getTime())) return { ok: false, error: "Fecha de inscripción no válida" };
+    enrollmentDate = d.toISOString();
+  }
+
   const tutorIds = Array.isArray(b.tutorIds)
     ? [...new Set(b.tutorIds.map(String).filter(Boolean))]
     : [];
@@ -116,6 +125,7 @@ export function validateContactPayload(body: unknown): { ok: true; data: Contact
       billingCountry: str(b.billingCountry) || "España",
       notes: str(b.notes),
       birthDate,
+      enrollmentDate,
       tutorIds,
     },
   };

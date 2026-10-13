@@ -25,6 +25,7 @@ interface Contact {
   billingCountry?: string;
   notes?: string;
   birthDate?: string;
+  enrollmentDate?: string;
   category?: "NONE" | "ALUMNO" | "TUTOR" | "PROFESOR";
   instrument?: "BAJO" | "GUITARRA" | "BATERIA" | "PIANO" | "VOZ";
   tutoredStudentIds?: string[];
@@ -49,6 +50,7 @@ const serverToContact = (c: any): Contact => ({
   billingCountry: c.billingCountry || "España",
   notes: c.notes || "",
   birthDate: c.birthDate ? String(c.birthDate).slice(0, 10) : undefined,
+  enrollmentDate: c.enrollmentDate ? String(c.enrollmentDate).slice(0, 10) : undefined,
   category: c.category === "ALUMNO" || c.category === "TUTOR" || c.category === "PROFESOR" ? c.category : "NONE",
   instrument: c.instrument || undefined,
   tutoredStudentIds: Array.isArray(c.students) ? c.students.map((s: any) => String(s.id)) : [],
@@ -194,6 +196,9 @@ export default function ContactsPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [localCount, setLocalCount] = useState(0);
   const [importingLocal, setImportingLocal] = useState(false);
+  // Feature #10: estado de la sync con Notion (solo modo servidor).
+  const [notionStatus, setNotionStatus] = useState<{ configured: boolean; lastSync: { details: string; at: string } | null } | null>(null);
+  const [syncingNotion, setSyncingNotion] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"ALL" | "INDIVIDUAL" | "COMPANY">("ALL");
   const [filterWithCif, setFilterWithCif] = useState(false);
@@ -365,6 +370,36 @@ export default function ContactsPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // --- Sincronizar desde Notion (ADMIN/DEV, modo servidor) ---
+  const refreshNotionStatus = async () => {
+    try {
+      const st = await fetch("/api/contacts/notion-sync").then((r) => r.json());
+      if (st?.success) setNotionStatus({ configured: !!st.configured, lastSync: st.lastSync ?? null });
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (mode === "server") refreshNotionStatus();
+  }, [mode]);
+
+  const syncFromNotion = async () => {
+    if (!confirm("Sincronizar alumnos activos desde Notion (Alumnos Administrativa)? Creará/actualizará los contactos del servidor.")) return;
+    setSyncingNotion(true);
+    try {
+      const res = await fetch("/api/contacts/notion-sync", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Servidor ${res.status}`);
+      setToastMessage(`Notion: ${data.created} creados, ${data.updated} actualizados, ${data.unchanged} sin cambios, ${(data.skipped || []).length} omitidos.`);
+      await loadServerContacts().catch(() => {});
+      await refreshNotionStatus();
+    } catch (e: any) {
+      alert(e?.message || "Falló la sincronización con Notion");
+    } finally {
+      setSyncingNotion(false);
+      setTimeout(() => setToastMessage(null), 8000);
+    }
+  };
 
   // --- Importar contactos locales al servidor (ADMIN/DEV, idempotente) ---
   const importLocalToServer = async () => {
@@ -1086,6 +1121,21 @@ export default function ContactsPage() {
         <div className="flex items-center gap-2">
           {mode === "server" ? (
             <>
+              {canManageServer && (
+                <button
+                  onClick={syncFromNotion}
+                  disabled={syncingNotion}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 text-xs font-semibold text-violet-700 hover:bg-violet-500/20 disabled:opacity-50"
+                  title="Sincronizar alumnos activos desde Notion (Alumnos Administrativa)"
+                >
+                  {syncingNotion ? (
+                    <Icons.Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Icons.RefreshCw className="h-3.5 w-3.5" />
+                  )}
+                  <span>{syncingNotion ? "Sincronizando..." : "Sincronizar desde Notion"}</span>
+                </button>
+              )}
               {canManageServer && localCount > 0 && (
                 <button
                   onClick={importLocalToServer}
@@ -1156,6 +1206,9 @@ export default function ContactsPage() {
         <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2 text-[11px] font-semibold text-emerald-800">
           <Icons.Cloud className="h-4 w-4 shrink-0" />
           <span>Contactos del servidor: visibles en todos tus dispositivos con tu usuario.</span>
+          {notionStatus?.lastSync && (
+            <span className="text-emerald-700/80">· Última sync Notion: {String(notionStatus.lastSync.details || "")}</span>
+          )}
         </div>
       )}
 
@@ -1473,6 +1526,9 @@ export default function ContactsPage() {
                     onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
                     className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500"
                   />
+                  {editingContact?.enrollmentDate && (
+                    <p className="text-[10px] text-muted-foreground">Inscripción: {editingContact.enrollmentDate} (desde Notion)</p>
+                  )}
                 </div>
               </div>
 

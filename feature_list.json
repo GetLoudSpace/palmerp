@@ -147,7 +147,20 @@
         "Prueba real con token/BD del tenant getloud: ≥1 alumno y su tutor aterrizan correctos en Contact y visibles en el flujo de Seguimiento",
         "npx tsc --noEmit → 0 errores · ./init.sh verde"
       ],
-      "status": "pending"
+      "status": "blocked"
+    },
+    {
+      "id": 12,
+      "name": "user_admin_delete",
+      "title": "Gestión ADMIN de usuarios: borrar y cambiar email",
+      "description": "Solo ADMIN/DEV desde Usuarios & Permisos: borrado real de usuarios con protecciones (nunca a sí mismo, DEV solo por DEV, nunca al último gestor) y cambio de email con unicidad por tenant. Todo con AuditLog. El profesor (USUARIO) ni ve esta página (módulo settings).",
+      "acceptance": [
+        "DELETE /api/admin/users?id= solo ADMIN/DEV, bloquea auto-borrado, DEV solo por DEV y último gestor; borra perfil de profesor en cascada y conserva clases (teacher null) e histórico",
+        "PATCH acepta email (formato + único por tenant) con audit del cambio",
+        "UI: email editable al editar + botón eliminar con doble confirmación",
+        "npx tsc --noEmit → 0 errores · ./init.sh verde"
+      ],
+      "status": "done"
     },
     {
       "id": 11,

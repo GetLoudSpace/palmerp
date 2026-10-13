@@ -1,7 +1,30 @@
 # Notion → Palmerp: sincronización de contactos (borrador de preparación)
 
-> Tarea asociada: `feature_list.json` #10 (`notion_contacts_sync`) y #11 (`contacts_shared_db`).
-> Estado: **PENDIENTE — esperando credenciales y esquema real de Notion**. Este documento es el checklist para que, cuando lleguen, implementar sea llenar huecos, no diseñar.
+> Tarea asociada: `feature_list.json` #10 (`notion_contacts_sync`) y #11 (`contacts_shared_db`, hecha 2026-10-13).
+> Estado: **EN CURSO — BD localizada y mapeada 2026-10-13**. `NOTION_TOKEN` guardado solo en `.env.local` (gitignored).
+
+## Base de datos objetivo (verificado vía API 2026-10-13)
+
+- **BD: "Alumnos (Administrativa)"** — `NOTION_CONTACTS_DB_ID=26a1fcee-f7db-8034-896f-cdfde03a55d6` (guardado en `.env.local`, nunca en docs/código).
+- Volumen: **100 activos** (`Fecha baja` vacía) + 5 bajas. La sync importa activos; las bajas van a `skipped[]` (nunca borra Contactos locales huérfanos).
+
+## Esquema real → mapeo Palmerp
+
+| Propiedad Notion (nombre exacto) | Tipo Notion | → Campo Palmerp | Notas |
+| :--- | :--- | :--- | :--- |
+| `Alumno` | title | `Contact.name` | nombre del alumno |
+| `Phone` | phone_number | `Contact.phone` + `phoneNormalized` | formato con prefijo (verificado presente); dedupe por normalizado |
+| `Email` | email | `Contact.email` | opcional, a veces vacío |
+| `Padre/Madre/Tutor` | rich_text | tutor: nuevo `Contact` (`TUTOR`, solo nombre, sin teléfono) + `ContactTutorStudent` | es SOLO nombre (sin dígitos verificado): el tutor queda sin teléfono → recipients degradan al alumno (ver fix abajo) |
+| `Edad` | number | menor = `<18` (sin `birthDate` en Notion) | `null` = se trata como adulto; define tutor/comms por defecto |
+| `Instrumento` | multi_select | `Contact.instrument` (primero = principal) | `Batería→BATERIA, Canto→VOZ, Piano→PIANO, Bajo→BAJO, Guitarra Ac.→GUITARRA_ACUSTICA, Guitarra E.→GUITARRA_ELECTRICA` |
+| `Ciudad` | select | `Contact.billingCity` | valores Vallès/Barcelona; a veces vacío |
+| `Dirección` | rich_text | `Contact.billingStreet` | a veces vacío |
+| `Fecha inicio` | date | `Contact.enrollmentDate` (NUEVO 2026-10-13: no existía en Palmerp, añadido al schema) | fecha de inscripción del alumno |
+| `Día` / `Hora (individual)` | multi_select / rich_text | NO se sincronizan (decidido con el usuario 2026-10-13: solo los 7 campos) | |
+| `Fecha baja` | date | filtro activo (vacía) / `skipped("baja")` | + `Estado de pagos` en Baja definitiva/julio/Congelado → también `skipped("baja")` |
+| `Profe` | people | NO se sincroniza en #10 (decidido: visibilidad profe va por `EduLesson.teacherId`, feature #11) | se reevalúa si piden asignar clases |
+| `Cuota mensual`, `Estado de pagos`, `Ficha`, `Fuente`, `Riesgo`, `Renovación`, `Reseña Google`, `WhatsApp`, `Instrumento gratuito`, `Banda`, `Diario de clases`, `Lead de origen`, `Fecha inicio` | varios | NO se sincronizan (finanzas/operativa fuera de alcance) | |
 
 ## Contexto (2026-10-13)
 
@@ -13,8 +36,8 @@
 
 | Clave `.env` | Qué es | Dónde se obtiene | Valor |
 | :--- | :--- | :--- | :--- |
-| `NOTION_TOKEN` | Internal integration secret | notion.so → Settings → Connections & APIs → Add internal integration (se le comparte la BD en la página de Notion con "Add connections") | ⬜ |
-| `NOTION_CONTACTS_DB_ID` | ID de la base de datos de contactos | URL de la BD: `notion.so/<workspace>/<32-hex>?v=...` → los 32 hex (con o sin guiones) | ⬜ |
+| `NOTION_TOKEN` | Internal integration secret | notion.so → Settings → Connections & APIs | ✅ en `.env.local` (aportado por el usuario 2026-10-13) |
+| `NOTION_CONTACTS_DB_ID` | ID de la base de datos de contactos | verificado vía `POST /v1/search` | ✅ `26a1fcee-…` en `.env.local` ("Alumnos (Administrativa)") |
 
 ## Esquema real de la BD de Notion (pegar aquí las propiedades exactas)
 
@@ -30,16 +53,37 @@
 | ⬜ Parentesco (madre/-padre/…) | ⬜ | `ContactTutorStudent.relation` | |
 | ⬜ Profe asignado | ⬜ | vía `EduStudent`/usuario Palmerp | decidir si se sincroniza ya |
 
-- [ ] Pegar aquí **un ejemplo JSON** de una página alumno y otra tutor (GET `https://api.notion.com/v1/databases/{id}/query` con `Notion-Version: 2022-06-28`) para fijar la forma de cada `property`.
+- [x] Estructura de página verificada con 2 fichas reales (2026-10-13): solo se registran tipos/presencia, **nunca valores personales**. Ejemplo SINTÉTICO con la misma forma (los tests usan esta fixture, no datos reales):
+```json
+{ "object": "page", "id": "00000000-0000-0000-0000-000000000000",
+  "properties": {
+    "Alumno": { "type": "title", "title": [{ "plain_text": "Nombre Ejemplo" }] },
+    "Phone": { "type": "phone_number", "phone_number": "+34600111222" },
+    "Email": { "type": "email", "email": "ejemplo@mail.es" },
+    "Padre/Madre/Tutor": { "type": "rich_text", "rich_text": [{ "plain_text": "Madre Ejemplo" }] },
+    "Edad": { "type": "number", "number": 12 },
+    "Instrumento": { "type": "multi_select", "multi_select": [{ "name": "Batería" }] },
+    "Ciudad": { "type": "select", "select": { "name": "Ripollet" } },
+    "Dirección": { "type": "rich_text", "rich_text": [{ "plain_text": "Calle Ejemplo 1" }] },
+    "Día": { "type": "multi_select", "multi_select": [{ "name": "Jueves" }] },
+    "Hora (individual)": { "type": "rich_text", "rich_text": [{ "plain_text": "17:30-18:30" }] },
+    "Fecha baja": { "type": "date", "date": null },
+    "Estado de pagos": { "type": "status", "status": { "name": "✅Al corriente" } } } }
+```
+
+## Garantía de solo-lectura sobre Notion (regla del usuario 2026-10-13)
+
+- La sync **solo lee** Notion (`POST /v1/databases/{id}/query` = endpoint de lectura; `GET /v1/databases/{id}` para esquema). **Jamás** llama a crear/actualizar/borrar páginas (`PATCH`/`DELETE` no existen en el código — verificado por búsqueda).
+- Los datos de Notion solo se copian al ERP (`Contact`/`ContactTutorStudent` del tenant de sesión). Nunca se escribe nada de vuelta.
+- El token vive solo en `.env.local` (gitignored) y en Vercel env. Nunca en repo, docs ni logs.
 
 ## Diseño acordado (no re-diseñar, solo ejecutar)
 
 1. `src/config/notionContacts.ts`: mapeo puro `NotionPage → { fields, category, tutorRef }` con los nombres exactos de arriba (único sitio que cambia si Notion cambia).
 2. `POST /api/contacts/notion-sync` (ADMIN/DEV, sesión = tenant):
-   - query paginada (cursor 100/100) con filter `Tipo in [Alumno, Tutor]` si el esquema lo permite; si no, filtra en código tras el mapeo;
-   - upsert por `phoneNormalized` (usa `normalizePhoneES` de `src/lib/phone.ts`; `34` + 9 dígitos si procede);
-   - sin teléfono válido → `skipped[]` (NUNCA crear Contact sin teléfono: `ClassReportPanel` ya lo gestiona);
-   - 2ª pasada: resolver `tutorRef` (por id de página Notion guardado en un Setting `notion_page_id` del Contact, no por nombre) → `ContactTutorStudent`;
+   - query paginada (cursor 100/100) SIN filtro Notion (no hay propiedad Tipo); filtra en código: `Fecha baja` vacía + `Estado de pagos` fuera de baja → activo, resto a `skipped[]` con motivo `baja`;
+   - upsert por `phoneNormalized` (usa `normalizePhoneES`; `34` + 9 dígitos si procede); sin teléfono válido → `skipped[]` (NUNCA crear Contact sin teléfono, salvo tutores por nombre — ver punto siguiente);
+   - tutores: `Padre/Madre/Tutor` es solo nombre → `Contact` categoría `TUTOR` sin teléfono (dedupe por nombre exacto) + `ContactTutorStudent`; sin tutor informado → alumno sin enlace (adulto o pendiente);
    - `AuditLog` `SYNC_NOTION_CONTACTS` con conteos `created/updated/skipped` (nunca datos personales);
    - respuesta `{ created, updated, unchanged, skipped, errors }`.
    - Sin `NOTION_TOKEN`/DB_ID → `501 { error: "Notion no configurado" }` (mismo patrón que `configured:false` de Calendar/WhatsApp).

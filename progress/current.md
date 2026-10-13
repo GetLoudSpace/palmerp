@@ -128,7 +128,23 @@
 - Nota: tablas Edu* sin RLS (paridad con db push; la app filtra por tenantId). Pendiente: extender `20260603_rls_tenant_isolation` o política equivalente.
 - Git: commit `ed180d7` local (51 ficheros). Push BLOQUEADO: 403 en ambos remotos con ambas cuentas (`belpaneobrador` y `renoplastia` tienen `push:false` vía API en los dos repos). Falta que un admin de la org dé write a una de las dos cuentas; cuenta activa restaurada a `belpaneobrador`, commit listo para `git push`.
 
-**Plan 2026-10-13 (feature #11 contacts_shared_db — API compartida por tenant/usuario):**
+**Plan 2026-10-13 (feature #10 notion_contacts_sync — en curso):**
+- Usuario aporta `NOTION_TOKEN` (guardado SOLO en `.env.local`, gitignored; nunca en repo/docs/chat). Objetivo: BD "Alumni" (alumnos activos).
+- Siguiente: localizar la BD Alumni vía API (`POST /v1/search`), fijar `NOTION_CONTACTS_DB_ID`, mapear propiedades en `docs/notion-sync.md`, implementar `src/config/notionContacts.ts` + `POST /api/contacts/notion-sync`.
+
+**Ejecutado 2026-10-13 (feature #10, pendiente solo de deploy + sync real):**
+- BD localizada: "Alumnos (Administrativa)" (`NOTION_CONTACTS_DB_ID` en `.env.local`); 100 activos + 5 bajas. Regla usuario: Notion SOLO lectura (solo `query`, verificado sin PATCH/DELETE) + garantía en `docs/notion-sync.md`.
+- Alcance recortado por el usuario a 7 campos: nombre, email, teléfono, tutor (`Padre/Madre/Tutor` = solo nombre), instrumento, ciudad, dirección + `Fecha inicio` → NUEVO `Contact.enrollmentDate` (no existía; columna aplicada en prod con `apply-schema-diff`: applied=1).
+- `src/config/notionContacts.ts` [NUEVO, puro] + tests 5/5; `POST/GET /api/contacts/notion-sync` (ADMIN/DEV, upsert teléfono>email, tutores por nombre, bajas a skipped, audit sin PII); botón "Sincronizar desde Notion" + última sync en `/admin/contacts`; `recipients.ts`: TUTOR_ONLY degrada al alumno si el tutor no tiene teléfono (+ tests).
+- Verificado: `tsc` 0 ✅ · tests 21/21 ✅ · `next build` OK ✅ · `init.sh` verde ✅.
+- Falta: commit + push (deploy Vercel con `NOTION_TOKEN`/`NOTION_CONTACTS_DB_ID` en env) y pulsar el botón para la copia real (~100 alumnos).
+
+**Ejecutado 2026-10-13 (feature #12 user_admin_delete — done, sin commitear):**
+- Solo ADMIN/DEV (el profesor ni ve Ajustes: módulo `settings` no asignable). Borrado FK-seguro: clases a `SetNull`, perfil profesor en cascada, auditoría conserva histórico.
+- `src/lib/userGuards.ts` [NUEVO, puro] + tests 3/3: `canEditUser` (DEV solo por DEV), `canDeleteUser` (+ nunca a sí mismo), `normalizeLoginEmail`.
+- `src/app/api/admin/users/route.ts`: PATCH acepta `email` (formato + único por tenant + audit `USER_UPDATED` con cambio); DELETE `?id=` (bloquea auto-borrado, DEV y último gestor ADMIN/DEV + audit `USER_DELETED`).
+- UI Usuarios: email editable al editar (avisa que cambia el login), papelera por fila con doble confirmación (oculta para uno mismo).
+- Verificado: `tsc` 0 ✅ · tests 24/24 ✅ · `next build` OK ✅ · `init.sh` verde ✅ · DELETE sin sesión → 401 ✅.
 - Petición usuario: mismos contactos/alumnos en PC y móvil, scoped por usuario logueado. Se elige #11 (la #10 queda pending hasta tener credenciales Notion).
 - Entorno: `init.sh` fallaba por `node_modules` sin `googleapis`/`xlsx` + Prisma client desactualizado (+ `prisma` CLI sin `DATABASE_URL` en shell). Resuelto con `npm install --legacy-peer-deps` + `prisma generate` con `DATABASE_URL` de `.env.local`. `tsc --noEmit --skipLibCheck` → 0 errores.
 - Alcance: `GET/POST/PATCH/DELETE /api/contacts` (tenant de sesión + AuditLog + relación tutor), `/admin/contacts` vía API + botón "Importar contactos locales" (ADMIN/DEV, dedupe `phoneNormalized`, idempotente), recipients con fallback local, PROFESOR solo asignados.

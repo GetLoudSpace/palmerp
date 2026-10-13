@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
 import db from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { WORK_ROLES, isAssignableModule, isWorkRole } from "@/lib/access";
+import { canDeleteUser, canEditUser, normalizeLoginEmail } from "@/lib/userGuards";
 
 type Caller = { id: string; role: string; tenantId: string };
 
@@ -147,12 +148,28 @@ export async function PATCH(req: Request) {
     .findFirst({ where: { id, tenantId: caller.tenantId } })
     .catch(() => null);
   if (!target) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
-  if (target.role === "DEV" && caller.role !== "DEV") {
+  if (!canEditUser(caller, { id: target.id, role: target.role })) {
     return NextResponse.json({ error: "Solo un DEV puede modificar usuarios DEV" }, { status: 403 });
   }
 
   const data: Record<string, unknown> = {};
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
+  // Feature #12: cambio de email (cambia su login). Formato + único por tenant.
+  let emailChanged: { from: string; to: string } | null = null;
+  if (typeof body.email === "string" && body.email.trim()) {
+    const email = normalizeLoginEmail(body.email);
+    if (!email) return NextResponse.json({ error: "Email no válido" }, { status: 400 });
+    if (email !== target.email) {
+      const clash = await (db as any).user
+        .findUnique({ where: { tenantId_email: { tenantId: caller.tenantId, email } } })
+        .catch(() => null);
+      if (clash && (clash as { id: string }).id !== id) {
+        return NextResponse.json({ error: "Ya existe un usuario con ese email" }, { status: 409 });
+      }
+      data.email = email;
+      emailChanged = { from: target.email as string, to: email };
+    }
+  }
   if (typeof body.isActive === "boolean") {
     if (body.isActive === false && id === caller.id) {
       return NextResponse.json({ error: "No puedes desactivarte a ti mismo" }, { status: 400 });
@@ -218,11 +235,62 @@ export async function PATCH(req: Request) {
         action: "USER_UPDATED",
         table: "User",
         recordId: id,
-        details: `${updated.name} <${updated.email}> nivel ${updated.role} roles ${(roles as string[]).join(",") || "—"} activo ${updated.isActive ? "sí" : "no"}`,
+        details: `${updated.name} <${updated.email}> nivel ${updated.role} roles ${(roles as string[]).join(",") || "—"} activo ${updated.isActive ? "sí" : "no"}${emailChanged ? ` email ${emailChanged.from} → ${emailChanged.to}` : ""}`,
         success: true,
       },
     });
   } catch {}
 
   return NextResponse.json({ success: true, user: sanitize(updated), ...(tempPassword ? { tempPassword } : {}) });
+}
+
+// Feature #12: borrado REAL de usuarios. Solo ADMIN/DEV (el profesor ni ve
+// esta página). Protecciones: nunca a sí mismo, DEV solo por DEV, y nunca al
+// último gestor (ADMIN/DEV activo) del tenant. Efectos: el perfil de profesor
+// se borra en cascada, sus clases quedan sin asignar (teacher null) y la
+// auditoría conserva su userId como histórico.
+export async function DELETE(req: Request) {
+  const auth = await requireManager();
+  if ("error" in auth) return auth.error;
+  const { caller } = auth;
+
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id") || "";
+  if (!id) return NextResponse.json({ error: "id requerido" }, { status: 400 });
+
+  const target = await (db as any).user
+    .findFirst({ where: { id, tenantId: caller.tenantId } })
+    .catch(() => null);
+  if (!target) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+  if (!canDeleteUser(caller, { id: target.id, role: target.role })) {
+    const reason =
+      target.id === caller.id ? "No puedes eliminarte a ti mismo" : "Solo un DEV puede eliminar usuarios DEV";
+    return NextResponse.json({ error: reason }, { status: 403 });
+  }
+  if (target.role === "ADMIN" || target.role === "DEV") {
+    const others = await (db as any).user
+      .count({ where: { tenantId: caller.tenantId, role: { in: ["ADMIN", "DEV"] }, isActive: true, id: { not: id } } })
+      .catch(() => 1);
+    if (others === 0) {
+      return NextResponse.json({ error: "No puedes eliminar al último gestor (ADMIN/DEV) del tenant" }, { status: 400 });
+    }
+  }
+
+  await (db as any).user.delete({ where: { id } });
+
+  try {
+    await (db as any).auditLog.create({
+      data: {
+        tenantId: caller.tenantId,
+        userId: caller.id,
+        action: "USER_DELETED",
+        table: "User",
+        recordId: id,
+        details: `${target.name} <${target.email}> nivel ${target.role} (borrado real por ${caller.id})`,
+        success: true,
+      },
+    });
+  } catch {}
+
+  return NextResponse.json({ success: true });
 }

@@ -152,6 +152,10 @@ export default function UsersSettingsPage() {
             id: editingUser.id,
             name: formData.name,
             level: formData.level,
+            // El email viaja solo si cambió (cambia su login).
+            ...(formData.email.trim().toLowerCase() !== editingUser.email.toLowerCase()
+              ? { email: formData.email.trim() }
+              : {}),
             // Los roles/extras solo aplican a USUARIO: mandarlos con ADMIN/DEV
             // hace que el servidor responda 400 ("solo aplican a USUARIO").
             ...(formData.level === "USUARIO"
@@ -194,8 +198,22 @@ export default function UsersSettingsPage() {
     }
   };
 
-  const toggleActive = async (user: ApiUser) => {
-    if (user.id === callerId && user.isActive) return alert("No puedes desactivarte a ti mismo.");
+  // Feature #12: borrado REAL (solo ADMIN/DEV; el servidor protege
+  // auto-borrado, DEV y último gestor). Doble confirmación en cliente.
+  const handleDelete = async (user: ApiUser) => {
+    if (user.id === callerId) return alert("No puedes eliminarte a ti mismo.");
+    if (!confirm(`Eliminar a ${user.name} (${user.email}) de forma PERMANENTE? Sus clases quedarán sin profesor asignado.`)) return;
+    if (!confirm("Segunda confirmación: no se puede deshacer. ¿Eliminar de verdad?")) return;
+    try {
+      await api(`/api/admin/users?id=${encodeURIComponent(user.id)}`, { method: "DELETE" });
+      triggerToast(`Usuario ${user.name} eliminado.`);
+      await load();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Error eliminando");
+    }
+  };
+
+  const toggleActive = async (user: ApiUser) => {    if (user.id === callerId && user.isActive) return alert("No puedes desactivarte a ti mismo.");
     try {
       await api("/api/admin/users", {
         method: "PATCH",
@@ -348,6 +366,11 @@ export default function UsersSettingsPage() {
                           <button onClick={() => openEditModal(user)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150" title="Editar ficha y accesos">
                             <Icons.Pencil className="h-4 w-4" />
                           </button>
+                          {user.id !== callerId && (
+                            <button onClick={() => handleDelete(user)} className="rounded-lg p-1.5 text-destructive hover:bg-destructive/10 transition-all duration-150" title="Eliminar usuario (borrado real, no se puede deshacer)">
+                              <Icons.Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -377,7 +400,8 @@ export default function UsersSettingsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-muted-foreground uppercase">Email (login)</label>
-                  <input type="email" required disabled={!!editingUser} value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="ana@empresa.es" className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500 disabled:opacity-60" />
+                  <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="ana@empresa.es" className="w-full rounded-lg border border-border/50 bg-background py-2 px-3 text-xs text-foreground outline-hidden focus:border-red-500" />
+                  {editingUser && <p className="text-[10px] text-muted-foreground">Cambiarlo cambia su login (debe ser único).</p>}
                 </div>
               </div>
 

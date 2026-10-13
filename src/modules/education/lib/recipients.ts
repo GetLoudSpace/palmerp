@@ -1,7 +1,7 @@
 // src/modules/education/lib/recipients.ts
 // Resolución de destinatarios WhatsApp: 1 alumno = 1 Contact + 1 tutor único.
 // Contact es fuente de verdad; aquí solo se decide A QUIÉN enviar.
-import { normalizePhoneES } from "@/lib/phone";
+import { normalizePhoneES } from "../../../lib/phone";
 
 export type EduCommsMode = "TUTOR_ONLY" | "STUDENT_ONLY" | "BOTH";
 export type RecipientRole = "STUDENT" | "GUARDIAN";
@@ -87,7 +87,12 @@ export function getReportRecipients(opts: {
   const studentLabel = `Alumno · ${student.name}`;
 
   if (commsMode === "TUTOR_ONLY") {
-    if (tutor) push(tutor, "GUARDIAN", tutorLabel);
+    // Feature #10: tutores de Notion vienen sin teléfono. Si el tutor no es
+    // enviable (sin teléfono o con opt-out), el mensaje va al alumno en vez
+    // de perderse (antes solo se emitía un aviso sin envío).
+    const tutorSendable = tutor && !tutor.commsOptOut && !!normPhone(tutor);
+    if (tutorSendable && tutor) push(tutor, "GUARDIAN", tutorLabel);
+    else if (tutor) push(student, "STUDENT", `${studentLabel} (tutor sin teléfono)`);
     else push(student, "STUDENT", studentLabel); // fallback: sin tutor, al alumno
   } else if (commsMode === "STUDENT_ONLY") {
     push(student, "STUDENT", studentLabel);

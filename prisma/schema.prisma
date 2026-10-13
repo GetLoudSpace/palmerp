@@ -109,6 +109,7 @@ model Contact {
   billingCountry String?
   notes          String?
   birthDate      DateTime?
+  enrollmentDate DateTime? // Fecha de inscripción (sync Notion: Fecha inicio)
   preferredChannel String?  @default("WHATSAPP")
   commsOptOut    Boolean    @default(false)
 
