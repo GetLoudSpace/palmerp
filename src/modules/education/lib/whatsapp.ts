@@ -79,9 +79,12 @@ async function postToGraph(opts: {
       // Errores Meta frecuentes, traducidos a acción:
       // 100/33 = phone_number_id inexistente o sin acceso (suele ser el Business Account ID).
       // 131030 = app en pruebas: el destinatario no está en la lista de autorizados.
-      // 131047 = fuera de la ventana 24h: el texto libre no vale, hay que usar plantilla.
-      // 190 = token caducado o inválido.
+      // 133010 = número añadido pero no registrado (falta completar el registro
+      // o quitar la verificación en dos pasos de la app del móvil).
       const metaErr = (data as { error?: { code?: number; error_subcode?: number } })?.error;
+      if (metaErr?.code === 133010) {
+        return { success: false, error: "Meta: el número está añadido pero no registrado. Completa su registro en el Administrador de WhatsApp (debe poner Connected) y, si ese número estuvo en la app del móvil, desactiva antes su verificación en dos pasos (app > Ajustes > Cuenta). Detalle: " + raw.slice(0, 200) };
+      }
       if (metaErr?.code === 100) {
         return { success: false, error: "Meta: el phone number ID no existe o el token no tiene acceso a ese número. Revisa que sea el Phone Number ID de WhatsApp > API Setup (no el Business Account ID) y que token y número sean del mismo negocio. Detalle: " + raw.slice(0, 200) };
       }
