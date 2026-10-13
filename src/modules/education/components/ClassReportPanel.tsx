@@ -44,6 +44,17 @@ type EduStudentLite = {
   commsMode: EduCommsMode;
 };
 
+// Feature #11: contacto del servidor (misma ficha en todos los dispositivos)
+// con su tutor enlazado. Si la API falla, se usa la ficha local.
+type DbContactLite = {
+  id: string;
+  name: string;
+  phone: string;
+  tutorId?: string;
+  tutorName?: string;
+  tutorPhone?: string;
+};
+
 type ReportForm = {
   done: string;
   todo: string;
@@ -71,6 +82,7 @@ export default function ClassReportPanel() {
   const [gcError, setGcError] = useState<string | null>(null);
   const [localLessons, setLocalLessons] = useState<LocalLesson[]>([]);
   const [eduStudents, setEduStudents] = useState<EduStudentLite[]>([]);
+  const [dbContacts, setDbContacts] = useState<DbContactLite[]>([]);
   const [recipients, setRecipients] = useState<ReportRecipient[]>([]);
   const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<GoogleEvent | null>(null);
@@ -180,25 +192,48 @@ export default function ClassReportPanel() {
     fetchGoogleEvents();
     loadLocalLessons();
     loadEduStudents();
+    // Feature #11: fichas del servidor para destinatarios (fallback: local).
+    (async () => {
+      try {
+        const res = await fetch("/api/contacts?pageSize=500");
+        if (!res.ok) return;
+        const data = await res.json();
+        setDbContacts(
+          ((data.contacts || []) as any[]).map((c: any) => ({
+            id: String(c.id),
+            name: String(c.name || ""),
+            phone: String(c.phone || ""),
+            tutorId: c.tutors?.[0]?.id ? String(c.tutors[0].id) : undefined,
+            tutorName: c.tutors?.[0]?.name ? String(c.tutors[0].name) : undefined,
+            tutorPhone: c.tutors?.[0]?.phone ? String(c.tutors[0].phone) : undefined,
+          })),
+        );
+      } catch {}
+    })();
   }, [fetchGoogleEvents, loadLocalLessons, loadEduStudents]);
 
   /** Resuelve destinatarios según ficha del alumno (Contact manda) o teléfono suelto de la clase. */
   const resolveRecipients = useCallback((lessonName: string, lessonPhone?: string): ReportRecipient[] => {
     const match = eduStudents.find((s) => s.contactName.toLowerCase() === lessonName.toLowerCase());
+    // Feature #11: la ficha del servidor manda (id real + tutor enlazado);
+    // la ficha local aporta commsMode/parentesco si existe.
+    const db = dbContacts.find((c) => c.name.toLowerCase() === lessonName.toLowerCase());
+    const tutorName = db?.tutorName || match?.tutorName;
+    const tutorPhone = db?.tutorPhone || match?.tutorPhone;
     const recs = getReportRecipients({
       student: {
-        id: match?.contactId || match?.id || `local-${lessonName}`,
-        name: match?.contactName || lessonName,
-        phone: match?.contactPhone || lessonPhone,
+        id: db?.id || match?.contactId || match?.id || `local-${lessonName}`,
+        name: db?.name || match?.contactName || lessonName,
+        phone: db?.phone || match?.contactPhone || lessonPhone,
       },
-      tutor: match?.tutorName || match?.tutorPhone
-        ? { id: match.tutorId || `tutor-${match.id}`, name: match.tutorName || "Tutor", phone: match.tutorPhone }
+      tutor: tutorName || tutorPhone
+        ? { id: db?.tutorId || match?.tutorId || `tutor-${match?.id || lessonName}`, name: tutorName || "Tutor", phone: tutorPhone }
         : null,
       commsMode: match?.commsMode || "TUTOR_ONLY",
       tutorRelationLabel: match?.guardianRelation,
     });
     return recs;
-  }, [eduStudents]);
+  }, [eduStudents, dbContacts]);
 
   const openRecipients = (lessonName: string, lessonPhone?: string) => {
     const recs = resolveRecipients(lessonName, lessonPhone);

@@ -125,6 +125,7 @@ export function pathToModule(pathname: string): string | null {
     ["/api/admin/dashboard", "settings"],
     ["/api/admin/restore", "settings"],
     ["/admin/contacts", "contacts"],
+    ["/api/contacts", "contacts"],
     ["/admin/conversations", "conversations"],
     ["/admin/education", "EDUCACION"],
     ["/api/education", "EDUCACION"],

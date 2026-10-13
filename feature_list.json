@@ -153,7 +153,7 @@
       "id": 11,
       "name": "contacts_shared_db",
       "title": "Contactos de Palmerp en DB compartida (multiusuario) en lugar de localStorage",
-      "description": "Paso necesario para que varios usuarios vean los mismos contactos sincronizados de Notion: la página /admin/contacts y los paneles de Educación dejan de leer/escribir palmera_contacts_<slug> / edu_students_<slug> de localStorage y pasan a la API /api/contacts sobre Prisma (scoped por tenant de sesión). Migración inicial desde localStorage a DB al primer acceso de ADMIN/DEV. El rol PROFESOR con datos asignados solo ve sus alumnos.",
+      "description": "Paso necesario para que varios usuarios vean los mismos contactos sincronizados de Notion: la página /admin/contacts y los paneles de Educación dejan de leer/escribir palmera_contacts_<slug> / edu_students_<slug> de localStorage y pasan a la API /api/contacts sobre Prisma (scoped por tenant de sesión). Migración inicial desde localStorage a DB al primer acceso de ADMIN/DEV. El rol PROFESOR con datos asignados solo ve sus alumnos. (Elegida por petición directa del usuario 2026-10-13; #10 queda pendiente hasta tener credenciales Notion.)",
       "acceptance": [
         "src/app/api/contacts/route.ts: GET (lista paginada scoped por tenantId de sesión), POST/PATCH/DELETE con validación y AuditLog; responde también desde Contact la relación tutor por alumno",
         "/admin/contacts lee/escribe vía API; elimina el seed de demoContacts para tenant con DB poblada; keeps offline-safe (loading + error states)",
@@ -162,7 +162,7 @@
         "USUARIO con rol PROFESOR: solo ve/alumna-asignados (mismo patrón Only Assigned Data que GHL: por EduTeacherProfile/teacherId de sus clases)",
         "npx tsc --noEmit → 0 errores · ./init.sh verde"
       ],
-      "status": "pending"
+      "status": "done"
     }
   ]
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import * as Icons from "lucide-react";
 import { getTenantStorageKey, getTenantSlugClient } from "@/lib/clientStorage";
 import { isTenantDataCleared } from "@/lib/demoDataCleanup";
@@ -28,8 +29,33 @@ interface Contact {
   instrument?: "BAJO" | "GUITARRA" | "BATERIA" | "PIANO" | "VOZ";
   tutoredStudentIds?: string[];
   tutorIds?: string[];
+  tutors?: { id: string; name: string; phone?: string; relation?: string | null }[];
   createdAt: string;
 }
+
+// Feature #11: la API devuelve el instrumento en clave UI y birthDate ISO.
+// Mapea una fila del servidor al modelo local de esta página.
+const serverToContact = (c: any): Contact => ({
+  id: String(c.id),
+  name: String(c.name || "Contacto"),
+  email: c.email || "",
+  phone: c.phone || "",
+  contactType: c.contactType === "COMPANY" ? "COMPANY" : "INDIVIDUAL",
+  companyName: c.companyName || "",
+  cif: c.cif || "",
+  billingStreet: c.billingStreet || "",
+  billingZip: c.billingZip || "",
+  billingCity: c.billingCity || "",
+  billingCountry: c.billingCountry || "España",
+  notes: c.notes || "",
+  birthDate: c.birthDate ? String(c.birthDate).slice(0, 10) : undefined,
+  category: c.category === "ALUMNO" || c.category === "TUTOR" || c.category === "PROFESOR" ? c.category : "NONE",
+  instrument: c.instrument || undefined,
+  tutoredStudentIds: Array.isArray(c.students) ? c.students.map((s: any) => String(s.id)) : [],
+  tutorIds: Array.isArray(c.tutorIds) ? c.tutorIds.map((t: any) => String(t)) : [],
+  tutors: Array.isArray(c.tutors) ? c.tutors : [],
+  createdAt: c.createdAt || new Date().toISOString(),
+});
 
 const initialDemoContacts: Contact[] = [
   {
@@ -156,8 +182,18 @@ type SortField = "name" | "email" | "contactType" | "cif";
 type SortOrder = "asc" | "desc";
 
 export default function ContactsPage() {
+  const { data: session } = useSession();
+  const sessionRole = String((session?.user as any)?.role || "");
+  const canManageServer = sessionRole === "ADMIN" || sessionRole === "DEV";
   // --- States ---
   const [contacts, setContacts] = useState<Contact[]>([]);
+  // Feature #11: "server" = Supabase vía /api/contacts (compartido entre
+  // dispositivos); "local" = fallback offline a localStorage del dispositivo.
+  const [mode, setMode] = useState<"server" | "local">("server");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [localCount, setLocalCount] = useState(0);
+  const [importingLocal, setImportingLocal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"ALL" | "INDIVIDUAL" | "COMPANY">("ALL");
   const [filterWithCif, setFilterWithCif] = useState(false);
@@ -264,31 +300,103 @@ export default function ContactsPage() {
     return `${mins.toString().padStart(2, "0")}:${remaining.toString().padStart(2, "0")}`;
   };
 
-  // --- Load and Save from LocalStorage ---
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const slug = getTenantSlugClient();
+  // --- Load: servidor primero (compartido), localStorage como fallback ---
+  const countLocalLeftovers = () => {
+    try {
+      if (typeof window === "undefined") return 0;
+      const raw = localStorage.getItem(`palmera_contacts_${getTenantSlugClient()}`);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr.length : 0;
+    } catch {
+      return 0;
+    }
+  };
 
-      const storageKey = `palmera_contacts_${slug}`;
-      if (isTenantDataCleared(slug)) {
-        setContacts([]);
-        return;
-      }
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        try {
-          setContacts(JSON.parse(saved));
-        } catch (e) {
-          const demoContacts = getDemoContactsForTenant(slug);
-          setContacts(demoContacts);
-        }
-      } else {
+  const loadServerContacts = async () => {
+    const res = await fetch("/api/contacts?pageSize=500");
+    if (!res.ok) throw new Error(`Servidor ${res.status}`);
+    const data = await res.json();
+    setContacts((data.contacts || []).map(serverToContact));
+  };
+
+  const loadLocalContacts = () => {
+    const slug = getTenantSlugClient();
+    const storageKey = `palmera_contacts_${slug}`;
+    if (isTenantDataCleared(slug)) {
+      setContacts([]);
+      return;
+    }
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        setContacts(JSON.parse(saved));
+      } catch (e) {
         const demoContacts = getDemoContactsForTenant(slug);
         setContacts(demoContacts);
-        localStorage.setItem(storageKey, JSON.stringify(demoContacts));
       }
+    } else {
+      const demoContacts = getDemoContactsForTenant(slug);
+      setContacts(demoContacts);
+      localStorage.setItem(storageKey, JSON.stringify(demoContacts));
     }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        await loadServerContacts();
+        if (cancelled) return;
+        setMode("server");
+        setLocalCount(countLocalLeftovers());
+      } catch {
+        if (cancelled) return;
+        loadLocalContacts();
+        setMode("local");
+        setLoadError("Sin conexión al servidor: mostrando los datos de ESTE dispositivo. Se sincronizarán al recuperar la conexión (pulsa Recargar).");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // --- Importar contactos locales al servidor (ADMIN/DEV, idempotente) ---
+  const importLocalToServer = async () => {
+    const slug = getTenantSlugClient();
+    let raw: any[] = [];
+    try {
+      raw = JSON.parse(localStorage.getItem(`palmera_contacts_${slug}`) || "[]");
+    } catch {}
+    if (!Array.isArray(raw) || !raw.length) {
+      alert("No hay contactos locales en este dispositivo.");
+      return;
+    }
+    if (!confirm(`Subir ${raw.length} contactos de este dispositivo al servidor? No duplica: detecta por teléfono/email.`)) return;
+    setImportingLocal(true);
+    try {
+      const res = await fetch("/api/contacts/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contacts: raw }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Servidor ${res.status}`);
+      setToastMessage(`Servidor: ${data.created} creados, ${data.updated} actualizados, ${(data.skipped || []).length} omitidos, ${data.tutorLinks || 0} enlaces tutor.`);
+      await loadServerContacts();
+      setLocalCount(countLocalLeftovers());
+    } catch (e: any) {
+      alert(e?.message || "Falló la subida al servidor");
+    } finally {
+      setImportingLocal(false);
+      setTimeout(() => setToastMessage(null), 6000);
+    }
+  };
 
   const saveContacts = (updated: Contact[]) => {
     setContacts(updated);
@@ -355,12 +463,22 @@ export default function ContactsPage() {
     setIsModalOpen(true);
   };
 
-  // --- Delete Handler ---
-  const handleDelete = (id: string) => {
-    if (confirm("¿Estás seguro de que deseas eliminar este contacto?")) {
-      const filtered = contacts.filter((c) => c.id !== id);
-      saveContacts(filtered);
+  // --- Delete Handler (servidor o local según modo) ---
+  const handleDelete = async (id: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar este contacto?")) return;
+    if (mode === "server") {
+      try {
+        const res = await fetch(`/api/contacts?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Servidor ${res.status}`);
+        setContacts(contacts.filter((c) => c.id !== id));
+      } catch (e: any) {
+        alert(e?.message || "No se pudo eliminar en el servidor");
+      }
+      return;
     }
+    const filtered = contacts.filter((c) => c.id !== id);
+    saveContacts(filtered);
   };
 
   // --- EduStudent Sync ---
@@ -401,11 +519,37 @@ export default function ContactsPage() {
     }
   };
 
-  // --- Submit Handler ---
-  const handleSubmit = (e: React.FormEvent) => {
+  // --- Submit Handler (servidor o local según modo) ---
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return alert("El nombre es requerido");
     if (formData.category === "ALUMNO" && !formData.instrument) return alert("El instrumento es obligatorio para un alumno.");
+
+    // Feature #11: en modo servidor la ficha vive en Supabase (todos los
+    // dispositivos la ven). Se conservan los tutores ya enlazados al editar.
+    if (mode === "server") {
+      try {
+        const payload = {
+          ...formData,
+          ...(editingContact ? { id: editingContact.id, tutorIds: editingContact.tutorIds ?? [] } : { tutorIds: [] }),
+        };
+        const res = await fetch("/api/contacts", {
+          method: editingContact ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Servidor ${res.status}`);
+        const saved = serverToContact(data.contact);
+        setContacts(editingContact ? contacts.map((c) => (c.id === saved.id ? saved : c)) : [...contacts, saved]);
+        syncEduStudent(saved);
+      } catch (err: any) {
+        alert(err?.message || "No se pudo guardar en el servidor");
+        return;
+      }
+      setIsModalOpen(false);
+      return;
+    }
 
     if (editingContact) {
       // Edit
@@ -636,8 +780,58 @@ export default function ContactsPage() {
     }
   };
 
-  const executeImport = () => {
+  const executeImport = async () => {
     if (!importResult || importResult.validRows.length === 0) return;
+
+    // Feature #11: en modo servidor cada fila válida se crea vía API
+    // (409 = ya existe por teléfono, no duplica) y se recarga la lista.
+    if (mode === "server") {
+      setIsImporting(true);
+      let createdCount = 0;
+      let existingCount = 0;
+      let failCount = 0;
+      for (const row of importResult.validRows as any[]) {
+        try {
+          const res = await fetch("/api/contacts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: row.name,
+              email: row.email,
+              phone: row.phone,
+              contactType: row.contactType || "INDIVIDUAL",
+              category: row.category || "NONE",
+              instrument: row.instrument,
+              companyName: row.companyName,
+              cif: row.cif,
+              birthDate: row.birthDate,
+              billingStreet: row.billingStreet,
+              billingZip: row.billingZip,
+              billingCity: row.billingCity,
+              billingCountry: row.billingCountry,
+              notes: row.notes,
+              tutorIds: [],
+            }),
+          });
+          if (res.ok) createdCount++;
+          else if (res.status === 409) existingCount++;
+          else failCount++;
+        } catch {
+          failCount++;
+        }
+      }
+      try {
+        await loadServerContacts();
+      } catch {}
+      setIsImporting(false);
+      setIsImportModalOpen(false);
+      setImportFile(null);
+      setImportResult(null);
+      setToastMessage(`Importación al servidor: ${createdCount} creados, ${existingCount} ya existían, ${failCount} fallidos.`);
+      setTimeout(() => setToastMessage(null), 5000);
+      return;
+    }
+
     setIsImporting(true);
 
     setTimeout(() => {
@@ -890,16 +1084,80 @@ export default function ContactsPage() {
 
         {/* Global Toolbar buttons */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => saveContacts(initialDemoContacts)}
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-muted"
-            title="Recargar datos de prueba iniciales"
-          >
-            <Icons.RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>Recargar Demo</span>
-          </button>
+          {mode === "server" ? (
+            <>
+              {canManageServer && localCount > 0 && (
+                <button
+                  onClick={importLocalToServer}
+                  disabled={importingLocal}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 text-xs font-semibold text-sky-700 hover:bg-sky-500/20 disabled:opacity-50"
+                  title="Sube los contactos guardados solo en este dispositivo al servidor (no duplica)"
+                >
+                  {importingLocal ? (
+                    <Icons.Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Icons.CloudUpload className="h-3.5 w-3.5" />
+                  )}
+                  <span>{importingLocal ? "Subiendo..." : `Subir locales (${localCount})`}</span>
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  loadServerContacts()
+                    .then(() => setLocalCount(countLocalLeftovers()))
+                    .catch(() => setLoadError("No se pudo recargar del servidor."))
+                    .finally(() => setLoading(false));
+                }}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-muted"
+                title="Recargar contactos del servidor"
+              >
+                <Icons.RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Recargar</span>
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => saveContacts(initialDemoContacts)}
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-muted"
+              title="Recargar datos de prueba iniciales"
+            >
+              <Icons.RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>Recargar Demo</span>
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Feature #11: aviso de modo local (datos solo de este dispositivo) */}
+      {mode === "local" && loadError && (
+        <div className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-xs font-semibold text-amber-800">
+          <Icons.AlertTriangle className="h-4 w-4 shrink-0" />
+          <span className="flex-1">{loadError}</span>
+          <button
+            onClick={() => {
+              setLoading(true);
+              loadServerContacts()
+                .then(() => {
+                  setMode("server");
+                  setLoadError(null);
+                  setLocalCount(countLocalLeftovers());
+                })
+                .catch(() => setLoadError("Sigue sin conexión al servidor."))
+                .finally(() => setLoading(false));
+            }}
+            className="rounded-lg border border-amber-500/40 px-2.5 py-1 text-[11px] font-bold hover:bg-amber-500/20"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+      {mode === "server" && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2 text-[11px] font-semibold text-emerald-800">
+          <Icons.Cloud className="h-4 w-4 shrink-0" />
+          <span>Contactos del servidor: visibles en todos tus dispositivos con tu usuario.</span>
+        </div>
+      )}
 
       {/* Odoo Filters Board */}
       <div className="grid gap-3 md:grid-cols-4 bg-muted/20 border border-border/40 p-4 rounded-xl">
@@ -1040,7 +1298,14 @@ export default function ContactsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredContacts.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-muted-foreground">
+                    <Icons.Loader2 className="h-8 w-8 mx-auto text-muted-foreground/50 mb-3 animate-spin" />
+                    <span>Cargando contactos...</span>
+                  </td>
+                </tr>
+              ) : filteredContacts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-sm text-muted-foreground">
                     <Icons.Users className="h-8 w-8 mx-auto text-muted-foreground/50 mb-3" />

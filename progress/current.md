@@ -128,7 +128,19 @@
 - Nota: tablas Edu* sin RLS (paridad con db push; la app filtra por tenantId). Pendiente: extender `20260603_rls_tenant_isolation` o política equivalente.
 - Git: commit `ed180d7` local (51 ficheros). Push BLOQUEADO: 403 en ambos remotos con ambas cuentas (`belpaneobrador` y `renoplastia` tienen `push:false` vía API en los dos repos). Falta que un admin de la org dé write a una de las dos cuentas; cuenta activa restaurada a `belpaneobrador`, commit listo para `git push`.
 
-**Pendiente:**
+**Plan 2026-10-13 (feature #11 contacts_shared_db — API compartida por tenant/usuario):**
+- Petición usuario: mismos contactos/alumnos en PC y móvil, scoped por usuario logueado. Se elige #11 (la #10 queda pending hasta tener credenciales Notion).
+- Entorno: `init.sh` fallaba por `node_modules` sin `googleapis`/`xlsx` + Prisma client desactualizado (+ `prisma` CLI sin `DATABASE_URL` en shell). Resuelto con `npm install --legacy-peer-deps` + `prisma generate` con `DATABASE_URL` de `.env.local`. `tsc --noEmit --skipLibCheck` → 0 errores.
+- Alcance: `GET/POST/PATCH/DELETE /api/contacts` (tenant de sesión + AuditLog + relación tutor), `/admin/contacts` vía API + botón "Importar contactos locales" (ADMIN/DEV, dedupe `phoneNormalized`, idempotente), recipients con fallback local, PROFESOR solo asignados.
+
+**Ejecutado 2026-10-13 (feature #11 done):**
+- `src/lib/contactSync.ts` [NUEVO, puro]: `mapInstrumentToDb/FromDb` (GUITARRA UI ↔ GUITARRA_ACUSTICA DB), `validateContactPayload`, `contactDedupeKey` (teléfono>email>nombre), `splitPhone`. `src/__tests__/contactSync.test.ts` [NUEVO] 5/5 ✅
+- `src/app/api/contacts/route.ts` [NUEVO]: GET paginado+búsqueda+filtros scoped tenantId; PROFESOR solo asignados (teacherId de sus EduLesson → contactos alumno+tutor); POST/PATCH con validación+409 por teléfono+enlaces tutor+AuditLog; DELETE solo ADMIN/DEV (lógico). `import/route.ts` [NUEVO]: POST bulk ADMIN/DEV idempotente + 2ª pasada tutores + audit. `access.ts`: `/api/contacts → contacts` en pathToModule.
+- `/admin/contacts`: modo servidor (fetch API, CRUD API, sin seed demo, banner verde) + fallback local offline (banner ámbar + reintentar) + botón "Subir locales (N)" + import Excel vía API. `ClassReportPanel`: destinatarios prefieren ficha DB (id real+tutor) con fallback local. `StudentsManager`: desplegable de contactos desde API con fallback.
+- Verificado: `tsc` 0 ✅ · `npm test` 13/13 ✅ · `next build` OK (`/api/contacts`, `/api/contacts/import`) ✅ · `init.sh` verde ✅ · rutas responden 401 sin sesión ✅ (sin escrituras en prod: `Contact` sigue con 0 filas hasta que el usuario importe)
+- Sin commitear: a la espera de orden para commit+push a `dst/master` (despliegue Vercel).
+
+**Pendiente (anterior):**
 - Configurar `GOOGLE_SERVICE_ACCOUNT_JSON` y `GOOGLE_CALENDAR_ID` en `.env` para activar sincronización real con Google Calendar
 - Configurar `WHATSAPP_TOKEN` y `WHATSAPP_PHONE_NUMBER_ID` (= `WHATSAPP_PHONE_ID` legacy) para envío real por WhatsApp Cloud API
 - `prisma db push` / migrate para aplicar los nuevos campos en la DB del tenant cuando toque

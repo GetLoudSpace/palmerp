@@ -39,13 +39,21 @@ export default function StudentsManager() {
   const [detailIdx, setDetailIdx] = useState<number|null>(null);
 
   const safeArray = (a: unknown): string[] => Array.isArray(a) ? (a as string[]) : [];
-  // load contacts from CRM storage + students from own storage (with legacy migration: join crash fix)
+  // load contacts from API (DB compartida, feature #11) con fallback a CRM local + students propios (con migración legacy)
   useEffect(()=>{
-    const slug = getTenantSlugClient();
-    const ck = `palmera_contacts_${slug}`;
-    const raw = localStorage.getItem(ck);
-    let contactList: {id:string;name:string;phone:string;birthDate?:string}[] = [];
-    if (raw) try{ const parsed = JSON.parse(raw); contactList = parsed.map((c:any)=>({id:String(c.id),name:String(c.name||"Contacto"),phone:String(c.phone||""),birthDate:c.birthDate?String(c.birthDate):undefined})); setContacts(contactList); } catch{}
+    (async () => {
+      let contactList: {id:string;name:string;phone:string;birthDate?:string}[] = [];
+      try {
+        const res = await fetch("/api/contacts?pageSize=500");
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        contactList = ((data.contacts || []) as any[]).map((c:any)=>({id:String(c.id),name:String(c.name||"Contacto"),phone:String(c.phone||""),birthDate:c.birthDate?String(c.birthDate).slice(0,10):undefined}));
+      } catch {
+        const slug = getTenantSlugClient();
+        const raw = localStorage.getItem(`palmera_contacts_${slug}`);
+        if (raw) try{ const parsed = JSON.parse(raw); contactList = parsed.map((c:any)=>({id:String(c.id),name:String(c.name||"Contacto"),phone:String(c.phone||""),birthDate:c.birthDate?String(c.birthDate):undefined})); } catch{}
+      }
+      setContacts(contactList);
     const sk = getTenantStorageKey("edu_students");
     const sraw = localStorage.getItem(sk);
     if (sraw) try{
@@ -98,6 +106,7 @@ export default function StudentsManager() {
       ];
       setStudents(seed); localStorage.setItem(sk, JSON.stringify(seed));
     }
+    })();
   }, []);
 
   const persist = (next: Student[])=>{ setStudents(next); localStorage.setItem(getTenantStorageKey("edu_students"), JSON.stringify(next)); };
