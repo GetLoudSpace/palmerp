@@ -4,7 +4,12 @@
   "rules": {
     "one_feature_at_a_time": true,
     "require_tests_to_close": true,
-    "valid_status": ["pending", "in_progress", "done", "blocked"]
+    "valid_status": [
+      "pending",
+      "in_progress",
+      "done",
+      "blocked"
+    ]
   },
   "features": [
     {
@@ -126,6 +131,38 @@
         "API /api/admin/restore y /api/fleet/backup-heartbeat funcionales y Superadmin muestra semáforo backup"
       ],
       "status": "done"
+    },
+    {
+      "id": 10,
+      "name": "notion_contacts_sync",
+      "title": "Sincronización de contactos desde Notion (fuente de verdad) — solo Alumnos y Tutores",
+      "description": "Ruta de servidor que lee la base de datos de contactos de Notion vía API REST (internal integration), filtra los registros de tipo Alumno/Tutor y los upserta en Contact/ContactTutorStudent de Prisma deduplicando por phoneNormalized. El mapeo propiedad-Notion→campo vive en src/config/notionContacts.ts (config-driven, ver docs/notion-sync.md). Disparo manual desde /admin/contacts y cron opcional. GHL queda fuera del envío (coste add-on); Notion manda también en teléfonos.",
+      "acceptance": [
+        "docs/notion-sync.md relleno con: NOTION_TOKEN, NOTION_CONTACTS_DB_ID y lista exacta de propiedades de la BD Notion (nombre + tipo) incl. ejemplo de página JSON",
+        "src/config/notionContacts.ts mapea cada propiedad real → Contact (name, phone, phoneNormalized, email, birthDate, category ALUMNO/TUTOR, instrument) y la relación tutor↔alumno → ContactTutorStudent(relation)",
+        "POST /api/contacts/notion-sync exige sesión ADMIN/DEV, devuelve 200 {created,updated,unchanged,skipped[],errors[]} y escribe AuditLog SYNC_NOTION_CONTACTS con conteos (nunca secretos); sin credenciales → 501 claro, no crash",
+        "Upsert idempotente: dedupe por phoneNormalized (normalizar con lib/phone, antepone 34 si 9 dígitos); sin teléfono → se registra en skipped[] con motivo; no borra contactos locales huérfanos (marca solo informe)",
+        "Menor de edad (birthDate) → ContactTutorStudent + commsMode por defecto TUTOR_ONLY; tutor y alumno con mismo teléfono → 1 solo Contact (regla dedupe ya existente en recipients.ts)",
+        "Botón 'Sincronizar desde Notion' en /admin/contacts con resumen último sync (leído de AuditLog) y loading state",
+        "Prueba real con token/BD del tenant getloud: ≥1 alumno y su tutor aterrizan correctos en Contact y visibles en el flujo de Seguimiento",
+        "npx tsc --noEmit → 0 errores · ./init.sh verde"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 11,
+      "name": "contacts_shared_db",
+      "title": "Contactos de Palmerp en DB compartida (multiusuario) en lugar de localStorage",
+      "description": "Paso necesario para que varios usuarios vean los mismos contactos sincronizados de Notion: la página /admin/contacts y los paneles de Educación dejan de leer/escribir palmera_contacts_<slug> / edu_students_<slug> de localStorage y pasan a la API /api/contacts sobre Prisma (scoped por tenant de sesión). Migración inicial desde localStorage a DB al primer acceso de ADMIN/DEV. El rol PROFESOR con datos asignados solo ve sus alumnos.",
+      "acceptance": [
+        "src/app/api/contacts/route.ts: GET (lista paginada scoped por tenantId de sesión), POST/PATCH/DELETE con validación y AuditLog; responde también desde Contact la relación tutor por alumno",
+        "/admin/contacts lee/escribe vía API; elimina el seed de demoContacts para tenant con DB poblada; keeps offline-safe (loading + error states)",
+        "Migración localStorage→DB: botón/detect 'Importar contactos locales' (solo ADMIN/DEV, dedupe por phoneNormalized, no duplica en re-ejecución)",
+        "ClassReportPanel/resolveRecipients resuelven destinatarios desde API (DB) cuando existe, conservando fallback localStorage para fichas aún locales",
+        "USUARIO con rol PROFESOR: solo ve/alumna-asignados (mismo patrón Only Assigned Data que GHL: por EduTeacherProfile/teacherId de sus clases)",
+        "npx tsc --noEmit → 0 errores · ./init.sh verde"
+      ],
+      "status": "pending"
     }
   ]
 }

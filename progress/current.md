@@ -142,3 +142,9 @@
 - Menús (`registry.ts` + `education/module.ts`): fuera "Curso Guitarra" (pestaña del profesor), "Alumnos" (se ve en Contactos filtrando categoría Alumno) y "Artista" de EDUCACION
 - Artista como módulo aparte `ARTISTA` (mismo nivel que Educación): nuevo `src/app/admin/artist/page.tsx` (reusa `ArtistWorkspace`), assignable como extra, rol PROFESOR lo incluye, `pathToModule` `/admin/artist → ARTISTA`. Requiere activar el modo en Gestión de modos (o por defecto para PROFESOR vía acceso)
 - `tsc` 0 ✅ · `./init.sh` verde ✅
+
+**Preparado 2026-10-13 (sync de contactos desde Notion — tareas pendientes #10 y #11):**
+- Decisiones de producto: fuente de verdad de contactos = **Notion** (GHL no: el add-on de WhatsApp de GHL cuesta y el envío ya lo cubre wa.me); Palmerp solo sincroniza **Alumnos y Tutores**; objetivo real = varios usuarios compartiendo datos → exige DB (hoy `/admin/contacts` vive en localStorage).
+- `feature_list.json`: añadidas #10 `notion_contacts_sync` (pending) y #11 `contacts_shared_db` (pending) con acceptance cerrada.
+- `docs/notion-sync.md`: checklist de implementación con tabla de mapeo Notion→`Contact` a rellenar (inputs pendientes: `NOTION_TOKEN`, `NOTION_CONTACTS_DB_ID`, nombres exactos de propiedades + 1 JSON de ejemplo), diseño acordado (upsert por `phoneNormalized`, 2ª pasada para `ContactTutorStudent`, 501 sin creds, botón sync en `/admin/contacts`) y orden de ejecución.
+- Verificado: `feature_list.json` válido ✅ · `./init.sh` verde ✅
