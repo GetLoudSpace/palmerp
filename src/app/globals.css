@@ -22,6 +22,9 @@
   --input: 220 15% 88%;
   --ring: 359 83% 48%;
   --radius: 0.85rem; /* Slightly smoother rounded corners */
+  /* Tipografías del sistema (sin next/font/google: evita su loader en build) */
+  --font-outfit: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 .dark {

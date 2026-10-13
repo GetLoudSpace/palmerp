@@ -1,18 +1,8 @@
 import type { Metadata } from "next";
-import { Outfit, JetBrains_Mono } from "next/font/google";
+// NOTA build: sin next/font/google (Turbopack en Vercel fallaba resolviendo su
+// loader interno). Tipografías del sistema vía --font-outfit/--font-mono en
+// globals.css: cero fetch en build, mismo layout.
 import "./globals.css";
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "Palmera Core",
@@ -31,7 +21,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className="h-full antialiased"
       suppressHydrationWarning
     >
       <head>
