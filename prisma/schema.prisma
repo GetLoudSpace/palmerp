@@ -71,6 +71,7 @@ model User {
   updatedAt    DateTime @updatedAt
   eduLessonsAsTeacher EduLesson[]
   eduTeacherProfile EduTeacherProfile?
+  eduOutboxSent EduOutboxMessage[] @relation("EduOutboxSender")
   clockEntries TeamClockEntry[]
 
   @@unique([tenantId, email])
@@ -1020,23 +1021,35 @@ model EduOutboxMessage {
   id          String   @id @default(cuid())
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  studentId   String
-  student     EduStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  // Nullable: un reporte puede nacer de una clase local (aún sin ficha Prisma).
+  studentId   String?
+  student     EduStudent? @relation(fields: [studentId], references: [id], onDelete: Cascade)
   lessonId    String?
-  channel     String   @default("WHATSAPP_CLOUD")
+  // Quién envió (profesor/admin). Nullable para histórico y borrados; senderName es snapshot.
+  userId      String?
+  sender      User?    @relation("EduOutboxSender", fields: [userId], references: [id], onDelete: SetNull)
+  senderName  String?
+  // Snapshot de la clase para mostrarla sin depender de EduLesson/EduStudent.
+  lessonLabel String?
+  instrument  String?
+  channel     String   @default("WHATSAPP_CLOUD") // WHATSAPP_CLOUD | WHATSAPP_ME
+  origin      String   @default("CLOUD") // reporte | clase | CLOUD
   waMessageId String?
   recipientContactId String?
   recipientRole String?
+  recipientLabel String?
   toPhone     String
   body        String   @db.Text
   link        String?
   batchToken  String?
-  status      String   @default("QUEUED") // QUEUED | SENT | DELIVERED | READ | FAILED
+  status      String   @default("QUEUED") // QUEUED | SENT | OPENED | DELIVERED | READ | FAILED
   error       String?  @db.Text
   sentAt      DateTime?
   createdAt   DateTime @default(now())
 
   @@index([tenantId, studentId, createdAt])
+  @@index([tenantId, userId, createdAt])
+  @@index([tenantId, origin, createdAt])
   @@index([waMessageId])
   @@index([batchToken])
   @@index([recipientContactId])

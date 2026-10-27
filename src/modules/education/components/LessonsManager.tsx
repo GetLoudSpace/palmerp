@@ -86,38 +86,52 @@ export default function LessonsManager() {
     persist(next);
 
     // outbox log + shared resources
-    const outKey = getTenantStorageKey("edu_outbox");
     const sharedKey = getTenantStorageKey("edu_shared");
-    const out = JSON.parse(localStorage.getItem(outKey)||"[]");
     const shared = JSON.parse(localStorage.getItem(sharedKey)||"[]");
     const body = buildLessonWhatsAppMessage({ studentName: showFinish.studentName, instrumentLabel: form.instrument, skillsLabel: safeArr(form.skills).join(", ")||undefined, link: batchLink, count: hwIds.length + safeArr(form.songs).length });
     // Cloud API dryRun: try fetch if Setting has creds, else fallback wa.me
     const phone = showFinish.studentPhone;
-    let waUrl = buildWaMeUrl(phone, body);
-    // pretend Cloud API call (will fail without creds, but we log)
+    const waUrl = buildWaMeUrl(phone, body);
+    let waFallback = false;
+    // El envío por Cloud API ya se registra en servidor dentro de la propia API.
     try {
       const res = await fetch("/api/education/whatsapp/send", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ to: phone, body, batchToken, lessonId: showFinish.id, link: batchLink }) });
       if (res.ok) {
         const j = await res.json();
-        if (j.waMessageId) {
-          out.unshift({ id: batchToken, studentName: showFinish.studentName, toPhone: phone, body, link: batchLink, batchToken, status:"SENT", waMessageId: j.waMessageId, sentAt: new Date().toISOString() });
-        } else {
-          // fallback to wa.me
+        if (!j.waMessageId) {
+          waFallback = true;
           window.open(waUrl, "_blank");
-          out.unshift({ id: batchToken, studentName: showFinish.studentName, toPhone: phone, body, link: batchLink, batchToken, status:"QUEUED", sentAt: new Date().toISOString() });
         }
       } else {
+        waFallback = true;
         window.open(waUrl, "_blank");
-        out.unshift({ id: batchToken, studentName: showFinish.studentName, toPhone: phone, body, link: batchLink, batchToken, status:"QUEUED", sentAt: new Date().toISOString() });
       }
     } catch {
+      waFallback = true;
       window.open(waUrl, "_blank");
-      out.unshift({ id: batchToken, studentName: showFinish.studentName, toPhone: phone, body, link: batchLink, batchToken, status:"QUEUED", sentAt: new Date().toISOString() });
+    }
+    if (waFallback) {
+      fetch("/api/education/outbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lesson: showFinish.studentName,
+          instrument: form.instrument,
+          body,
+          origin: "clase",
+          channel: "WHATSAPP_ME",
+          status: "OPENED",
+          lessonId: showFinish.id,
+          batchToken,
+          recipients: [{ label: "Alumno", phone }],
+        }),
+      })
+        .then(() => window.dispatchEvent(new Event("palmera_outbox_updated")))
+        .catch(() => {});
     }
     // shared resources for batch (1 per hw)
     hwIds.forEach((eid:string)=> shared.unshift({ token: Math.random().toString(36).slice(2,10), batchToken, lessonId: showFinish.id, exerciseId: eid, studentName: showFinish.studentName }));
     form.songs.forEach((sid:string)=> shared.unshift({ token: Math.random().toString(36).slice(2,10), batchToken, lessonId: showFinish.id, songId: sid, studentName: showFinish.studentName }));
-    localStorage.setItem(outKey, JSON.stringify(out.slice(0,50)));
     localStorage.setItem(sharedKey, JSON.stringify(shared.slice(0,100)));
     // audit local
     const audit = JSON.parse(localStorage.getItem("palmera_audit_logs")||"[]");

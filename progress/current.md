@@ -224,3 +224,13 @@
 - `feature_list.json`: añadidas #10 `notion_contacts_sync` (pending) y #11 `contacts_shared_db` (pending) con acceptance cerrada.
 - `docs/notion-sync.md`: checklist de implementación con tabla de mapeo Notion→`Contact` a rellenar (inputs pendientes: `NOTION_TOKEN`, `NOTION_CONTACTS_DB_ID`, nombres exactos de propiedades + 1 JSON de ejemplo), diseño acordado (upsert por `phoneNormalized`, 2ª pasada para `ContactTutorStudent`, 501 sin creds, botón sync en `/admin/contacts`) y orden de ejecución.
 - Verificado: `feature_list.json` válido ✅ · `./init.sh` verde ✅
+
+**Ejecutado 2026-10-27 (registro de envíos en servidor + visibilidad ADMIN):**
+- Regla general añadida a `AGENTS.md`: todo dato de negocio se persiste en servidor (DB/API), nunca en localStorage/IndexedDB; localStorage solo preferencias visuales del dispositivo.
+- `prisma/schema.prisma`: `EduOutboxMessage` gana `userId`/`sender` (SetNull) + `senderName`, `lessonLabel`, `instrument`, `origin`, `recipientLabel`; `studentId` pasa a opcional para clases locales. Migración idempotente `prisma/migrations/20261027_edu_outbox_server_log`.
+- `src/app/api/education/outbox/route.ts` [NUEVO]: GET (usuario ve lo suyo; ADMIN/DEV ve todo el tenant y filtra por `teacherId`, devuelve lista de profesores), POST (registra envío wa.me/Cloud con agrupación por `batchToken`) y DELETE scoped.
+- Registro servidor en `education/report` y `education/whatsapp/send` (emisor, snapshot de clase/instrumento/destinatarios).
+- `SendLogPanel.tsx` reescrito: carga API (sin localStorage), refresco al foco/evento, filtro por profesor solo ADMIN, autor visible y vaciado en servidor.
+- `ClassReportPanel` / `LessonsManager` / `LessonFinishModal`: eliminadas escrituras locales de outbox; los fallbacks wa.me hacen POST a `/api/education/outbox`.
+- Verificado: `prisma generate` ✅ · `tsc --noEmit` 0 errores ✅ · tests 29/29 ✅. Pendiente aplicar migración en DB (`prisma migrate deploy` o `db push`) antes de desplegar.
+- Migración `20261027_edu_outbox_server_log` aplicada en Supabase (columnas, FK e índices verificados). `SendLogPanel` incluye migración única: sube al servidor los registros legacy de `edu_wa_outbox`/`edu_outbox` del navegador y borra las claves locales tras éxito.

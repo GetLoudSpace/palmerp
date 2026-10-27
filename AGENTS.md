@@ -36,6 +36,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## 3. Reglas duras (no negociables)
 
 - **Una sola feature a la vez.** No mezcles cambios de múltiples tareas en una sola sesión de git/progreso.
+- **Persistencia en servidor obligatoria (regla general).** Todo dato de negocio —registros, envíos, clases, progreso, ajustes compartidos, auditoría— debe guardarse en la base de datos a través de una API del servidor, **nunca** en `localStorage`, `sessionStorage`, IndexedDB ni en estado efímero del navegador. Cualquier usuario debe ver los mismos datos actualizados al entrar desde otro ordenador con internet. `localStorage` queda reservado únicamente a preferencias visuales del dispositivo (tema, paneles colapsados) y jamás como fuente de verdad.
 - **No declares una tarea `done` sin pruebas y compilación correctas.** Ejecuta `./init.sh` y asegúrate de que el compilador de TypeScript (`npx tsc --noEmit`) y la compilación de Next.js pasen sin errores.
 - **Documenta lo que haces** en `progress/current.md` en tiempo real mientras programas, no al final.
 - **Autoguardado automático (no depende de recordar):** el plugin `.opencode/plugin/session-checkpoint.js` escribe `progress/.checkpoint.json` tras cada tarea (`todowrite`) o cambio (`edit`/`write`). Si la conversación se cierra sin querer, la siguiente sesión retoma desde esa huella + `current.md` + `feature_list.json`. El comando `/cierre` ejecuta el lifecycle completo.

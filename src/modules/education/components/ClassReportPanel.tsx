@@ -320,20 +320,24 @@ export default function ClassReportPanel() {
 
       if (fallbackTargets.length > 0) {
         setToast({ msg: `📲 Abriendo WhatsApp → ${fallbackTargets.length} chat${fallbackTargets.length === 1 ? "" : "s"}...`, ok: true });
-        try {
-          const logKey = getTenantStorageKey("edu_wa_outbox");
-          const prev = JSON.parse(localStorage.getItem(logKey) || "[]");
-          const entry = {
-            id: `walog_${Date.now()}`,
-            at: new Date().toISOString(),
+        // Registro compartido en servidor (visible para el profesor y para ADMIN).
+        fetch("/api/education/outbox", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             lesson: lessonName,
             instrument,
-            recipients: fallbackTargets.map((r) => ({ label: r.label, phone: r.toPhone })),
             body,
-          };
-          localStorage.setItem(logKey, JSON.stringify([entry, ...prev].slice(0, 200)));
-          window.dispatchEvent(new Event("palmera_wa_outbox_updated"));
-        } catch {}
+            origin: "reporte",
+            channel: "WHATSAPP_ME",
+            status: "OPENED",
+            lessonId: selectedLocal?.id || undefined,
+            batchToken: `walog_${Date.now()}`,
+            recipients: fallbackTargets.map((r) => ({ label: r.label, phone: r.toPhone, contactId: r.contactId, role: r.role })),
+          }),
+        })
+          .then(() => window.dispatchEvent(new Event("palmera_outbox_updated")))
+          .catch(() => {});
         fallbackTargets.forEach((r, i) => {
           setTimeout(() => window.open(buildWaMeUrl(r.toPhone, body), "_blank"), i * 600);
         });

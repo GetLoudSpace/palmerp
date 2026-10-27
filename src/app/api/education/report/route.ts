@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const { session, tenantId } = auth;
 
   const body = await request.json().catch(() => ({}));
-  const { studentId, lessonId, done, todo, commsMode: commsOverride, recipients: recipientsOverride, batchToken, link } = body as {
+  const { studentId, lessonId, done, todo, commsMode: commsOverride, recipients: recipientsOverride, batchToken, link, lesson, instrument } = body as {
     studentId?: string;
     lessonId?: string;
     done?: string;
@@ -28,6 +28,8 @@ export async function POST(request: Request) {
     recipients?: { contactId: string; role: RecipientRole; toPhone?: string; label?: string }[];
     batchToken?: string;
     link?: string;
+    lesson?: string;
+    instrument?: string;
   };
   if (!studentId || !lessonId) {
     return NextResponse.json({ error: 'studentId and lessonId required' }, { status: 400 });
@@ -41,6 +43,8 @@ export async function POST(request: Request) {
     (done ? `Hecho: ${done}\n` : '') +
     (todo ? `Tarea: ${todo}\n` : '') +
     (link ? `Recursos: ${link}\n` : '');
+  // Agrupa todas las filas de este envío en el panel (un envío → N destinatarios).
+  const outboxBatchToken = batchToken || crypto.randomUUID();
 
   // 1. Resolver EduStudent + Contact alumno + Contact tutor (teléfonos reales).
   // Si la ficha aún solo vive en localStorage (sin Prisma), NO 404: el cliente
@@ -64,6 +68,32 @@ export async function POST(request: Request) {
       const sent = await sendWhatsAppTextApi({ phoneNumberId: waLocal.phoneNumberId!, accessToken: waLocal.token!, to: t.toPhone, body: message });
       localResults.push({ contactId: t.contactId, role: t.role, toPhone: t.toPhone, waMessageId: sent.waMessageId ?? null, error: sent.error });
     }
+    try {
+      // Registro compartido en servidor, también para clases locales sin ficha Prisma.
+      await db.eduOutboxMessage.createMany({
+        data: localResults.map((r) => ({
+          tenantId,
+          studentId: null,
+          lessonId,
+          userId: session.user.id,
+          senderName: session.user.name || session.user.email || "Usuario",
+          lessonLabel: lesson || null,
+          instrument: instrument || null,
+          channel: 'WHATSAPP_CLOUD',
+          origin: 'reporte',
+          recipientContactId: r.contactId,
+          recipientRole: r.role,
+          recipientLabel: localTargets.find((t) => t.contactId === r.contactId)?.role || null,
+          toPhone: r.toPhone,
+          body: message,
+          link: link ?? null,
+          batchToken: outboxBatchToken,
+          status: r.waMessageId ? 'SENT' : 'FAILED',
+          error: r.error ?? null,
+          sentAt: r.waMessageId ? new Date() : null,
+        })),
+      });
+    } catch {}
     try {
       await db.auditLog.create({
         data: { tenantId, userId: session.user.id, action: 'EDU_CLASS_REPORT_SENT', table: 'EduOutboxMessage', recordId: lessonId, details: `Report local lesson ${lessonId} → ${localResults.map((r) => `${r.role}:${r.toPhone}${r.waMessageId ? '' : '(failed)'}`).join(', ')}`, success: localResults.some((r) => r.waMessageId) },
@@ -135,14 +165,20 @@ export async function POST(request: Request) {
         tenantId,
         studentId: student.id,
         lessonId,
+        userId: session.user.id,
+        senderName: session.user.name || session.user.email || "Usuario",
+        lessonLabel: lesson || student.contact.name,
+        instrument: instrument || (student.instruments?.[0] ?? null),
         channel: 'WHATSAPP_CLOUD',
+        origin: 'reporte',
         waMessageId: waMessageId ?? undefined,
         recipientContactId: r.contactId,
         recipientRole: r.role,
+        recipientLabel: r.label,
         toPhone: r.toPhone,
         body: message,
         link: link ?? undefined,
-        batchToken: batchToken ?? undefined,
+        batchToken: outboxBatchToken,
         status: waMessageId ? 'QUEUED' : 'FAILED',
         error: error ?? undefined,
         sentAt: waMessageId ? new Date() : undefined,

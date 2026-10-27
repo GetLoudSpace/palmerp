@@ -86,9 +86,7 @@ export default function LessonFinishModal({
     );
     persist(next);
 
-    const outKey = getTenantStorageKey("edu_outbox");
     const sharedKey = getTenantStorageKey("edu_shared");
-    const out = JSON.parse(localStorage.getItem(outKey) || "[]");
     const shared = JSON.parse(localStorage.getItem(sharedKey) || "[]");
     const body = buildLessonWhatsAppMessage({
       studentName: lesson.studentName,
@@ -99,6 +97,8 @@ export default function LessonFinishModal({
     });
     const phone = lesson.studentPhone;
     const waUrl = buildWaMeUrl(phone, body);
+    let waFallback = false;
+    // El envío por Cloud API ya se registra en servidor dentro de la propia API.
     try {
       const res = await fetch("/api/education/whatsapp/send", {
         method: "POST",
@@ -107,19 +107,36 @@ export default function LessonFinishModal({
       });
       if (res.ok) {
         const j = await res.json();
-        if (j.waMessageId) {
-          out.unshift({ id: batchToken, studentName: lesson.studentName, toPhone: phone, body, link: batchLink, batchToken, status: "SENT", waMessageId: j.waMessageId, sentAt: new Date().toISOString() });
-        } else {
+        if (!j.waMessageId) {
+          waFallback = true;
           window.open(waUrl, "_blank");
-          out.unshift({ id: batchToken, studentName: lesson.studentName, toPhone: phone, body, link: batchLink, batchToken, status: "QUEUED", sentAt: new Date().toISOString() });
         }
       } else {
+        waFallback = true;
         window.open(waUrl, "_blank");
-        out.unshift({ id: batchToken, studentName: lesson.studentName, toPhone: phone, body, link: batchLink, batchToken, status: "QUEUED", sentAt: new Date().toISOString() });
       }
     } catch {
+      waFallback = true;
       window.open(waUrl, "_blank");
-      out.unshift({ id: batchToken, studentName: lesson.studentName, toPhone: phone, body, link: batchLink, batchToken, status: "QUEUED", sentAt: new Date().toISOString() });
+    }
+    if (waFallback) {
+      fetch("/api/education/outbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lesson: lesson.studentName,
+          instrument: form.instrument,
+          body,
+          origin: "clase",
+          channel: "WHATSAPP_ME",
+          status: "OPENED",
+          lessonId: lesson.id,
+          batchToken,
+          recipients: [{ label: "Alumno", phone }],
+        }),
+      })
+        .then(() => window.dispatchEvent(new Event("palmera_outbox_updated")))
+        .catch(() => {});
     }
     hwIds.forEach((eid) =>
       shared.unshift({ token: Math.random().toString(36).slice(2, 10), batchToken, lessonId: lesson.id, exerciseId: eid, studentName: lesson.studentName })
@@ -127,7 +144,6 @@ export default function LessonFinishModal({
     form.songs.forEach((sid) =>
       shared.unshift({ token: Math.random().toString(36).slice(2, 10), batchToken, lessonId: lesson.id, songId: sid, studentName: lesson.studentName })
     );
-    localStorage.setItem(outKey, JSON.stringify(out.slice(0, 50)));
     localStorage.setItem(sharedKey, JSON.stringify(shared.slice(0, 100)));
 
     const audit = JSON.parse(localStorage.getItem("palmera_audit_logs") || "[]");

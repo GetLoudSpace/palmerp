@@ -48,6 +48,14 @@ export const bookingsModule: PalmModule = {
 
 ---
 
+## 3.bis Persistencia de Datos (regla general)
+
+- **Servidor como única fuente de verdad.** Todo dato de negocio (registros, envíos, clases, progreso, ajustes compartidos, auditoría) se guarda en la base de datos mediante una API del servidor. Nunca en `localStorage`, `sessionStorage`, IndexedDB ni estado efímero del navegador.
+- **Datos compartidos entre dispositivos.** Cualquier usuario debe ver la misma información al entrar desde otro ordenador con internet.
+- **Excepción mínima:** `localStorage` solo para preferencias visuales del dispositivo (tema, paneles colapsados), nunca para datos de negocio.
+
+---
+
 ## 4. Control de Errores y Excepciones
 
 - **API Routes / Server Actions**: Toda acción del lado del servidor que pueda fallar debe envolverse en un bloque `try/catch` y devolver una estructura consistente de respuesta a la UI:

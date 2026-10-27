@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   if ("error" in auth) return auth.error;
   // Tenant SIEMPRE de la sesión (servidor). Nunca de headers/body: el middleware
   // no fija x-tenant-id y el body lo controla el cliente.
-  const { tenantId } = auth;
+  const { tenantId, session } = auth;
 
   try {
     const body = await req.json().catch(()=> ({}));
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
           const student = await (tx as any).eduStudent?.findFirst?.({ where:{ tenantId } }).catch(()=>null);
           // we log without strict FK if student not found (demo)
           if ((tx as any).eduOutboxMessage?.create) {
-            await (tx as any).eduOutboxMessage.create({ data:{ tenantId, studentId: student?.id ?? (await (tx as any).eduStudent.findFirst({where:{tenantId}}))?.id ?? "unknown", lessonId: lessonId || null, toPhone: to, body: textBody || link, link, batchToken: batchToken || null, status:"SENT", waMessageId: result.waMessageId || null, sentAt: new Date() } });
+            await (tx as any).eduOutboxMessage.create({ data:{ tenantId, studentId: student?.id ?? null, lessonId: lessonId || null, userId: session.user.id, senderName: session.user.name || session.user.email || "Usuario", lessonLabel: studentName, instrument, channel: "WHATSAPP_CLOUD", origin: "clase", recipientRole: "STUDENT", recipientLabel: "Alumno", toPhone: to, body: textBody || link, link, batchToken: batchToken || null, status:"SENT", waMessageId: result.waMessageId || null, sentAt: new Date() } });
           }
           if ((tx as any).auditLog?.create) {
             await (tx as any).auditLog.create({ data:{ tenantId, action:"EDU_WHATSAPP_SENT", table:"EduOutboxMessage", recordId: batchToken || "batch", details: `WhatsApp Cloud API a ${maskPhone(to)} link ${link}`, success:true } });
